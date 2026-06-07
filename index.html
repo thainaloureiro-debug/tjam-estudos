@@ -191,13 +191,47 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .confirm-sub{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6;}
 
 @media print{nav,header,.filter-bar,.btn,.add-erro-panel,.no-print{display:none !important;}body{background:#fff;color:#000;font-size:12px;}.card{border:1px solid #ddd;background:#fff;}.kpi{border:1px solid #ccc;background:#fff;}.kpi-value,.kpi-label,.kpi-sub{color:#000 !important;}}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center;}
+.login-logo{font-size:40px;margin-bottom:12px;}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:28px;}
+.login-input{width:100%;padding:12px 16px;font-size:15px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--font);outline:none;text-align:center;letter-spacing:2px;margin-bottom:14px;}
+.login-input:focus{border-color:var(--accent);}
+.login-btn{width:100%;padding:12px;background:var(--accent);color:#0c0e13;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);transition:background .15s;}
+.login-btn:hover{background:#b8e020;}
+.login-error{color:var(--danger);font-size:13px;margin-top:10px;height:18px;}
+.login-loading{color:var(--text2);font-size:12px;margin-top:12px;}
+
+/* SYNC indicator */
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px;vertical-align:middle;}
+.sync-ok{background:var(--success);}.sync-err{background:var(--danger);}.sync-spin{background:var(--warning);animation:pulse .8s infinite;}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⚖️</div>
+    <div class="login-title">TJ-AM Estudos</div>
+    <div class="login-sub">Digite a senha para acessar</div>
+    <input type="password" class="login-input" id="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-loading" id="login-loading"></div>
+  </div>
+</div>
+
 <header>
   <div class="logo">⚖️ TJ-AM <span class="logo-badge">Assistente Judiciário</span></div>
-  <div class="header-right">Controle de Estudos</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="header-right" id="sync-status">Conectando...</div>
+    <button class="btn btn-secondary btn-sm no-print" onclick="doLogout()" style="font-size:11px;padding:4px 10px">Sair</button>
+  </div>
 </header>
 
 <nav>
@@ -500,537 +534,285 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 <div id="toast"></div>
 
 <script>
-// ═══════════════ DATA ═══════════════
-const MATERIAS={
-  "Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],
-  "Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],
-  "Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],
-  "Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],
-  "Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],
-  "Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],
-  "Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],
-  "Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],
-  "Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],
-  "Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],
-  "Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"]
-};
-const PDF_DEF={
-  "Língua Portuguesa":{total:16,feitas:0,feitas_q:0,status:'pendente'},
-  "Direito Constitucional":{total:12,feitas:12,feitas_q:0,status:'concluido'},
-  "Direito Administrativo":{total:7,feitas:7,feitas_q:0,status:'concluido'},
-  "Administração Geral":{total:15,feitas:7,feitas_q:0,status:'pendente'},
-  "Direito Processual Civil":{total:8,feitas:1,feitas_q:0,status:'pendente'},
-  "Direito Processual Penal":{total:8,feitas:0,feitas_q:0,status:'pendente'},
-  "Estatuto dos Servidores":{total:6,feitas:0,feitas_q:0,status:'pendente'},
-  "Organização Judiciária":{total:6,feitas:0,feitas_q:0,status:'pendente'},
-  "Informática e Processo Digital":{total:8,feitas:0,feitas_q:0,status:'pendente'},
-  "Acessibilidade":{total:4,feitas:0,feitas_q:0,status:'pendente'},
-  "Geografia do Amazonas":{total:2,feitas:2,feitas_q:0,status:'concluido'}
-};
-const MESES_LABELS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const STATUS_LABELS={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Revisão',caderno:'📓 Caderno TEC'};
-const STATUS_CSS={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
-const MBADGE={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
+// ═══ SUPABASE CONFIG ═══
+const SB_URL='https://ixrtpjpmkejzcasiujru.supabase.co';
+const SB_KEY='sb_publishable_61xeI0Ny11_2xtENznG4rg_29L8aEGd';
+const SENHA='notisa43';
 
-function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
-function sv(k,v){localStorage.setItem(k,JSON.stringify(v));}
-
-let erros=ld('tjam4_erros',[
-  {id:1,data:'2026-04-10',materia:'Língua Portuguesa',assunto:'Ortografia e acentuação',questao:'Q12',material:'Apostila',motivo:'Acentuação proparoxítona'},
-  {id:2,data:'2026-04-12',materia:'Direito Constitucional',assunto:'Direitos individuais e coletivos',questao:'Q5',material:'PDF CESPE',motivo:''},
-  {id:3,data:'2026-04-15',materia:'Língua Portuguesa',assunto:'Pronomes e colocação pronominal',questao:'Q22',material:'Apostila',motivo:'Ênclise x próclise'},
-  {id:4,data:'2026-05-03',materia:'Língua Portuguesa',assunto:'Ortografia e acentuação',questao:'Q8',material:'Apostila',motivo:''},
-  {id:5,data:'2026-05-10',materia:'Direito Constitucional',assunto:'Direitos sociais',questao:'Q14',material:'PDF',motivo:'Confundi com direitos políticos'},
-]);
-let simulados=ld('tjam4_sims',[
-  {id:1,data:'2026-04-10',nome:'Simulado CESPE 1',banca:'CESPE',total:120,acertos:78,porMateria:{}},
-  {id:2,data:'2026-04-20',nome:'Simulado FGV 1',banca:'FGV',total:80,acertos:56,porMateria:{}},
-  {id:3,data:'2026-05-05',nome:'Simulado CESPE 2',banca:'CESPE',total:120,acertos:85,porMateria:{}},
-]);
-let pdfs=ld('tjam4_pdfs',PDF_DEF);
-let idCtr=ld('tjam4_id',400);
-
-// ═══════════════ UTILS ═══════════════
-const today=()=>new Date().toISOString().slice(0,10);
-const fmtD=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
-const pctStr=v=>v==null||isNaN(v)?'—':(v*100).toFixed(1)+'%';
-const pctKpi=(v,color)=>v==null||isNaN(v)?'<span style="color:var(--text3)">—</span>':`<span style="color:${color||'inherit'}">${(v*100).toFixed(1)}<span style="font-size:22px;font-weight:600;vertical-align:baseline;opacity:.8">%</span></span>`;
-const nextId=()=>{idCtr++;sv('tjam4_id',idCtr);return idCtr;};
-function pctColor(v){if(v>=0.75)return'var(--success)';if(v>=0.6)return'var(--accent)';if(v>=0.4)return'var(--warning)';return'var(--danger)';}
-function filterDate(arr,from,to,f='data'){return arr.filter(r=>{if(from&&r[f]<from)return false;if(to&&r[f]>to)return false;return true;});}
-function clearFilter(...ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});}
-function fillMateriaSelect(id,all='Todas as matérias'){
-  const sel=document.getElementById(id);if(!sel)return;const cur=sel.value;
-  sel.innerHTML=all?`<option value="">${all}</option>`:'<option value="">Selecione...</option>';
-  Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
-  if(cur)sel.value=cur;
-}
-
-// ═══════════════ NAV ═══════════════
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,pdfs:renderPDFs,relatorio:renderRelatorio};
-function showPage(id,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  if(el)el.classList.add('active');
-  renders[id]?.();
-}
-
-// ═══════════════ TOAST ═══════════════
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-
-// ═══════════════ ZERAR ═══════════════
-function zerarDados(){
-  ['tjam4_erros','tjam4_sims','tjam4_pdfs','tjam4_id'].forEach(k=>localStorage.removeItem(k));
-  // limpar rev keys
-  Object.keys(localStorage).filter(k=>k.startsWith('rev4_')).forEach(k=>localStorage.removeItem(k));
-  erros=[];simulados=[];pdfs=JSON.parse(JSON.stringify(PDF_DEF));idCtr=400;
-  document.getElementById('confirm-modal').classList.remove('open');
-  toast('✓ Dados zerados!');
-  renderDashboard();renderRegistro();renderSimulados();renderPDFs();
-}
-
-// ═══════════════ MODALS ═══════════════
-function openModal(id){
-  document.getElementById(id).classList.add('open');
-  if(id==='modal-simulado'){document.getElementById('s-data').value=today();switchSimTab('geral',document.querySelector('.modal-tab'));}
-  if(id==='modal-pdf')renderPDFEdit();
-}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function closeModalOut(e,id){if(e.target.id===id)closeModal(id);}
-
-function switchSimTab(tab,el){
-  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
-  document.getElementById('sim-tab-geral').style.display=tab==='geral'?'block':'none';
-  document.getElementById('sim-tab-materias').style.display=tab==='materias'?'block':'none';
-  if(tab==='materias'){
-    document.getElementById('sim-mat-rows').innerHTML=Object.keys(MATERIAS).map(mat=>{
-      const k=mat.replace(/[\s\/]/g,'_');
-      return`<tr><td style="font-size:12px;font-weight:600">${mat}</td><td><input type="number" id="sm-q-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-a-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-e-${k}" min="0" placeholder="0" style="width:58px"></td></tr>`;
-    }).join('');
+// ═══ LOGIN ═══
+function checkLogin(){return sessionStorage.getItem('tjam_ok')==='1';}
+function doLogin(){
+  const v=document.getElementById('login-input').value;
+  if(v===SENHA){
+    sessionStorage.setItem('tjam_ok','1');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('login-loading').textContent='Carregando dados...';
+    init();
+  } else {
+    document.getElementById('login-error').textContent='Senha incorreta.';
+    document.getElementById('login-input').value='';
+    document.getElementById('login-input').focus();
   }
 }
+function doLogout(){sessionStorage.removeItem('tjam_ok');location.reload();}
 
-// ═══════════════ ADD ERRO ═══════════════
-function toggleAddPanel(){
-  const p=document.getElementById('add-panel');const open=p.classList.toggle('open');
-  if(open){fillMateriaSelect('err-materia',null);document.getElementById('err-data').value=today();['err-materia','err-assunto','err-questao','err-material','err-motivo'].forEach(id=>document.getElementById(id).value='');document.getElementById('err-assunto').innerHTML='<option value="">Selecione a matéria</option>';}
+// ═══ SUPABASE API ═══
+const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+async function sbGet(t,q=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${q}&order=id.asc`,{headers:H});return r.json();}
+async function sbIns(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});return r.json();}
+async function sbDel(t,id){await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:H});}
+async function sbUps(t,b){await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(b)});}
+async function sbDelAll(t,col,val){await fetch(`${SB_URL}/rest/v1/${t}?${col}=neq.${val}`,{method:'DELETE',headers:H});}
+
+function setSS(estado){
+  const el=document.getElementById('sync-status');if(!el)return;
+  const m={ok:'🟢 Sincronizado',erro:'🔴 Erro na conexão',sync:'🟡 Sincronizando...'};
+  el.textContent=m[estado]||'';
 }
-function updateAssuntos(){
-  const mat=document.getElementById('err-materia').value;
-  const sel=document.getElementById('err-assunto');sel.innerHTML='<option value="">Selecione...</option>';
-  if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+
+// ═══ DATA ═══
+const MATERIAS={"Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],"Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],"Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],"Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],"Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],"Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],"Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],"Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],"Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],"Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],"Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"]};
+const PDF_DEF={"Língua Portuguesa":{total:16,feitas:0,feitas_q:0,status:'pendente'},"Direito Constitucional":{total:12,feitas:12,feitas_q:0,status:'concluido'},"Direito Administrativo":{total:7,feitas:7,feitas_q:0,status:'concluido'},"Administração Geral":{total:15,feitas:7,feitas_q:0,status:'pendente'},"Direito Processual Civil":{total:8,feitas:1,feitas_q:0,status:'pendente'},"Direito Processual Penal":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Estatuto dos Servidores":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Organização Judiciária":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Informática e Processo Digital":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Acessibilidade":{total:4,feitas:0,feitas_q:0,status:'pendente'},"Geografia do Amazonas":{total:2,feitas:2,feitas_q:0,status:'concluido'}};
+const ML=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Revisão',caderno:'📓 Caderno TEC'};
+const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
+const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
+
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={};
+
+// ═══ UTILS ═══
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtD=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
+const pS=v=>v==null||isNaN(v)?'—':(v*100).toFixed(1)+'%';
+const pK=(v,c)=>v==null||isNaN(v)?'<span style="color:var(--text3)">—</span>':`<span style="color:${c||'inherit'}">${(v*100).toFixed(1)}<span style="font-size:22px;font-weight:600;vertical-align:baseline;opacity:.8">%</span></span>`;
+function pC(v){if(v>=0.75)return'var(--success)';if(v>=0.6)return'var(--accent)';if(v>=0.4)return'var(--warning)';return'var(--danger)';}
+function fD(arr,from,to,f='data'){return arr.filter(r=>{if(from&&r[f]<from)return false;if(to&&r[f]>to)return false;return true;});}
+function cF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});}
+function fMS(id,all='Todas'){const sel=document.getElementById(id);if(!sel)return;const cur=sel.value;sel.innerHTML=all?`<option value="">${all}</option>`:'<option value="">Selecione...</option>';Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});if(cur)sel.value=cur;}
+
+// ═══ NAV ═══
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,pdfs:renderPDFs,relatorio:renderRelatorio};
+function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ═══ ZERAR ═══
+async function zerarDados(){
+  if(!confirm('Apagar TODOS os dados do banco?'))return;
+  setSS('sync');
+  try{
+    await Promise.all([sbDelAll('erros','id','0'),sbDelAll('simulados','id','0'),sbDelAll('pdfs','materia',''),sbDelAll('revisoes','chave','')]);
+    erros=[];simulados=[];pdfs=JSON.parse(JSON.stringify(PDF_DEF));revisoes={};
+    document.getElementById('confirm-modal').classList.remove('open');
+    setSS('ok');toast('✓ Dados zerados!');
+    renderDashboard();renderRegistro();renderSimulados();renderPDFs();
+  }catch(e){setSS('erro');toast('Erro ao zerar.');}
 }
-function salvarErro(){
+
+// ═══ MODALS ═══
+function openModal(id){document.getElementById(id).classList.add('open');if(id==='modal-simulado'){document.getElementById('s-data').value=today();switchSimTab('geral',document.querySelector('.modal-tab'));}if(id==='modal-pdf')renderPDFEdit();}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalOut(e,id){if(e.target.id===id)closeModal(id);}
+function switchSimTab(tab,el){document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('sim-tab-geral').style.display=tab==='geral'?'block':'none';document.getElementById('sim-tab-materias').style.display=tab==='materias'?'block':'none';if(tab==='materias'){document.getElementById('sim-mat-rows').innerHTML=Object.keys(MATERIAS).map(mat=>{const k=mat.replace(/[\s\/]/g,'_');return`<tr><td style="font-size:12px;font-weight:600">${mat}</td><td><input type="number" id="sm-q-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-a-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-e-${k}" min="0" placeholder="0" style="width:58px"></td></tr>`;}).join('');}}
+
+// ═══ ERROS ═══
+function toggleAddPanel(){const p=document.getElementById('add-panel');const open=p.classList.toggle('open');if(open){fMS('err-materia',null);document.getElementById('err-data').value=today();['err-materia','err-assunto','err-questao','err-material','err-motivo'].forEach(id=>document.getElementById(id).value='');document.getElementById('err-assunto').innerHTML='<option value="">Selecione a matéria</option>';}}
+function updateAssuntos(){const mat=document.getElementById('err-materia').value;const sel=document.getElementById('err-assunto');sel.innerHTML='<option value="">Selecione...</option>';if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});}
+async function salvarErro(){
   const data=document.getElementById('err-data').value,materia=document.getElementById('err-materia').value,assunto=document.getElementById('err-assunto').value;
   if(!data||!materia||!assunto){alert('Preencha Data, Matéria e Assunto.');return;}
-  erros.push({id:nextId(),data,materia,assunto,questao:document.getElementById('err-questao').value,material:document.getElementById('err-material').value,motivo:document.getElementById('err-motivo').value});
-  sv('tjam4_erros',erros);document.getElementById('add-panel').classList.remove('open');toast('✓ Erro registrado!');renderRegistro();
+  setSS('sync');
+  try{const res=await sbIns('erros',{data,materia,assunto,questao:document.getElementById('err-questao').value||null,material:document.getElementById('err-material').value||null,motivo:document.getElementById('err-motivo').value||null});if(res&&res[0])erros.push(res[0]);document.getElementById('add-panel').classList.remove('open');setSS('ok');toast('✓ Erro registrado!');renderRegistro();renderDashboard();}
+  catch(e){setSS('erro');toast('Erro ao salvar.');}
 }
-function deletarErro(id){if(!confirm('Remover?'))return;erros=erros.filter(e=>e.id!==id);sv('tjam4_erros',erros);renderRegistro();toast('Removido.');}
+async function deletarErro(id){if(!confirm('Remover?'))return;setSS('sync');await sbDel('erros',id);erros=erros.filter(e=>e.id!==id);setSS('ok');toast('Removido.');renderRegistro();renderDashboard();}
 
-// ═══════════════ SIMULADO ═══════════════
-function salvarSimulado(){
+// ═══ SIMULADOS ═══
+async function salvarSimulado(){
   const data=document.getElementById('s-data').value,nome=document.getElementById('s-nome').value.trim();
   const total=parseInt(document.getElementById('s-total').value),acertos=parseInt(document.getElementById('s-acertos').value);
   if(!data||!nome||isNaN(total)||isNaN(acertos)){alert('Campos obrigatórios.');return;}
   if(acertos>total){alert('Acertos > total.');return;}
-  const porMateria={};
-  Object.keys(MATERIAS).forEach(mat=>{const k=mat.replace(/[\s\/]/g,'_');const q=parseInt(document.getElementById('sm-q-'+k)?.value)||0,a=parseInt(document.getElementById('sm-a-'+k)?.value)||0,e=parseInt(document.getElementById('sm-e-'+k)?.value)||0;if(q||a||e)porMateria[mat]={q,a,e};});
-  simulados.push({id:nextId(),data,nome,banca:document.getElementById('s-banca').value,total,acertos,porMateria});
-  sv('tjam4_sims',simulados);closeModal('modal-simulado');toast('✓ Simulado salvo!');renderSimulados();
+  const pm={};Object.keys(MATERIAS).forEach(mat=>{const k=mat.replace(/[\s\/]/g,'_');const q=parseInt(document.getElementById('sm-q-'+k)?.value)||0,a=parseInt(document.getElementById('sm-a-'+k)?.value)||0,e=parseInt(document.getElementById('sm-e-'+k)?.value)||0;if(q||a||e)pm[mat]={q,a,e};});
+  setSS('sync');
+  try{const res=await sbIns('simulados',{data,nome,banca:document.getElementById('s-banca').value||null,total,acertos,por_materia:pm});if(res&&res[0])simulados.push({...res[0],porMateria:res[0].por_materia||{}});closeModal('modal-simulado');setSS('ok');toast('✓ Simulado salvo!');renderSimulados();renderDashboard();}
+  catch(e){setSS('erro');toast('Erro ao salvar.');}
 }
-function deletarSim(id){if(!confirm('Remover?'))return;simulados=simulados.filter(s=>s.id!==id);sv('tjam4_sims',simulados);renderSimulados();toast('Removido.');}
+async function deletarSim(id){if(!confirm('Remover?'))return;setSS('sync');await sbDel('simulados',id);simulados=simulados.filter(s=>s.id!==id);setSS('ok');toast('Removido.');renderSimulados();renderDashboard();}
 function toggleSimMat(id){const el=document.getElementById('simmat-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
-// ═══════════════ DASHBOARD ═══════════════
+// ═══ DASHBOARD ═══
 function renderDashboard(){
   const from=document.getElementById('dash-from').value,to=document.getElementById('dash-to').value;
-  const fE=filterDate(erros,from,to),fS=filterDate(simulados,from,to);
-  const totalQ=fS.reduce((s,x)=>s+x.total,0),totalAc=fS.reduce((s,x)=>s+x.acertos,0);
-  const pAcGeral=totalQ>0?totalAc/totalQ:null;
-  const media=fS.length?fS.reduce((s,x)=>s+x.acertos/x.total,0)/fS.length:null;
-  const materiasCom=new Set(fE.map(e=>e.materia)).size;
-
+  const fE=fD(erros,from,to),fS=fD(simulados,from,to);
+  const tQ=fS.reduce((s,x)=>s+x.total,0),tA=fS.reduce((s,x)=>s+x.acertos,0),pG=tQ>0?tA/tQ:null;
+  const mC=new Set(fE.map(e=>e.materia)).size;
   document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Resolvidas</div><div class="kpi-value" style="color:var(--accent2)">${totalQ.toLocaleString('pt-BR')}</div><div class="kpi-sub">nos simulados</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Total de Acertos</div><div class="kpi-value" style="color:var(--success)">${totalAc.toLocaleString('pt-BR')}</div><div class="kpi-sub">${pAcGeral!=null?pctStr(pAcGeral)+' das questões':'—'}</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total de Erros</div><div class="kpi-value" style="color:var(--accent3)">${(totalQ-totalAc).toLocaleString('pt-BR')}</div><div class="kpi-sub">${fE.length} no diário</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:${pAcGeral==null?'var(--text3)':pctColor(pAcGeral)}"></div><div class="kpi-label">Taxa de Acerto</div><div class="kpi-value">${pctKpi(pAcGeral,pctColor(pAcGeral))}</div><div class="kpi-sub">geral nos simulados</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Resolvidas</div><div class="kpi-value" style="color:var(--accent2)">${tQ.toLocaleString('pt-BR')}</div><div class="kpi-sub">nos simulados</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Total de Acertos</div><div class="kpi-value" style="color:var(--success)">${tA.toLocaleString('pt-BR')}</div><div class="kpi-sub">${pG!=null?pS(pG)+' das questões':'—'}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total de Erros</div><div class="kpi-value" style="color:var(--accent3)">${(tQ-tA).toLocaleString('pt-BR')}</div><div class="kpi-sub">${fE.length} no diário</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:${pG==null?'var(--text3)':pC(pG)}"></div><div class="kpi-label">Taxa de Acerto</div><div class="kpi-value">${pK(pG,pC(pG))}</div><div class="kpi-sub">geral nos simulados</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Simulados Feitos</div><div class="kpi-value" style="color:var(--accent)">${fS.length}</div><div class="kpi-sub">${from||to?'no período':'todos'}</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Matérias c/ Erro</div><div class="kpi-value" style="color:var(--accent2)">${materiasCom}</div><div class="kpi-sub">de ${Object.keys(MATERIAS).length} matérias</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Matérias c/ Erro</div><div class="kpi-value" style="color:var(--accent2)">${mC}</div><div class="kpi-sub">de ${Object.keys(MATERIAS).length} matérias</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">Erros no Diário</div><div class="kpi-value" style="color:var(--warning)">${fE.length}</div><div class="kpi-sub">${from||to?'no período':'todos'}</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--text3)"></div><div class="kpi-label">Média p/ Simulado</div><div class="kpi-value" style="color:var(--text2)">${fS.length>0?Math.round(totalQ/fS.length):0}</div><div class="kpi-sub">questões por prova</div></div>`;
-
-  // Top assuntos
+    <div class="kpi"><div class="kpi-accent" style="background:var(--text3)"></div><div class="kpi-label">Média p/ Simulado</div><div class="kpi-value" style="color:var(--text2)">${fS.length>0?Math.round(tQ/fS.length):0}</div><div class="kpi-sub">questões por prova</div></div>`;
   const cnt={};fE.forEach(e=>{const k=e.assunto+'|||'+e.materia;cnt[k]=(cnt[k]||0)+1;});
   const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,10);const maxV=sorted[0]?.[1]||1;
-  const colors=['var(--accent3)','var(--accent)','var(--accent2)'];
-  document.getElementById('top-assuntos').innerHTML=sorted.length?`<div class="bar-chart">${sorted.map(([k,v],i)=>{const[ass]=k.split('|||');const w=(v/maxV*100).toFixed(0);return`<div class="bar-row"><div class="bar-name" title="${ass}">${ass}</div><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${colors[Math.min(i,2)]};color:#0c0e13">${v>1?v:''}</div></div><div class="bar-count">${v}</div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Sem dados</div><div class="empty-sub">Registre erros para ver o ranking</div></div>';
-
+  const cols=['var(--accent3)','var(--accent)','var(--accent2)'];
+  document.getElementById('top-assuntos').innerHTML=sorted.length?`<div class="bar-chart">${sorted.map(([k,v],i)=>{const[ass]=k.split('|||');return`<div class="bar-row"><div class="bar-name" title="${ass}">${ass}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxV*100).toFixed(0)}%;background:${cols[Math.min(i,2)]};color:#0c0e13">${v>1?v:''}</div></div><div class="bar-count">${v}</div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Sem dados</div><div class="empty-sub">Registre erros para ver o ranking</div></div>';
   const ultS=[...fS].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,4);
-  document.getElementById('ult-sims').innerHTML=ultS.length?`<div style="display:flex;flex-direction:column;gap:8px">${ultS.map(s=>{const p=s.acertos/s.total;return`<div class="sim-card"><div class="sim-pct" style="color:${pctColor(p)}">${(p*100).toFixed(1)}<span style="font-size:13px;opacity:.8">%</span></div><div class="sim-info"><div class="sim-name">${s.nome}</div><div class="sim-meta">${fmtD(s.data)} · ${s.banca||'—'} · ${s.acertos}/${s.total}</div><div style="margin-top:6px"><div class="prog" style="width:160px"><div class="prog-fill" style="background:${pctColor(p)};width:${p*100}%"></div></div></div></div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">Sem simulados</div></div>';
-
+  document.getElementById('ult-sims').innerHTML=ultS.length?`<div style="display:flex;flex-direction:column;gap:8px">${ultS.map(s=>{const p=s.acertos/s.total;return`<div class="sim-card"><div class="sim-pct" style="color:${pC(p)}">${(p*100).toFixed(1)}<span style="font-size:13px;opacity:.8">%</span></div><div class="sim-info"><div class="sim-name">${s.nome}</div><div class="sim-meta">${fmtD(s.data)} · ${s.banca||'—'} · ${s.acertos}/${s.total}</div><div style="margin-top:6px"><div class="prog" style="width:160px"><div class="prog-fill" style="background:${pC(p)};width:${p*100}%"></div></div></div></div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">Sem simulados</div></div>';
   renderRankingMes(fE);
 }
-
 function renderRankingMes(fE){
-  const byMat={};fE.forEach(e=>{if(!e.data)return;const mo=new Date(e.data+'T12:00').getMonth();if(!byMat[e.materia])byMat[e.materia]=new Array(12).fill(0);byMat[e.materia][mo]++;});
-  const entries=Object.entries(byMat).map(([mat,ms])=>({mat,ms,tot:ms.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.tot-a.tot);
-  const activeMo=[...Array(12).keys()].filter(i=>entries.some(e=>e.ms[i]>0));
+  const bM={};fE.forEach(e=>{if(!e.data)return;const mo=new Date(e.data+'T12:00').getMonth();if(!bM[e.materia])bM[e.materia]=new Array(12).fill(0);bM[e.materia][mo]++;});
+  const entries=Object.entries(bM).map(([mat,ms])=>({mat,ms,tot:ms.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.tot-a.tot);
+  const aMo=[...Array(12).keys()].filter(i=>entries.some(e=>e.ms[i]>0));
   const div=document.getElementById('rank-mes');
   if(!entries.length){div.innerHTML='<div class="empty"><div class="empty-sub">Sem dados</div></div>';return;}
-  div.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th>${activeMo.map(i=>`<th>${MESES_LABELS[i]}</th>`).join('')}<th>Total</th></tr></thead><tbody>${entries.map((e,i)=>`<tr><td><span class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span></td><td>${e.mat}</td>${activeMo.map(mi=>`<td style="font-family:var(--mono);font-size:12px">${e.ms[mi]||'—'}</td>`).join('')}<td style="font-weight:700;font-family:var(--mono)">${e.tot}</td></tr>`).join('')}</tbody></table></div>`;
+  div.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th>${aMo.map(i=>`<th>${ML[i]}</th>`).join('')}<th>Total</th></tr></thead><tbody>${entries.map((e,i)=>`<tr><td><span class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span></td><td>${e.mat}</td>${aMo.map(mi=>`<td style="font-family:var(--mono);font-size:12px">${e.ms[mi]||'—'}</td>`).join('')}<td style="font-weight:700;font-family:var(--mono)">${e.tot}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-// ═══════════════ REGISTRO ═══════════════
-function clearRegFilters(){clearFilter('reg-from','reg-to');document.getElementById('reg-materia').value='';renderRegistro();}
+// ═══ REGISTRO ═══
+function clearRegFilters(){cF('reg-from','reg-to');document.getElementById('reg-materia').value='';renderRegistro();}
 function renderRegistro(){
-  fillMateriaSelect('reg-materia','Todas');
+  fMS('reg-materia','Todas');
   const from=document.getElementById('reg-from').value,to=document.getElementById('reg-to').value,mat=document.getElementById('reg-materia').value;
-  let filt=filterDate(erros,from,to);if(mat)filt=filt.filter(e=>e.materia===mat);
+  let filt=fD(erros,from,to);if(mat)filt=filt.filter(e=>e.materia===mat);
   filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
   document.getElementById('reg-count-label').textContent=`${filt.length} erro${filt.length!==1?'s':''} encontrado${filt.length!==1?'s':''}`;
   const div=document.getElementById('lista-erros');
   if(!filt.length){div.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Nenhum erro</div><div class="empty-sub">Ajuste os filtros ou registre acima</div></div>';return;}
-  div.innerHTML=filt.map(e=>`<div class="erro-row" id="erow-${e.id}">
-    <div class="erro-header" onclick="toggleErroRow(${e.id})">
-      <span class="erro-chevron">▶</span><span class="erro-date">${fmtD(e.data)}</span>
-      <span class="badge ${MBADGE[e.materia]||'badge-blue'}">${e.materia}</span>
-      <span class="erro-assunto">${e.assunto}</span><span class="erro-questao">${e.questao||''}</span>
-    </div>
-    <div class="erro-body">
-      <div class="erro-body-grid">
-        <div><div class="erro-field-label">Data</div><div class="erro-field-value">${fmtD(e.data)}</div></div>
-        <div><div class="erro-field-label">Questão</div><div class="erro-field-value" style="font-family:var(--mono)">${e.questao||'—'}</div></div>
-        <div><div class="erro-field-label">Material</div><div class="erro-field-value">${e.material||'—'}</div></div>
-      </div>
-      ${e.motivo?`<div class="erro-motivo-box">💬 "${e.motivo}"</div>`:''}
-      <div class="erro-actions"><button class="btn btn-ghost" onclick="deletarErro(${e.id})">🗑 Remover</button></div>
-    </div></div>`).join('');
+  div.innerHTML=filt.map(e=>`<div class="erro-row" id="erow-${e.id}"><div class="erro-header" onclick="toggleErroRow(${e.id})"><span class="erro-chevron">▶</span><span class="erro-date">${fmtD(e.data)}</span><span class="badge ${MB[e.materia]||'badge-blue'}">${e.materia}</span><span class="erro-assunto">${e.assunto}</span><span class="erro-questao">${e.questao||''}</span></div><div class="erro-body"><div class="erro-body-grid"><div><div class="erro-field-label">Data</div><div class="erro-field-value">${fmtD(e.data)}</div></div><div><div class="erro-field-label">Questão</div><div class="erro-field-value" style="font-family:var(--mono)">${e.questao||'—'}</div></div><div><div class="erro-field-label">Material</div><div class="erro-field-value">${e.material||'—'}</div></div></div>${e.motivo?`<div class="erro-motivo-box">💬 "${e.motivo}"</div>`:''}<div class="erro-actions"><button class="btn btn-ghost" onclick="deletarErro(${e.id})">🗑 Remover</button></div></div></div>`).join('');
 }
 function toggleErroRow(id){const row=document.getElementById('erow-'+id);if(!row)return;document.querySelectorAll('.erro-row.open').forEach(r=>{if(r!==row)r.classList.remove('open');});row.classList.toggle('open');}
 
-// ═══════════════ SIMULADOS ═══════════════
+// ═══ SIMULADOS PAGE ═══
 function renderSimulados(){
   const from=document.getElementById('sim-from').value,to=document.getElementById('sim-to').value,banca=document.getElementById('sim-banca-filter').value;
-  const bancas=[...new Set(simulados.map(s=>s.banca).filter(Boolean))];
-  const bSel=document.getElementById('sim-banca-filter');const curB=bSel.value;
-  bSel.innerHTML='<option value="">Todas</option>';bancas.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;bSel.appendChild(o);});bSel.value=curB;
-  let filt=filterDate(simulados,from,to);if(banca)filt=filt.filter(s=>s.banca===banca);
-  filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
+  const bancas=[...new Set(simulados.map(s=>s.banca).filter(Boolean))];const bSel=document.getElementById('sim-banca-filter');const curB=bSel.value;bSel.innerHTML='<option value="">Todas</option>';bancas.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;bSel.appendChild(o);});bSel.value=curB;
+  let filt=fD(simulados,from,to);if(banca)filt=filt.filter(s=>s.banca===banca);filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
   const div=document.getElementById('lista-sims');
   if(!filt.length){div.innerHTML='<div class="empty"><div class="empty-icon">🎯</div><div class="empty-title">Nenhum simulado</div></div>';}
-  else div.innerHTML=filt.map((s,i)=>{
-    const p=s.acertos/s.total;const prev=filt[i+1];
-    let trend='';if(prev){const d=p-prev.acertos/prev.total;trend=d>=0?`<span class="trend-up"> ▲ +${(d*100).toFixed(1)}%</span>`:`<span class="trend-dn"> ▼ ${(d*100).toFixed(1)}%</span>`;}
-    const temMat=s.porMateria&&Object.keys(s.porMateria).length>0;
-    return`<div class="sim-card" style="flex-direction:column;align-items:stretch">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:16px">
-          <div class="sim-pct" style="color:${pctColor(p)}">${(p*100).toFixed(1)}<span style="font-size:13px;opacity:.8">%</span></div>
-          <div class="sim-info"><div class="sim-name">${s.nome} ${s.banca?`<span class="badge badge-gray" style="font-size:10px">${s.banca}</span>`:''}</div>
-          <div class="sim-meta">${fmtD(s.data)} · ${s.acertos}/${s.total} acertos${trend}</div>
-          <div style="margin-top:7px"><div class="prog" style="width:200px"><div class="prog-fill" style="background:${pctColor(p)};width:${p*100}%"></div></div></div></div>
-        </div>
-        <div style="display:flex;gap:6px">${temMat?`<button class="btn btn-secondary btn-sm" onclick="toggleSimMat(${s.id})">📊</button>`:''}<button class="btn btn-ghost" onclick="deletarSim(${s.id})">🗑</button></div>
-      </div>
-      ${temMat?`<div id="simmat-${s.id}" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px"><div class="tbl-wrap"><table><thead><tr><th>Matéria</th><th>Questões</th><th>Acertos</th><th>Erros</th><th>%</th></tr></thead><tbody>${Object.entries(s.porMateria).map(([m,d])=>{const pa=d.q>0?d.a/d.q:null;return`<tr><td style="font-weight:600">${m}</td><td style="font-family:var(--mono)">${d.q}</td><td style="font-family:var(--mono)">${d.a}</td><td style="font-family:var(--mono);color:var(--accent3)">${d.e}</td><td style="font-family:var(--mono);font-weight:700;color:${pa==null?'var(--text3)':pctColor(pa)}">${pa==null?'—':pctStr(pa)}</td></tr>`;}).join('')}</tbody></table></div></div>`:''}
-    </div>`;
-  }).join('');
-
-  const byMo={};simulados.forEach(s=>{if(!s.data)return;const d=new Date(s.data+'T12:00');const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(!byMo[k])byMo[k]={count:0,q:0,a:0};byMo[k].count++;byMo[k].q+=s.total;byMo[k].a+=s.acertos;});
-  const moKeys=Object.keys(byMo).sort();
-  document.getElementById('resumo-mes').innerHTML=moKeys.length?`<div class="tbl-wrap"><table><thead><tr><th>Mês</th><th>Sims</th><th>Questões</th><th>Acertos</th><th>%</th></tr></thead><tbody>${moKeys.map(k=>{const m=byMo[k];const p=m.a/m.q;const[y,mo]=k.split('-');return`<tr><td>${MESES_LABELS[parseInt(mo)-1]}/${y.slice(2)}</td><td style="font-family:var(--mono)">${m.count}</td><td style="font-family:var(--mono)">${m.q}</td><td style="font-family:var(--mono)">${m.a}</td><td style="font-weight:700;color:${pctColor(p)};font-family:var(--mono)">${pctStr(p)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-sub">Sem dados</div></div>';
-
-  const srtS=[...simulados].sort((a,b)=>a.data.localeCompare(b.data));
-  const maxP=srtS.length?Math.max(...srtS.map(s=>s.acertos/s.total)):1;
-  document.getElementById('evolucao-chart').innerHTML=srtS.length?`<div class="bar-chart">${srtS.map(s=>{const p=s.acertos/s.total;return`<div class="bar-row"><div class="bar-name">${s.nome.slice(0,20)}</div><div class="bar-track"><div class="bar-fill" style="width:${(p/maxP*100).toFixed(0)}%;background:${pctColor(p)};color:#0c0e13">${pctStr(p)}</div></div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-sub">Adicione simulados</div></div>';
+  else div.innerHTML=filt.map((s,i)=>{const p=s.acertos/s.total;const prev=filt[i+1];let trend='';if(prev){const d=p-prev.acertos/prev.total;trend=d>=0?`<span class="trend-up"> ▲ +${(d*100).toFixed(1)}%</span>`:`<span class="trend-dn"> ▼ ${(d*100).toFixed(1)}%</span>`;}const pm=s.porMateria||s.por_materia||{};const temMat=Object.keys(pm).length>0;return`<div class="sim-card" style="flex-direction:column;align-items:stretch"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:16px"><div class="sim-pct" style="color:${pC(p)}">${(p*100).toFixed(1)}<span style="font-size:13px;opacity:.8">%</span></div><div class="sim-info"><div class="sim-name">${s.nome} ${s.banca?`<span class="badge badge-gray" style="font-size:10px">${s.banca}</span>`:''}</div><div class="sim-meta">${fmtD(s.data)} · ${s.acertos}/${s.total}${trend}</div><div style="margin-top:7px"><div class="prog" style="width:200px"><div class="prog-fill" style="background:${pC(p)};width:${p*100}%"></div></div></div></div></div><div style="display:flex;gap:6px">${temMat?`<button class="btn btn-secondary btn-sm" onclick="toggleSimMat(${s.id})">📊</button>`:''}<button class="btn btn-ghost" onclick="deletarSim(${s.id})">🗑</button></div></div>${temMat?`<div id="simmat-${s.id}" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px"><div class="tbl-wrap"><table><thead><tr><th>Matéria</th><th>Q</th><th>Acertos</th><th>Erros</th><th>%</th></tr></thead><tbody>${Object.entries(pm).map(([m,d])=>{const pa=d.q>0?d.a/d.q:null;return`<tr><td style="font-weight:600">${m}</td><td>${d.q}</td><td>${d.a}</td><td style="color:var(--accent3)">${d.e}</td><td style="font-weight:700;color:${pa==null?'var(--text3)':pC(pa)}">${pa==null?'—':pS(pa)}</td></tr>`;}).join('')}</tbody></table></div></div>`:''}`;}).join('');
+  const bMo={};simulados.forEach(s=>{if(!s.data)return;const d=new Date(s.data+'T12:00');const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(!bMo[k])bMo[k]={count:0,q:0,a:0};bMo[k].count++;bMo[k].q+=s.total;bMo[k].a+=s.acertos;});
+  const mK=Object.keys(bMo).sort();
+  document.getElementById('resumo-mes').innerHTML=mK.length?`<div class="tbl-wrap"><table><thead><tr><th>Mês</th><th>Sims</th><th>Questões</th><th>Acertos</th><th>%</th></tr></thead><tbody>${mK.map(k=>{const m=bMo[k];const p=m.a/m.q;const[y,mo]=k.split('-');return`<tr><td>${ML[parseInt(mo)-1]}/${y.slice(2)}</td><td>${m.count}</td><td>${m.q}</td><td>${m.a}</td><td style="font-weight:700;color:${pC(p)}">${pS(p)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-sub">Sem dados</div></div>';
+  const sS=[...simulados].sort((a,b)=>a.data.localeCompare(b.data));const mxP=sS.length?Math.max(...sS.map(s=>s.acertos/s.total)):1;
+  document.getElementById('evolucao-chart').innerHTML=sS.length?`<div class="bar-chart">${sS.map(s=>{const p=s.acertos/s.total;return`<div class="bar-row"><div class="bar-name">${s.nome.slice(0,20)}</div><div class="bar-track"><div class="bar-fill" style="width:${(p/mxP*100).toFixed(0)}%;background:${pC(p)};color:#0c0e13">${pS(p)}</div></div></div>`;}).join('')}</div>`:'<div class="empty"><div class="empty-sub">Adicione simulados</div></div>';
 }
 
-// ═══════════════ RANKING ═══════════════
+// ═══ RANKING ═══
 function renderRanking(){
-  fillMateriaSelect('rank-materia','Todas');
-  const from=document.getElementById('rank-from').value,to=document.getElementById('rank-to').value,mat=document.getElementById('rank-materia').value;
-  let filt=filterDate(erros,from,to);if(mat)filt=filt.filter(e=>e.materia===mat);
-  const cnt={};filt.forEach(e=>{const k=e.materia+'|||'+e.assunto;cnt[k]=(cnt[k]||0)+1;});
-  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);const total=sorted.reduce((s,[,v])=>s+v,0);const maxV=sorted[0]?.[1]||1;
+  fMS('rank-materia','Todas');const from=document.getElementById('rank-from').value,to=document.getElementById('rank-to').value,mat=document.getElementById('rank-materia').value;
+  let filt=fD(erros,from,to);if(mat)filt=filt.filter(e=>e.materia===mat);
+  const cnt={};filt.forEach(e=>{const k=e.materia+'|||'+e.assunto;cnt[k]=(cnt[k]||0)+1;});const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);const total=sorted.reduce((s,[,v])=>s+v,0);const mxV=sorted[0]?.[1]||1;
   const div=document.getElementById('ranking-content');
   if(!sorted.length){div.innerHTML='<div class="empty"><div class="empty-icon">🏅</div><div class="empty-title">Sem dados</div></div>';return;}
-  div.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th><th>Assunto</th><th>Erros</th><th>%</th><th style="min-width:120px">Barra</th></tr></thead><tbody>${sorted.map(([k,v],i)=>{const[m,a]=k.split('|||');const cls=i===0?'r1':i===1?'r2':i===2?'r3':'';return`<tr><td><span class="rank ${cls}">${i+1}</span></td><td><span class="badge badge-blue" style="font-size:11px">${m}</span></td><td style="font-weight:600">${a}</td><td style="font-family:var(--mono);font-weight:700;color:var(--accent3)">${v}</td><td style="font-family:var(--mono)">${total>0?(v/total*100).toFixed(1)+'%':'—'}</td><td><div class="prog"><div class="prog-fill ${i===0?'prog-red':i<=2?'prog-orange':'prog-blue'}" style="width:${(v/maxV*100).toFixed(0)}%"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
+  div.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th><th>Assunto</th><th>Erros</th><th>%</th><th>Barra</th></tr></thead><tbody>${sorted.map(([k,v],i)=>{const[m,a]=k.split('|||');const cls=i===0?'r1':i===1?'r2':i===2?'r3':'';return`<tr><td><span class="rank ${cls}">${i+1}</span></td><td><span class="badge badge-blue" style="font-size:11px">${m}</span></td><td style="font-weight:600">${a}</td><td style="font-family:var(--mono);font-weight:700;color:var(--accent3)">${v}</td><td style="font-family:var(--mono)">${total>0?(v/total*100).toFixed(1)+'%':'—'}</td><td><div class="prog"><div class="prog-fill ${i===0?'prog-red':i<=2?'prog-orange':'prog-blue'}" style="width:${(v/mxV*100).toFixed(0)}%"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 
-// ═══════════════ POR MATÉRIA ═══════════════
+// ═══ POR MATÉRIA ═══
 function renderMaterias(){
   const sel=document.getElementById('sel-materia');const cur=sel.value;sel.innerHTML='';Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});if(cur)sel.value=cur;
   const mat=sel.value,from=document.getElementById('mat-from').value,to=document.getElementById('mat-to').value;
-  const fE=filterDate(erros,from,to).filter(e=>e.materia===mat);const assuntos=MATERIAS[mat]||[];
-  const MIDX=[3,4,5,6,7,8,9,10,11];
-  const byA={};assuntos.forEach(a=>{byA[a]={tot:0,ms:new Array(12).fill(0)};});
-  fE.forEach(e=>{if(!byA[e.assunto])return;byA[e.assunto].tot++;if(e.data){const mo=new Date(e.data+'T12:00').getMonth();byA[e.assunto].ms[mo]++;}});
-  const totalE=fE.length,comErro=Object.values(byA).filter(v=>v.tot>0).length;
-  document.getElementById('mat-content').innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
-      <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total Erros</div><div class="kpi-value" style="color:var(--accent3)">${totalE}</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Assuntos</div><div class="kpi-value" style="color:var(--accent2)">${assuntos.length}</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Com Erro</div><div class="kpi-value" style="color:var(--accent)">${comErro}</div></div>
-    </div>
-    <div class="card"><div class="card-title">Assuntos — ${mat}</div><div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Assunto</th>${MIDX.map(i=>`<th>${MESES_LABELS[i]}</th>`).join('')}<th>Total</th><th>Revisado</th></tr></thead><tbody>${[...assuntos].sort((a,b)=>byA[b].tot-byA[a].tot).map((a,i)=>{const d=byA[a];const rk=ld('rev4_'+mat+'_'+a,false);const cls=i===0&&d.tot>0?'r1':i===1&&d.tot>0?'r2':i===2&&d.tot>0?'r3':'';return`<tr><td><span class="rank ${cls}">${i+1}</span></td><td style="font-weight:600">${a}</td>${MIDX.map(mi=>`<td style="font-family:var(--mono);font-size:12px">${d.ms[mi]||'—'}</td>`).join('')}<td style="font-family:var(--mono);font-weight:700;color:${d.tot>0?'var(--accent3)':'var(--text3)'}">${d.tot||'—'}</td><td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${rk?'var(--success)':'var(--text3)'}"><input type="checkbox" ${rk?'checked':''} onchange="toggleRev('${mat}','${a}',this.checked)" style="width:15px;height:15px">${rk?'Revisado':'Pendente'}</label></td></tr>`;}).join('')}</tbody></table></div></div>`;
+  const fE=fD(erros,from,to).filter(e=>e.materia===mat);const ass=MATERIAS[mat]||[];const MX=[3,4,5,6,7,8,9,10,11];
+  const byA={};ass.forEach(a=>{byA[a]={tot:0,ms:new Array(12).fill(0)};});fE.forEach(e=>{if(!byA[e.assunto])return;byA[e.assunto].tot++;if(e.data){const mo=new Date(e.data+'T12:00').getMonth();byA[e.assunto].ms[mo]++;}});
+  const tE=fE.length,cE=Object.values(byA).filter(v=>v.tot>0).length;
+  document.getElementById('mat-content').innerHTML=`<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"><div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total Erros</div><div class="kpi-value" style="color:var(--accent3)">${tE}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Assuntos</div><div class="kpi-value" style="color:var(--accent2)">${ass.length}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Com Erro</div><div class="kpi-value" style="color:var(--accent)">${cE}</div></div></div><div class="card"><div class="card-title">Assuntos — ${mat}</div><div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Assunto</th>${MX.map(i=>`<th>${ML[i]}</th>`).join('')}<th>Total</th><th>Revisado</th></tr></thead><tbody>${[...ass].sort((a,b)=>byA[b].tot-byA[a].tot).map((a,i)=>{const d=byA[a];const rk=revisoes[mat+'_'+a]||false;const cls=i===0&&d.tot>0?'r1':i===1&&d.tot>0?'r2':i===2&&d.tot>0?'r3':'';return`<tr><td><span class="rank ${cls}">${i+1}</span></td><td style="font-weight:600">${a}</td>${MX.map(mi=>`<td style="font-family:var(--mono);font-size:12px">${d.ms[mi]||'—'}</td>`).join('')}<td style="font-family:var(--mono);font-weight:700;color:${d.tot>0?'var(--accent3)':'var(--text3)'}">${d.tot||'—'}</td><td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${rk?'var(--success)':'var(--text3)'}"><input type="checkbox" ${rk?'checked':''} onchange="toggleRev('${mat}','${a}',this.checked)" style="width:15px;height:15px">${rk?'Revisado':'Pendente'}</label></td></tr>`;}).join('')}</tbody></table></div></div>`;
 }
-function toggleRev(mat,ass,val){sv('rev4_'+mat+'_'+ass,val);toast(val?'✓ Revisado!':'Desmarcado');setTimeout(()=>renderMaterias(),300);}
+async function toggleRev(mat,ass,val){revisoes[mat+'_'+ass]=val;await sbUps('revisoes',{chave:mat+'_'+ass,valor:val});toast(val?'✓ Revisado!':'Desmarcado');setTimeout(()=>renderMaterias(),300);}
 
-// ═══════════════ COMPARAR ═══════════════
+// ═══ COMPARAR ═══
 function initComparar(){
-  fillMateriaSelect('cmp-materia','Todas as matérias');
-  const anos=[...new Set([...erros,...simulados].map(r=>r.data?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
-  const anoAtual=new Date().getFullYear().toString();if(!anos.includes(anoAtual))anos.unshift(anoAtual);
+  fMS('cmp-materia','Todas as matérias');
+  const anos=[...new Set([...erros,...simulados].map(r=>r.data?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);const anoAtual=new Date().getFullYear().toString();if(!anos.includes(anoAtual))anos.unshift(anoAtual);
   ['cmp-a-ano','cmp-b-ano'].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML='<option value="">—</option>';anos.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});sel.value=anoAtual;});
-  ['cmp-a-mes','cmp-b-mes'].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML='<option value="">— escolher —</option>';MESES_LABELS.forEach((m,i)=>{const o=document.createElement('option');o.value=String(i+1).padStart(2,'0');o.textContent=m;sel.appendChild(o);});});
-  const now=new Date();const mesAtual=String(now.getMonth()+1).padStart(2,'0');const mesAnt=String(now.getMonth()===0?12:now.getMonth()).padStart(2,'0');const anoAnt=now.getMonth()===0?String(now.getFullYear()-1):anoAtual;
-  document.getElementById('cmp-b-mes').value=mesAtual;document.getElementById('cmp-a-mes').value=mesAnt;document.getElementById('cmp-a-ano').value=anoAnt;
-  applyMesRapido('a');applyMesRapido('b');
+  ['cmp-a-mes','cmp-b-mes'].forEach(id=>{const sel=document.getElementById(id);sel.innerHTML='<option value="">— escolher —</option>';ML.forEach((m,i)=>{const o=document.createElement('option');o.value=String(i+1).padStart(2,'0');o.textContent=m;sel.appendChild(o);});});
+  const now=new Date();const mA=String(now.getMonth()+1).padStart(2,'0');const mB=String(now.getMonth()===0?12:now.getMonth()).padStart(2,'0');const aB=now.getMonth()===0?String(now.getFullYear()-1):anoAtual;
+  document.getElementById('cmp-b-mes').value=mA;document.getElementById('cmp-a-mes').value=mB;document.getElementById('cmp-a-ano').value=aB;applyMesRapido('a');applyMesRapido('b');
 }
-function applyMesRapido(lado){
-  const mes=document.getElementById(`cmp-${lado}-mes`).value,ano=document.getElementById(`cmp-${lado}-ano`).value;
-  if(!mes||!ano)return;const ult=new Date(parseInt(ano),parseInt(mes),0).getDate();
-  document.getElementById(`cmp-${lado}-from`).value=`${ano}-${mes}-01`;
-  document.getElementById(`cmp-${lado}-to`).value=`${ano}-${mes}-${String(ult).padStart(2,'0')}`;
-}
+function applyMesRapido(lado){const mes=document.getElementById(`cmp-${lado}-mes`).value,ano=document.getElementById(`cmp-${lado}-ano`).value;if(!mes||!ano)return;const ult=new Date(parseInt(ano),parseInt(mes),0).getDate();document.getElementById(`cmp-${lado}-from`).value=`${ano}-${mes}-01`;document.getElementById(`cmp-${lado}-to`).value=`${ano}-${mes}-${String(ult).padStart(2,'0')}`;}
 function renderComparar(){
-  const aFrom=document.getElementById('cmp-a-from').value,aTo=document.getElementById('cmp-a-to').value;
-  const bFrom=document.getElementById('cmp-b-from').value,bTo=document.getElementById('cmp-b-to').value;
+  const aF=document.getElementById('cmp-a-from').value,aT=document.getElementById('cmp-a-to').value,bF=document.getElementById('cmp-b-from').value,bT=document.getElementById('cmp-b-to').value;
   const mat=document.getElementById('cmp-materia').value,tipo=document.getElementById('cmp-tipo').value;
-  if(!aFrom&&!aTo&&!bFrom&&!bTo){document.getElementById('cmp-result').innerHTML='<div class="empty"><div class="empty-icon">⚖️</div><div class="empty-title">Selecione os períodos</div></div>';return;}
-  const lA=aFrom||aTo?`${fmtD(aFrom)||'início'} → ${fmtD(aTo)||'hoje'}`:'Período A';
-  const lB=bFrom||bTo?`${fmtD(bFrom)||'início'} → ${fmtD(bTo)||'hoje'}`:'Período B';
-  let html='';
-  if(tipo==='resumo'||tipo==='erros')html+=buildCmpErros(aFrom,aTo,bFrom,bTo,mat,lA,lB);
-  if(tipo==='resumo'||tipo==='simulados')html+=buildCmpSims(aFrom,aTo,bFrom,bTo,lA,lB);
+  if(!aF&&!aT&&!bF&&!bT){document.getElementById('cmp-result').innerHTML='<div class="empty"><div class="empty-icon">⚖️</div><div class="empty-title">Selecione os períodos</div></div>';return;}
+  const lA=aF||aT?`${fmtD(aF)||'início'} → ${fmtD(aT)||'hoje'}`:'Período A';const lB=bF||bT?`${fmtD(bF)||'início'} → ${fmtD(bT)||'hoje'}`:'Período B';
+  let html='';if(tipo==='resumo'||tipo==='erros')html+=bCE(aF,aT,bF,bT,mat,lA,lB);if(tipo==='resumo'||tipo==='simulados')html+=bCS(aF,aT,bF,bT,lA,lB);
   document.getElementById('cmp-result').innerHTML=html||'<div class="empty"><div class="empty-sub">Sem dados</div></div>';
 }
-function buildCmpErros(aF,aT,bF,bT,mat,lA,lB){
-  let fA=filterDate(erros,aF,aT),fB=filterDate(erros,bF,bT);
-  if(mat){fA=fA.filter(e=>e.materia===mat);fB=fB.filter(e=>e.materia===mat);}
-  const cA={},cB={};fA.forEach(e=>{const k=e.materia+'|||'+e.assunto;cA[k]=(cA[k]||0)+1;});fB.forEach(e=>{const k=e.materia+'|||'+e.assunto;cB[k]=(cB[k]||0)+1;});
-  const allK=[...new Set([...Object.keys(cA),...Object.keys(cB)])].sort((a,b)=>(cB[b]||0)+(cA[b]||0)-(cA[a]||0)-(cB[a]||0));
-  const dd=fB.length-fA.length;
-  let out=`<div class="card" style="margin-bottom:16px">
-    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px">
-      <div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lA}</div><div style="font-size:36px;font-weight:800;color:var(--accent2)">${fA.length}</div><div style="font-size:12px;color:var(--text3)">erros</div></div>
-      <div style="text-align:center;font-size:13px;font-weight:700">${dd===0?'<span style="color:var(--text3)">= igual</span>':dd<0?`<span style="color:var(--success)">▼ ${Math.abs(dd)} menos</span>`:`<span style="color:var(--danger)">▲ ${dd} mais</span>`}</div>
-      <div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lB}</div><div style="font-size:36px;font-weight:800;color:var(--accent3)">${fB.length}</div><div style="font-size:12px;color:var(--text3)">erros</div></div>
-    </div>`;
-  if(allK.length)out+=`<div class="card-title">Erros por Assunto</div><div class="tbl-wrap"><table><thead><tr><th style="color:var(--accent2)">${lA}</th><th>Assunto</th><th>Diferença</th><th style="color:var(--accent3)">${lB}</th></tr></thead><tbody>${allK.map(k=>{const[,ass]=k.split('|||');const a=cA[k]||0,b=cB[k]||0,d=b-a;return`<tr><td style="font-family:var(--mono);font-weight:700;font-size:18px;color:var(--accent2)">${a||'—'}</td><td style="font-weight:600">${ass}</td><td><span class="comp-diff ${d<0?'diff-up':d>0?'diff-dn':'diff-eq'}">${d===0?'= igual':d<0?`▼ ${Math.abs(d)} menos`:`▲ ${d} mais`}</span></td><td style="font-family:var(--mono);font-weight:700;font-size:18px;color:var(--accent3)">${b||'—'}</td></tr>`;}).join('')}</tbody></table></div>`;
-  else out+='<div class="empty"><div class="empty-sub">Sem erros nos períodos</div></div>';
-  return out+'</div>';
-}
-function buildCmpSims(aF,aT,bF,bT,lA,lB){
-  const sA=filterDate(simulados,aF,aT),sB=filterDate(simulados,bF,bT);
-  const mA=sA.length?sA.reduce((s,x)=>s+x.acertos/x.total,0)/sA.length:null;
-  const mB=sB.length?sB.reduce((s,x)=>s+x.acertos/x.total,0)/sB.length:null;
-  const dm=mA!=null&&mB!=null?mB-mA:null;
-  return`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div>
-    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:16px">
-      <div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lA}</div><div style="font-size:36px;font-weight:800;color:${mA==null?'var(--text3)':pctColor(mA)}">${mA==null?'—':(mA*100).toFixed(1)+'%'}</div><div style="font-size:12px;color:var(--text3)">${sA.length} simulado${sA.length!==1?'s':''}</div></div>
-      <div style="text-align:center;font-size:13px;font-weight:700">${dm==null?'<span style="color:var(--text3)">—</span>':dm>=0?`<span style="color:var(--success)">▲ +${(dm*100).toFixed(1)}%</span>`:`<span style="color:var(--danger)">▼ ${(dm*100).toFixed(1)}%</span>`}</div>
-      <div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lB}</div><div style="font-size:36px;font-weight:800;color:${mB==null?'var(--text3)':pctColor(mB)}">${mB==null?'—':(mB*100).toFixed(1)+'%'}</div><div style="font-size:12px;color:var(--text3)">${sB.length} simulado${sB.length!==1?'s':''}</div></div>
-    </div>
-  </div>`;
-}
-function printComparar(){
-  const res=document.getElementById('cmp-result').innerHTML;
-  if(!res||res.includes('empty')){alert('Faça uma comparação primeiro.');return;}
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comparação TJ-AM</title><style>body{font-family:'Inter',sans-serif;background:#fff;color:#000;padding:24px;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px 12px;text-align:left;}th{background:#f5f5f5;font-size:11px;text-transform:uppercase;letter-spacing:.8px;}.card{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}.card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:#666;margin-bottom:12px;}h1{font-size:20px;margin-bottom:4px;}p{font-size:12px;color:#666;margin-bottom:20px;}</style></head><body><h1>⚖️ TJ-AM — Comparação de Períodos</h1><p>Emitido em ${fmtD(today())}</p>${res}</body></html>`);
-  w.document.close();setTimeout(()=>w.print(),500);
-}
+function bCE(aF,aT,bF,bT,mat,lA,lB){let fA=fD(erros,aF,aT),fB=fD(erros,bF,bT);if(mat){fA=fA.filter(e=>e.materia===mat);fB=fB.filter(e=>e.materia===mat);}const cA={},cB={};fA.forEach(e=>{const k=e.materia+'|||'+e.assunto;cA[k]=(cA[k]||0)+1;});fB.forEach(e=>{const k=e.materia+'|||'+e.assunto;cB[k]=(cB[k]||0)+1;});const allK=[...new Set([...Object.keys(cA),...Object.keys(cB)])].sort((a,b)=>(cB[b]||0)+(cA[b]||0)-(cA[a]||0)-(cB[a]||0));const dd=fB.length-fA.length;let out=`<div class="card" style="margin-bottom:16px"><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:20px"><div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lA}</div><div style="font-size:36px;font-weight:800;color:var(--accent2)">${fA.length}</div><div style="font-size:12px;color:var(--text3)">erros</div></div><div style="text-align:center;font-size:13px;font-weight:700">${dd===0?'<span style="color:var(--text3)">= igual</span>':dd<0?`<span style="color:var(--success)">▼ ${Math.abs(dd)} menos</span>`:`<span style="color:var(--danger)">▲ ${dd} mais</span>`}</div><div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lB}</div><div style="font-size:36px;font-weight:800;color:var(--accent3)">${fB.length}</div><div style="font-size:12px;color:var(--text3)">erros</div></div></div>`;if(allK.length)out+=`<div class="card-title">Erros por Assunto</div><div class="tbl-wrap"><table><thead><tr><th style="color:var(--accent2)">${lA}</th><th>Assunto</th><th>Diferença</th><th style="color:var(--accent3)">${lB}</th></tr></thead><tbody>${allK.map(k=>{const[,ass]=k.split('|||');const a=cA[k]||0,b=cB[k]||0,d=b-a;return`<tr><td style="font-family:var(--mono);font-weight:700;font-size:18px;color:var(--accent2)">${a||'—'}</td><td style="font-weight:600">${ass}</td><td><span class="comp-diff ${d<0?'diff-up':d>0?'diff-dn':'diff-eq'}">${d===0?'= igual':d<0?`▼ ${Math.abs(d)} menos`:`▲ ${d} mais`}</span></td><td style="font-family:var(--mono);font-weight:700;font-size:18px;color:var(--accent3)">${b||'—'}</td></tr>`;}).join('')}</tbody></table></div>`;else out+='<div class="empty"><div class="empty-sub">Sem erros nos períodos</div></div>';return out+'</div>';}
+function bCS(aF,aT,bF,bT,lA,lB){const sA=fD(simulados,aF,aT),sB=fD(simulados,bF,bT);const mA=sA.length?sA.reduce((s,x)=>s+x.acertos/x.total,0)/sA.length:null;const mB=sB.length?sB.reduce((s,x)=>s+x.acertos/x.total,0)/sB.length:null;const dm=mA!=null&&mB!=null?mB-mA:null;return`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center"><div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lA}</div><div style="font-size:36px;font-weight:800;color:${mA==null?'var(--text3)':pC(mA)}">${mA==null?'—':(mA*100).toFixed(1)+'%'}</div><div style="font-size:12px;color:var(--text3)">${sA.length} sim.</div></div><div style="text-align:center;font-size:13px;font-weight:700">${dm==null?'<span style="color:var(--text3)">—</span>':dm>=0?`<span style="color:var(--success)">▲ +${(dm*100).toFixed(1)}%</span>`:`<span style="color:var(--danger)">▼ ${(dm*100).toFixed(1)}%</span>`}</div><div style="text-align:center"><div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${lB}</div><div style="font-size:36px;font-weight:800;color:${mB==null?'var(--text3)':pC(mB)}">${mB==null?'—':(mB*100).toFixed(1)+'%'}</div><div style="font-size:12px;color:var(--text3)">${sB.length} sim.</div></div></div></div>`;}
+function printComparar(){const res=document.getElementById('cmp-result').innerHTML;if(!res||res.includes('empty')){alert('Faça uma comparação primeiro.');return;}const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comparação TJ-AM</title><style>body{font-family:sans-serif;padding:24px;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px 12px;}.card{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}</style></head><body><h1>⚖️ TJ-AM — Comparação</h1><p>${fmtD(today())}</p>${res}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
 
-// ═══════════════ GRÁFICOS ═══════════════
+// ═══ GRÁFICOS ═══
 function renderGraficos(){
-  const from=document.getElementById('graf-from').value,to=document.getElementById('graf-to').value;
-  const fE=filterDate(erros,from,to),fS=filterDate(simulados,from,to);
-
-  // 1. Rank matérias
-  const byMat={};fE.forEach(e=>{byMat[e.materia]=(byMat[e.materia]||0)+1;});
-  const matSorted=Object.entries(byMat).sort((a,b)=>b[1]-a[1]);const maxM=matSorted[0]?.[1]||1;
-  const colors=['var(--accent3)','var(--accent)','var(--accent2)','var(--success)','var(--warning)'];
-  document.getElementById('g-rank-materias').innerHTML=matSorted.length?`<div class="bar-chart">${matSorted.map(([m,v],i)=>`<div class="bar-row"><div class="bar-name">${m.length>22?m.slice(0,20)+'…':m}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxM*100).toFixed(0)}%;background:${colors[i%colors.length]};color:#0c0e13">${v}</div></div><div class="bar-count">${v}</div></div>`).join('')}</div>`:'<div class="empty"><div class="empty-sub">Sem erros no período</div></div>';
-
-  // 2. PDF progresso
-  const pdfMats=Object.keys(PDF_DEF);
-  document.getElementById('g-pdf-prog').innerHTML=`<div class="bar-chart">${pdfMats.map(mat=>{const d=pdfs[mat]||{total:1,feitas:0};const p=d.total>0?d.feitas/d.total:0;const pW=Math.min(p*100,100).toFixed(0);const st=d.status||'pendente';const stColor={concluido:'var(--success)',revisao:'var(--accent2)',caderno:'var(--accent)',pendente:'var(--accent3)'}[st];return`<div class="bar-row"><div class="bar-name">${mat.length>22?mat.slice(0,20)+'…':mat}</div><div class="bar-track"><div class="bar-fill" style="width:${pW}%;background:${stColor};color:#0c0e13">${pW}%</div></div></div>`;}).join('')}`;
-
-  // 3. Simulados linha do tempo com pontos SVG
-  const srtS=[...simulados].sort((a,b)=>a.data.localeCompare(b.data));
-  const gSimDiv=document.getElementById('g-sims-linha');
-  if(srtS.length<2){gSimDiv.innerHTML='<div class="empty"><div class="empty-sub">Adicione pelo menos 2 simulados</div></div>';}
-  else{
-    const W=600,H=160,pad=40;const vals=srtS.map(s=>s.acertos/s.total);const minV=Math.min(...vals);const maxV=Math.max(...vals);const range=maxV-minV||0.1;
-    const xs=srtS.map((_,i)=>pad+(i/(srtS.length-1))*(W-pad*2));
-    const ys=vals.map(v=>H-pad-(v-minV)/range*(H-pad*2));
-    const polyline=xs.map((x,i)=>`${x},${ys[i]}`).join(' ');
-    const polyFill=`${xs[0]},${H-pad} `+xs.map((x,i)=>`${x},${ys[i]}`).join(' ')+` ${xs[xs.length-1]},${H-pad}`;
-    const gridLines=[0.5,0.6,0.7,0.8].map(v=>{const y=H-pad-(v-minV)/range*(H-pad*2);if(y<pad||y>H-pad)return'';return`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#2e3548" stroke-width="1"/><text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="10" fill="#3d4557">${(v*100).toFixed(0)}%</text>`;}).join('');
-    const dots=srtS.map((s,i)=>{const p=vals[i];const c=p>=0.75?'#34d399':p>=0.6?'#c8f135':p>=0.4?'#f59e0b':'#f06464';return`<circle cx="${xs[i]}" cy="${ys[i]}" r="5" fill="${c}" stroke="#0c0e13" stroke-width="2"/><title>${s.nome}: ${(p*100).toFixed(1)}%</title>`;}).join('');
-    const labels=srtS.map((s,i)=>`<text x="${xs[i]}" y="${H-pad+16}" text-anchor="middle" font-size="10" fill="#7c879c">${fmtD(s.data).slice(0,5)}</text>`).join('');
-    gSimDiv.innerHTML=`<svg viewBox="0 0 ${W} ${H}" class="chart-svg">${gridLines}<polyline points="${polyFill}" fill="rgba(200,241,53,.08)" stroke="none"/><polyline points="${polyline}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}${labels}</svg>`;
-  }
-
-  // 4. Erros por mês barras
-  const byMes={};erros.forEach(e=>{if(!e.data)return;const[y,m]=e.data.split('-');const k=`${y}-${m}`;byMes[k]=(byMes[k]||0)+1;});
-  const mesKeys=Object.keys(byMes).sort();const maxMes=Math.max(...Object.values(byMes),1);
-  const gMesDiv=document.getElementById('g-erros-mes');
-  if(!mesKeys.length){gMesDiv.innerHTML='<div class="empty"><div class="empty-sub">Sem dados</div></div>';}
-  else{
-    const W2=600,H2=120,padX=40,padY=20;const barW=Math.min(40,(W2-padX*2)/mesKeys.length-4);
-    const barsH=mesKeys.map((k,i)=>{const v=byMes[k];const bH=(v/maxMes)*(H2-padY*2);const x=padX+i*((W2-padX*2)/mesKeys.length)+(((W2-padX*2)/mesKeys.length)-barW)/2;const y=H2-padY-bH;const [yr,mo]=k.split('-');const lbl=MESES_LABELS[parseInt(mo)-1]+'/'+yr.slice(2);const clr=v>4?'var(--accent3)':v>2?'var(--warning)':'var(--accent2)';return`<rect x="${x}" y="${y}" width="${barW}" height="${bH}" fill="${clr}" rx="3"/><text x="${x+barW/2}" y="${y-4}" text-anchor="middle" font-size="11" font-weight="700" fill="${clr}">${v}</text><text x="${x+barW/2}" y="${H2-padY+14}" text-anchor="middle" font-size="9" fill="#7c879c">${lbl}</text>`;}).join('');
-    gMesDiv.innerHTML=`<svg viewBox="0 0 ${W2} ${H2}" class="chart-svg"><line x1="${padX}" y1="${padY}" x2="${padX}" y2="${H2-padY}" stroke="#2e3548" stroke-width="1"/><line x1="${padX}" y1="${H2-padY}" x2="${W2-padX}" y2="${H2-padY}" stroke="#2e3548" stroke-width="1"/>${barsH}</svg>`;
-  }
-
-  // 5. Previsão PDFs
+  const from=document.getElementById('graf-from').value,to=document.getElementById('graf-to').value;const fE=fD(erros,from,to);
+  const bM={};fE.forEach(e=>{bM[e.materia]=(bM[e.materia]||0)+1;});const mS=Object.entries(bM).sort((a,b)=>b[1]-a[1]);const mxM=mS[0]?.[1]||1;const cl=['var(--accent3)','var(--accent)','var(--accent2)','var(--success)','var(--warning)'];
+  document.getElementById('g-rank-materias').innerHTML=mS.length?`<div class="bar-chart">${mS.map(([m,v],i)=>`<div class="bar-row"><div class="bar-name">${m.length>22?m.slice(0,20)+'…':m}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/mxM*100).toFixed(0)}%;background:${cl[i%cl.length]};color:#0c0e13">${v}</div></div><div class="bar-count">${v}</div></div>`).join('')}</div>`:'<div class="empty"><div class="empty-sub">Sem erros</div></div>';
+  document.getElementById('g-pdf-prog').innerHTML=`<div class="bar-chart">${Object.keys(PDF_DEF).map(mat=>{const d=pdfs[mat]||{total:1,feitas:0,status:'pendente'};const p=d.total>0?d.feitas/d.total:0;const pW=Math.min(p*100,100).toFixed(0);const sC={concluido:'var(--success)',revisao:'var(--accent2)',caderno:'var(--accent)',pendente:'var(--accent3)'}[d.status||'pendente'];return`<div class="bar-row"><div class="bar-name">${mat.length>22?mat.slice(0,20)+'…':mat}</div><div class="bar-track"><div class="bar-fill" style="width:${pW}%;background:${sC};color:#0c0e13">${pW}%</div></div></div>`;}).join('')}`;
+  const sS=[...simulados].sort((a,b)=>a.data.localeCompare(b.data));const gS=document.getElementById('g-sims-linha');
+  if(sS.length<2){gS.innerHTML='<div class="empty"><div class="empty-sub">Adicione pelo menos 2 simulados</div></div>';}
+  else{const W=600,H=160,pad=40;const vals=sS.map(s=>s.acertos/s.total);const minV=Math.min(...vals);const mxV=Math.max(...vals);const range=mxV-minV||0.1;const xs=sS.map((_,i)=>pad+(i/(sS.length-1))*(W-pad*2));const ys=vals.map(v=>H-pad-(v-minV)/range*(H-pad*2));const pl=xs.map((x,i)=>`${x},${ys[i]}`).join(' ');const pf=`${xs[0]},${H-pad} `+xs.map((x,i)=>`${x},${ys[i]}`).join(' ')+` ${xs[xs.length-1]},${H-pad}`;const gl=[0.5,0.6,0.7,0.8].map(v=>{const y=H-pad-(v-minV)/range*(H-pad*2);if(y<pad||y>H-pad)return'';return`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#2e3548" stroke-width="1"/><text x="${pad-4}" y="${y+4}" text-anchor="end" font-size="10" fill="#3d4557">${(v*100).toFixed(0)}%</text>`;}).join('');const dots=sS.map((s,i)=>{const p=vals[i];const c=p>=0.75?'#34d399':p>=0.6?'#c8f135':p>=0.4?'#f59e0b':'#f06464';return`<circle cx="${xs[i]}" cy="${ys[i]}" r="5" fill="${c}" stroke="#0c0e13" stroke-width="2"/><title>${s.nome}: ${(p*100).toFixed(1)}%</title>`;}).join('');const lbls=sS.map((s,i)=>`<text x="${xs[i]}" y="${H-pad+16}" text-anchor="middle" font-size="10" fill="#7c879c">${fmtD(s.data).slice(0,5)}</text>`).join('');gS.innerHTML=`<svg viewBox="0 0 ${W} ${H}" class="chart-svg">${gl}<polyline points="${pf}" fill="rgba(200,241,53,.08)" stroke="none"/><polyline points="${pl}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}${lbls}</svg>`;}
+  const bMs={};erros.forEach(e=>{if(!e.data)return;const[y,m]=e.data.split('-');const k=`${y}-${m}`;bMs[k]=(bMs[k]||0)+1;});const mK=Object.keys(bMs).sort();const mxMs=Math.max(...Object.values(bMs),1);const gM=document.getElementById('g-erros-mes');
+  if(!mK.length){gM.innerHTML='<div class="empty"><div class="empty-sub">Sem dados</div></div>';}
+  else{const W2=600,H2=120,pX=40,pY=20;const bW=Math.min(40,(W2-pX*2)/mK.length-4);const bH=mK.map((k,i)=>{const v=bMs[k];const h=(v/mxMs)*(H2-pY*2);const x=pX+i*((W2-pX*2)/mK.length)+(((W2-pX*2)/mK.length)-bW)/2;const y=H2-pY-h;const[yr,mo]=k.split('-');const lbl=ML[parseInt(mo)-1]+'/'+yr.slice(2);const clr=v>4?'var(--accent3)':v>2?'var(--warning)':'var(--accent2)';return`<rect x="${x}" y="${y}" width="${bW}" height="${h}" fill="${clr}" rx="3"/><text x="${x+bW/2}" y="${y-4}" text-anchor="middle" font-size="11" font-weight="700" fill="${clr}">${v}</text><text x="${x+bW/2}" y="${H2-pY+14}" text-anchor="middle" font-size="9" fill="#7c879c">${lbl}</text>`;}).join('');gM.innerHTML=`<svg viewBox="0 0 ${W2} ${H2}" class="chart-svg"><line x1="${pX}" y1="${pY}" x2="${pX}" y2="${H2-pY}" stroke="#2e3548"/><line x1="${pX}" y1="${H2-pY}" x2="${W2-pX}" y2="${H2-pY}" stroke="#2e3548"/>${bH}</svg>`;}
   renderPrevisao();
 }
-
 function renderPrevisao(){
-  const mats=Object.keys(PDF_DEF);
-  // Calcular ritmo: total de aulas feitas com data mais recente
-  const acessos=erros.length>0?[...erros].sort((a,b)=>b.data.localeCompare(a.data)):[];
-  const primeiraData=acessos.length>0?new Date(acessos[acessos.length-1].data+'T12:00'):new Date();
-  const ultimaData=acessos.length>0?new Date(acessos[0].data+'T12:00'):new Date();
-  const diasEstudando=Math.max(1,Math.round((ultimaData-primeiraData)/(1000*60*60*24))+1);
-
-  // Total de aulas feitas
-  const totalFeitas=Object.values(pdfs).reduce((s,d)=>s+(d.feitas||0),0);
-  const totalAulas=Object.values(pdfs).reduce((s,d)=>s+(d.total||0),0);
-  const faltamTotal=totalAulas-totalFeitas;
-  const ritmo=diasEstudando>0?totalFeitas/diasEstudando:0; // aulas por dia
-  const diasRestantes=ritmo>0?Math.ceil(faltamTotal/ritmo):null;
-  const dataPrevista=diasRestantes!=null?new Date(Date.now()+diasRestantes*86400000):null;
-
-  const previsaoDiv=document.getElementById('g-previsao');
-  const pagesMedia=150,pagesTeoria=70,pagesQuestoes=80;
-
-  let html=`
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px">
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Aulas Feitas</div>
-      <div style="font-size:28px;font-weight:800;color:var(--accent2)">${totalFeitas}</div>
-      <div style="font-size:11px;color:var(--text3)">de ${totalAulas} total</div>
-    </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Faltam</div>
-      <div style="font-size:28px;font-weight:800;color:var(--accent3)">${faltamTotal}</div>
-      <div style="font-size:11px;color:var(--text3)">aulas (≈${faltamTotal*pagesTeoria} pgs teoria)</div>
-    </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ritmo Estimado</div>
-      <div style="font-size:28px;font-weight:800;color:var(--accent)">${ritmo>0?ritmo.toFixed(1):'—'}</div>
-      <div style="font-size:11px;color:var(--text3)">aulas por dia estudado</div>
-    </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Previsão Final</div>
-      <div style="font-size:${dataPrevista?'16':'28'}px;font-weight:800;color:${dataPrevista?'var(--success)':'var(--text3)'}">${dataPrevista?dataPrevista.toLocaleDateString('pt-BR'):'—'}</div>
-      <div style="font-size:11px;color:var(--text3)">${diasRestantes!=null?`em ≈ ${diasRestantes} dias`:'Registre erros para calcular'}</div>
-    </div>
-  </div>
-  <div style="font-size:11px;color:var(--text3);margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:8px;">
-    ℹ️ Estimativa baseada em: ${pagesTeoria} págs/teoria + ${pagesQuestoes} págs/questões por aula (≈${pagesMedia} págs total). Ritmo calculado com base nos ${diasEstudando} dias de atividade registrada.
-  </div>
-  <div class="tbl-wrap"><table><thead><tr><th>Matéria</th><th>Total</th><th>Feitas</th><th>Faltam</th><th>Progresso</th><th>Status</th><th>Previsão (%)</th></tr></thead><tbody>
-  ${mats.map(mat=>{
-    const d=pdfs[mat]||{total:0,feitas:0,status:'pendente'};
-    const f=d.total-d.feitas;const p=d.total>0?d.feitas/d.total:0;
-    const st=d.status||'pendente';const stColor={concluido:'var(--success)',revisao:'var(--accent2)',caderno:'var(--accent)',pendente:'var(--accent3)'}[st];
-    const diasMat=ritmo>0&&f>0?Math.ceil(f/ritmo):null;const dtMat=diasMat!=null?new Date(Date.now()+diasMat*86400000).toLocaleDateString('pt-BR'):null;
-    return`<tr>
-      <td style="font-weight:600">${mat}</td>
-      <td style="font-family:var(--mono)">${d.total}</td>
-      <td style="font-family:var(--mono)">${d.feitas}</td>
-      <td style="font-family:var(--mono);color:${f>0?'var(--accent3)':'var(--success)'}">${f}</td>
-      <td style="min-width:140px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="prog" style="width:80px"><div class="prog-fill" style="background:${stColor};width:${Math.min(p*100,100).toFixed(0)}%"></div></div>
-          <span style="font-size:12px;font-family:var(--mono)">${(p*100).toFixed(0)}%</span>
-        </div>
-      </td>
-      <td><span class="badge ${STATUS_CSS[st]}">${STATUS_LABELS[st]}</span></td>
-      <td style="font-size:12px;font-family:var(--mono);color:${dtMat?'var(--text2)':'var(--success)'}">${st==='concluido'?'✅ Concluído':dtMat?`≈ ${dtMat}`:'—'}</td>
-    </tr>`;
-  }).join('')}
-  </tbody></table></div>`;
-  previsaoDiv.innerHTML=html;
+  const mats=Object.keys(PDF_DEF);const ac=erros.length>0?[...erros].sort((a,b)=>a.data.localeCompare(b.data)):[];const pD=ac.length>0?new Date(ac[0].data+'T12:00'):new Date();const uD=ac.length>0?new Date(ac[ac.length-1].data+'T12:00'):new Date();const dias=Math.max(1,Math.round((uD-pD)/(1000*60*60*24))+1);const tF=Object.values(pdfs).reduce((s,d)=>s+(d.feitas||0),0);const tA=Object.values(pdfs).reduce((s,d)=>s+(d.total||0),0);const fT=tA-tF;const rt=dias>0?tF/dias:0;const dR=rt>0?Math.ceil(fT/rt):null;const dP=dR!=null?new Date(Date.now()+dR*86400000):null;const pT=70;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px"><div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Aulas Feitas</div><div style="font-size:28px;font-weight:800;color:var(--accent2)">${tF}</div><div style="font-size:11px;color:var(--text3)">de ${tA} total</div></div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Faltam</div><div style="font-size:28px;font-weight:800;color:var(--accent3)">${fT}</div><div style="font-size:11px;color:var(--text3)">≈${fT*pT} pgs teoria</div></div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ritmo</div><div style="font-size:28px;font-weight:800;color:var(--accent)">${rt>0?rt.toFixed(1):'—'}</div><div style="font-size:11px;color:var(--text3)">aulas/dia estudado</div></div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Previsão Final</div><div style="font-size:${dP?'16':'28'}px;font-weight:800;color:${dP?'var(--success)':'var(--text3)'}">${dP?dP.toLocaleDateString('pt-BR'):'—'}</div><div style="font-size:11px;color:var(--text3)">${dR!=null?`em ≈ ${dR} dias`:'Registre atividades'}</div></div></div><div class="tbl-wrap"><table><thead><tr><th>Matéria</th><th>Total</th><th>Feitas</th><th>Faltam</th><th>Progresso</th><th>Status</th><th>Previsão</th></tr></thead><tbody>${mats.map(mat=>{const d=pdfs[mat]||{total:0,feitas:0,status:'pendente'};const f=d.total-d.feitas;const p=d.total>0?d.feitas/d.total:0;const st=d.status||'pendente';const sC={concluido:'var(--success)',revisao:'var(--accent2)',caderno:'var(--accent)',pendente:'var(--accent3)'}[st];const dM=rt>0&&f>0?Math.ceil(f/rt):null;const dtM=dM!=null?new Date(Date.now()+dM*86400000).toLocaleDateString('pt-BR'):null;return`<tr><td style="font-weight:600">${mat}</td><td>${d.total}</td><td>${d.feitas}</td><td style="color:${f>0?'var(--accent3)':'var(--success)'}">${f}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="prog" style="width:80px"><div class="prog-fill" style="background:${sC};width:${Math.min(p*100,100).toFixed(0)}%"></div></div><span style="font-size:12px">${(p*100).toFixed(0)}%</span></div></td><td><span class="badge ${SC[st]}">${SL[st]}</span></td><td style="font-size:12px;color:${dtM?'var(--text2)':'var(--success)'}">${st==='concluido'?'✅ Concluído':dtM?`≈ ${dtM}`:'—'}</td></tr>`;}).join('')}</tbody></table></div>`;
+  document.getElementById('g-previsao').innerHTML=html;
 }
 
-// ═══════════════ PDFs ═══════════════
+// ═══ PDFs ═══
 function renderPDFs(){
   const mats=Object.keys(PDF_DEF);let tA=0,tB=0,tF=0;
-  document.getElementById('pdfs-tbody').innerHTML=mats.map(mat=>{
-    const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};
-    const eM=erros.filter(e=>e.materia===mat).length;
-    const falta=d.total-d.feitas;const pB=d.total>0?d.feitas/d.total:0;
-    const pA=d.feitas_q>0?(d.feitas_q-eM)/d.feitas_q:null;const st=d.status||'pendente';
-    tA+=d.total;tB+=d.feitas;tF+=d.feitas_q;
-    return`<tr><td style="font-weight:600">${mat}</td><td style="font-family:var(--mono)">${d.total}</td><td style="font-family:var(--mono)">${d.feitas}</td><td style="font-family:var(--mono)">${falta}</td>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="prog" style="width:70px"><div class="prog-fill ${pB>=1?'prog-green':'prog-accent'}" style="width:${Math.min(pB*100,100).toFixed(0)}%"></div></div><span style="font-family:var(--mono);font-size:12px">${(pB*100).toFixed(0)}%</span></div></td>
-      <td><span class="badge ${STATUS_CSS[st]}">${STATUS_LABELS[st]}</span></td>
-      <td style="font-family:var(--mono)">${d.feitas_q}</td><td style="font-family:var(--mono);color:var(--accent3)">${eM}</td>
-      <td style="font-family:var(--mono);font-weight:700;color:${pA==null?'var(--text3)':pctColor(pA)}">${pA==null?'—':pctStr(pA)}</td></tr>`;
-  }).join('');
-  const totE=erros.length;const totP=tF>0?(tF-totE)/tF:null;
-  document.getElementById('pdfs-tfoot').innerHTML=`<td>TOTAL</td><td style="font-family:var(--mono)">${tA}</td><td style="font-family:var(--mono)">${tB}</td><td style="font-family:var(--mono)">${tA-tB}</td><td style="font-family:var(--mono)">${tA>0?(tB/tA*100).toFixed(0)+'%':'—'}</td><td></td><td style="font-family:var(--mono)">${tF}</td><td style="font-family:var(--mono);color:var(--accent3)">${totE}</td><td style="font-family:var(--mono);font-weight:700;color:${totP==null?'var(--text3)':pctColor(totP)}">${totP==null?'—':pctStr(totP)}</td>`;
+  document.getElementById('pdfs-tbody').innerHTML=mats.map(mat=>{const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};const eM=erros.filter(e=>e.materia===mat).length;const falta=d.total-d.feitas;const pB=d.total>0?d.feitas/d.total:0;const pA=d.feitas_q>0?(d.feitas_q-eM)/d.feitas_q:null;const st=d.status||'pendente';tA+=d.total;tB+=d.feitas;tF+=d.feitas_q;return`<tr><td style="font-weight:600">${mat}</td><td>${d.total}</td><td>${d.feitas}</td><td>${falta}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="prog" style="width:70px"><div class="prog-fill ${pB>=1?'prog-green':'prog-accent'}" style="width:${Math.min(pB*100,100).toFixed(0)}%"></div></div><span style="font-size:12px">${(pB*100).toFixed(0)}%</span></div></td><td><span class="badge ${SC[st]}">${SL[st]}</span></td><td>${d.feitas_q}</td><td style="color:var(--accent3)">${eM}</td><td style="font-weight:700;color:${pA==null?'var(--text3)':pC(pA)}">${pA==null?'—':pS(pA)}</td></tr>`;}).join('');
+  const totE=erros.length;const totP=tF>0?(tF-totE)/tF:null;document.getElementById('pdfs-tfoot').innerHTML=`<td>TOTAL</td><td>${tA}</td><td>${tB}</td><td>${tA-tB}</td><td>${tA>0?(tB/tA*100).toFixed(0)+'%':'—'}</td><td></td><td>${tF}</td><td style="color:var(--accent3)">${totE}</td><td style="font-weight:700;color:${totP==null?'var(--text3)':pC(totP)}">${totP==null?'—':pS(totP)}</td>`;
 }
-function renderPDFEdit(){
-  document.getElementById('pdf-edit-body').innerHTML=Object.keys(PDF_DEF).map(mat=>{
-    const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};const k=mat.replace(/[\s\/]/g,'_');
-    return`<tr><td style="font-weight:600;font-size:12px">${mat}</td>
-      <td><input type="number" id="pe-t-${k}" value="${d.total}" min="0" style="width:65px"></td>
-      <td><input type="number" id="pe-f-${k}" value="${d.feitas}" min="0" style="width:65px"></td>
-      <td><input type="number" id="pe-q-${k}" value="${d.feitas_q}" min="0" style="width:65px"></td>
-      <td><select id="pe-s-${k}" style="min-width:160px"><option value="pendente" ${d.status==='pendente'?'selected':''}>⏳ Pendente</option><option value="revisao" ${d.status==='revisao'?'selected':''}>🔄 Em Revisão</option><option value="concluido" ${d.status==='concluido'?'selected':''}>✅ Concluído</option><option value="caderno" ${d.status==='caderno'?'selected':''}>📓 Caderno TEC</option></select></td></tr>`;
-  }).join('');
-}
-function salvarPDFs(){
-  Object.keys(PDF_DEF).forEach(mat=>{const k=mat.replace(/[\s\/]/g,'_');pdfs[mat]={total:parseInt(document.getElementById('pe-t-'+k)?.value)||0,feitas:parseInt(document.getElementById('pe-f-'+k)?.value)||0,feitas_q:parseInt(document.getElementById('pe-q-'+k)?.value)||0,status:document.getElementById('pe-s-'+k)?.value||'pendente'};pdfs[mat].feitas=Math.min(pdfs[mat].feitas,pdfs[mat].total);});
-  sv('tjam4_pdfs',pdfs);closeModal('modal-pdf');toast('✓ PDFs salvos!');renderPDFs();
-}
+function renderPDFEdit(){document.getElementById('pdf-edit-body').innerHTML=Object.keys(PDF_DEF).map(mat=>{const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};const k=mat.replace(/[\s\/]/g,'_');return`<tr><td style="font-weight:600;font-size:12px">${mat}</td><td><input type="number" id="pe-t-${k}" value="${d.total}" min="0" style="width:65px"></td><td><input type="number" id="pe-f-${k}" value="${d.feitas}" min="0" style="width:65px"></td><td><input type="number" id="pe-q-${k}" value="${d.feitas_q}" min="0" style="width:65px"></td><td><select id="pe-s-${k}" style="min-width:160px"><option value="pendente" ${d.status==='pendente'?'selected':''}>⏳ Pendente</option><option value="revisao" ${d.status==='revisao'?'selected':''}>🔄 Em Revisão</option><option value="concluido" ${d.status==='concluido'?'selected':''}>✅ Concluído</option><option value="caderno" ${d.status==='caderno'?'selected':''}>📓 Caderno TEC</option></select></td></tr>`;}).join('');}
+async function salvarPDFs(){setSS('sync');const rows=[];Object.keys(PDF_DEF).forEach(mat=>{const k=mat.replace(/[\s\/]/g,'_');const t=parseInt(document.getElementById('pe-t-'+k)?.value)||0;const f=Math.min(parseInt(document.getElementById('pe-f-'+k)?.value)||0,t);const q=parseInt(document.getElementById('pe-q-'+k)?.value)||0;const s=document.getElementById('pe-s-'+k)?.value||'pendente';pdfs[mat]={total:t,feitas:f,feitas_q:q,status:s};rows.push({materia:mat,total:t,feitas:f,feitas_q:q,status:s});});await sbUps('pdfs',rows);closeModal('modal-pdf');setSS('ok');toast('✓ PDFs salvos!');renderPDFs();}
 
-// ═══════════════ RELATÓRIO ═══════════════
+// ═══ RELATÓRIO ═══
 function renderRelatorio(){
   const from=document.getElementById('rel-from').value,to=document.getElementById('rel-to').value,tipo=document.getElementById('rel-tipo').value;
-  const fE=filterDate(erros,from,to),fS=filterDate(simulados,from,to);
-  const periodo=from||to?`${from?fmtD(from):'início'} → ${to?fmtD(to):'hoje'}`:'Todo o período';
-  const totalQ=fS.reduce((s,x)=>s+x.total,0),totalAc=fS.reduce((s,x)=>s+x.acertos,0),pAcGeral=totalQ>0?totalAc/totalQ:null;
-  const cnt={};fE.forEach(e=>{const k=e.materia+'|||'+e.assunto;cnt[k]=(cnt[k]||0)+1;});const sortedA=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  const fE=fD(erros,from,to),fS=fD(simulados,from,to);const periodo=from||to?`${from?fmtD(from):'início'} → ${to?fmtD(to):'hoje'}`:'Todo o período';
+  const tQ=fS.reduce((s,x)=>s+x.total,0),tAc=fS.reduce((s,x)=>s+x.acertos,0),pG=tQ>0?tAc/tQ:null;
+  const cnt={};fE.forEach(e=>{const k=e.materia+'|||'+e.assunto;cnt[k]=(cnt[k]||0)+1;});const sA=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
   let html=`<div class="report-header"><div class="report-title-big">⚖️ TJ-AM — Assistente Judiciário</div><div class="report-sub">Relatório · ${periodo} · Emitido em ${fmtD(today())}</div></div>`;
-  if(tipo==='geral'||tipo==='erros'){
-    html+=`<div style="margin-bottom:16px"><div class="kpi-grid"><div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões</div><div class="kpi-value" style="color:var(--accent2)">${totalQ}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Acertos</div><div class="kpi-value" style="color:var(--success)">${totalAc}</div></div><div class="kpi"><div class="kpi-accent" style="background:${pAcGeral==null?'var(--text3)':pctColor(pAcGeral)}"></div><div class="kpi-label">Taxa Acerto</div><div class="kpi-value">${pctKpi(pAcGeral,pctColor(pAcGeral))}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">Erros Diário</div><div class="kpi-value" style="color:var(--warning)">${fE.length}</div></div></div></div>`;
-  }
-  if((tipo==='geral'||tipo==='ranking')&&sortedA.length){
-    const total=sortedA.reduce((s,[,v])=>s+v,0);
-    html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🏆 Ranking</div><div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th><th>Assunto</th><th>Erros</th><th>%</th></tr></thead><tbody>${sortedA.map(([k,v],i)=>{const[m,a]=k.split('|||');return`<tr><td><span class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span></td><td>${m}</td><td style="font-weight:600">${a}</td><td style="font-weight:700;color:var(--accent3);font-family:var(--mono)">${v}</td><td style="font-family:var(--mono)">${total>0?(v/total*100).toFixed(1)+'%':'—'}</td></tr>`;}).join('')}</tbody></table></div></div>`;
-  }
-  if((tipo==='geral'||tipo==='simulados')&&fS.length){
-    html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Simulado</th><th>Banca</th><th>Acertos</th><th>Total</th><th>%</th></tr></thead><tbody>${[...fS].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const p=s.acertos/s.total;return`<tr><td style="font-family:var(--mono)">${fmtD(s.data)}</td><td style="font-weight:600">${s.nome}</td><td>${s.banca||'—'}</td><td style="font-family:var(--mono)">${s.acertos}</td><td style="font-family:var(--mono)">${s.total}</td><td style="font-weight:700;color:${pctColor(p)};font-family:var(--mono)">${pctStr(p)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
-  }
-  if((tipo==='geral'||tipo==='erros')&&fE.length){
-    html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">📝 Erros</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Matéria</th><th>Assunto</th><th>Questão</th><th>Material</th><th>Motivo</th></tr></thead><tbody>${[...fE].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`<tr><td style="font-family:var(--mono)">${fmtD(e.data)}</td><td>${e.materia}</td><td style="font-weight:600">${e.assunto}</td><td style="font-family:var(--mono)">${e.questao||'—'}</td><td>${e.material||'—'}</td><td style="color:var(--text2);font-style:italic">${e.motivo||'—'}</td></tr>`).join('')}</tbody></table></div></div>`;
-  }
-  if(tipo==='comparacao'){
-    // Inclui a comparação atual
-    const cmpContent=document.getElementById('cmp-result')?.innerHTML;
-    html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">⚖️ Comparação de Períodos</div>${cmpContent&&!cmpContent.includes('empty')?cmpContent:'<div style="padding:20px;color:#666;text-align:center">Acesse a aba Comparar, faça uma comparação e volte aqui.</div>'}</div>`;
-  }
+  if(tipo==='geral'||tipo==='erros')html+=`<div style="margin-bottom:16px"><div class="kpi-grid"><div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões</div><div class="kpi-value" style="color:var(--accent2)">${tQ}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Acertos</div><div class="kpi-value" style="color:var(--success)">${tAc}</div></div><div class="kpi"><div class="kpi-accent" style="background:${pG==null?'var(--text3)':pC(pG)}"></div><div class="kpi-label">Taxa</div><div class="kpi-value">${pK(pG,pC(pG))}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">Erros Diário</div><div class="kpi-value" style="color:var(--warning)">${fE.length}</div></div></div></div>`;
+  if((tipo==='geral'||tipo==='ranking')&&sA.length){const tot=sA.reduce((s,[,v])=>s+v,0);html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🏆 Ranking</div><div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th><th>Assunto</th><th>Erros</th><th>%</th></tr></thead><tbody>${sA.map(([k,v],i)=>{const[m,a]=k.split('|||');return`<tr><td><span class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span></td><td>${m}</td><td style="font-weight:600">${a}</td><td style="font-weight:700;color:var(--accent3)">${v}</td><td>${tot>0?(v/tot*100).toFixed(1)+'%':'—'}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
+  if((tipo==='geral'||tipo==='simulados')&&fS.length)html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Simulado</th><th>Banca</th><th>Acertos</th><th>Total</th><th>%</th></tr></thead><tbody>${[...fS].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const p=s.acertos/s.total;return`<tr><td>${fmtD(s.data)}</td><td style="font-weight:600">${s.nome}</td><td>${s.banca||'—'}</td><td>${s.acertos}</td><td>${s.total}</td><td style="font-weight:700;color:${pC(p)}">${pS(p)}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+  if((tipo==='geral'||tipo==='erros')&&fE.length)html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">📝 Erros</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Matéria</th><th>Assunto</th><th>Questão</th><th>Material</th><th>Motivo</th></tr></thead><tbody>${[...fE].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>`<tr><td>${fmtD(e.data)}</td><td>${e.materia}</td><td style="font-weight:600">${e.assunto}</td><td>${e.questao||'—'}</td><td>${e.material||'—'}</td><td style="color:var(--text2);font-style:italic">${e.motivo||'—'}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if(tipo==='comparacao'){const cmp=document.getElementById('cmp-result')?.innerHTML;html+=`<div class="card"><div class="card-title">⚖️ Comparação</div>${cmp&&!cmp.includes('empty')?cmp:'<div style="padding:20px;text-align:center;color:#666">Faça uma comparação na aba Comparar primeiro.</div>'}</div>`;}
   if(!fE.length&&!fS.length&&tipo!=='comparacao')html+='<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Sem dados no período</div></div>';
   document.getElementById('rel-content').innerHTML=html;
 }
 
-// ═══════════════ INIT ═══════════════
-(function init(){
-  fillMateriaSelect('err-materia',null);
+// ═══ CARREGAR DADOS ═══
+async function carregarDados(){
+  setSS('sync');
+  try{
+    const[eD,sD,pD,rD]=await Promise.all([sbGet('erros','select=*'),sbGet('simulados','select=*'),sbGet('pdfs','select=*'),sbGet('revisoes','select=*')]);
+    erros=Array.isArray(eD)?eD:[];
+    simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
+    if(Array.isArray(pD)&&pD.length>0)pD.forEach(row=>{pdfs[row.materia]={total:row.total,feitas:row.feitas,feitas_q:row.feitas_q,status:row.status};});
+    revisoes={};if(Array.isArray(rD))rD.forEach(r=>{revisoes[r.chave]=r.valor;});
+    setSS('ok');document.getElementById('login-loading').textContent='';
+  }catch(e){setSS('erro');console.error(e);}
+}
+
+// ═══ INIT ═══
+async function init(){
+  fMS('err-materia',null);
+  await carregarDados();
   initComparar();
   renderDashboard();renderRegistro();renderSimulados();renderRanking();renderMaterias();renderGraficos();renderPDFs();renderRelatorio();
-})();
+}
+
+// Verificar login ao abrir
+if(checkLogin()){document.getElementById('login-screen').classList.add('hidden');init();}
+else{setTimeout(()=>document.getElementById('login-input').focus(),100);}
 </script>
 </body>
 </html>
