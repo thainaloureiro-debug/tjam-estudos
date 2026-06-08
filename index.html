@@ -854,20 +854,52 @@ function renderPDFEdit(){
 
 // ══ SALVAR PDFs ══
 async function salvarPDFs(){
-  setSS('sync');
   const mats=Object.keys(PDF_DEF);
-  try{
-    for(let i=0;i<mats.length;i++){
-      const mat=mats[i];
-      const t=parseInt(document.getElementById('pe-t-'+i)?.value)||0;
-      const f=Math.min(parseInt(document.getElementById('pe-f-'+i)?.value)||0,t);
-      const q=parseInt(document.getElementById('pe-q-'+i)?.value)||0;
-      const s=document.getElementById('pe-s-'+i)?.value||'pendente';
-      pdfs[mat]={total:t,feitas:f,feitas_q:q,status:s};
-      await sbUpsertOne('pdfs',{materia:mat,total:t,feitas:f,feitas_q:q,status:s});
+  const btn=document.querySelector('#modal-pdf .btn-primary');
+  if(btn){btn.textContent='Salvando...';btn.disabled=true;}
+  setSS('sync');
+
+  let erroEncontrado=false;
+  for(let i=0;i<mats.length;i++){
+    const mat=mats[i];
+    const t=parseInt(document.getElementById('pe-t-'+i)?.value)||0;
+    const f=Math.min(parseInt(document.getElementById('pe-f-'+i)?.value)||0,t);
+    const q=parseInt(document.getElementById('pe-q-'+i)?.value)||0;
+    const s=document.getElementById('pe-s-'+i)?.value||'pendente';
+    pdfs[mat]={total:t,feitas:f,feitas_q:q,status:s};
+
+    try{
+      const resp=await fetch(`${SB_URL}/rest/v1/pdfs?on_conflict=materia`,{
+        method:'POST',
+        headers:{
+          'apikey':SB_KEY,
+          'Authorization':'Bearer '+SB_KEY,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates'
+        },
+        body:JSON.stringify({materia:mat,total:t,feitas:f,feitas_q:q,status:s})
+      });
+      if(!resp.ok){
+        const txt=await resp.text();
+        console.error(`Erro ao salvar "${mat}":`,resp.status,txt);
+        erroEncontrado=true;
+      }
+    }catch(err){
+      console.error(`Exceção ao salvar "${mat}":`,err);
+      erroEncontrado=true;
     }
-    closeModal('modal-pdf');setSS('ok');toast('✓ PDFs salvos!');renderPDFs();
-  }catch(e){setSS('erro');toast('Erro ao salvar PDFs.');console.error(e);}
+  }
+
+  if(btn){btn.textContent='Salvar';btn.disabled=false;}
+  if(erroEncontrado){
+    setSS('erro');
+    toast('❌ Erro ao salvar. Veja o console (F12).');
+  } else {
+    closeModal('modal-pdf');
+    setSS('ok');
+    toast('✓ PDFs salvos!');
+    renderPDFs();
+  }
 }
 
 // ══ RELATÓRIO ══
