@@ -463,14 +463,27 @@ async function sbIns(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'
 async function sbDel(t,id){await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:H});}
 async function sbDelWhere(t,col,op,val){await fetch(`${SB_URL}/rest/v1/${t}?${col}=${op}.${val}`,{method:'DELETE',headers:H});}
 async function sbUpsertOne(t,body){
-  const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)});
-  return r.json();
+  // Tenta atualizar primeiro (PATCH). Se não existir, insere (POST).
+  const pkCol = t==='pdfs'?'materia':t==='revisoes'?'chave':'id';
+  const pkVal = body[pkCol];
+  // Usa upsert nativo do Supabase com on_conflict
+  const r=await fetch(`${SB_URL}/rest/v1/${t}?on_conflict=${pkCol}`,{
+    method:'POST',
+    headers:{...H,'Prefer':'resolution=merge-duplicates'},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok){
+    const err=await r.text();
+    console.error('sbUpsertOne error:',r.status,err);
+    throw new Error(err);
+  }
+  return r;
 }
 function setSS(e){const el=document.getElementById('sync-status');if(!el)return;const m={ok:'🟢 Sincronizado',erro:'🔴 Erro',sync:'🟡 Salvando...'};el.textContent=m[e]||'';}
 
 // ══ DATA ══
 const MATERIAS={"Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],"Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],"Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],"Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],"Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],"Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],"Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],"Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],"Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],"Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],"Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"]};
-const PDF_DEF={"Língua Portuguesa":{total:16,feitas:0,feitas_q:0,status:'pendente'},"Direito Constitucional":{total:12,feitas:12,feitas_q:0,status:'concluido'},"Direito Administrativo":{total:7,feitas:7,feitas_q:0,status:'concluido'},"Administração Geral":{total:15,feitas:7,feitas_q:0,status:'pendente'},"Direito Processual Civil":{total:8,feitas:1,feitas_q:0,status:'pendente'},"Direito Processual Penal":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Estatuto dos Servidores":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Organização Judiciária":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Informática e Processo Digital":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Acessibilidade":{total:4,feitas:0,feitas_q:0,status:'pendente'},"Geografia do Amazonas":{total:2,feitas:2,feitas_q:0,status:'concluido'}};
+const PDF_DEF={"Língua Portuguesa":{total:16,feitas:0,feitas_q:0,status:'pendente'},"Direito Constitucional":{total:12,feitas:0,feitas_q:0,status:'pendente'},"Direito Administrativo":{total:7,feitas:0,feitas_q:0,status:'pendente'},"Administração Geral":{total:15,feitas:0,feitas_q:0,status:'pendente'},"Direito Processual Civil":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Direito Processual Penal":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Estatuto dos Servidores":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Organização Judiciária":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Informática e Processo Digital":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Acessibilidade":{total:4,feitas:0,feitas_q:0,status:'pendente'},"Geografia do Amazonas":{total:2,feitas:0,feitas_q:0,status:'pendente'}};
 const ML=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Revisão',caderno:'📓 Caderno TEC'};
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
@@ -821,19 +834,35 @@ function renderPDFs(){
 }
 
 function renderPDFEdit(){
-  document.getElementById('pdf-edit-body').innerHTML=Object.keys(PDF_DEF).map(mat=>{const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};const k=mat.replace(/[\s\/]/g,'_');return`<tr><td style="font-weight:600;font-size:12px">${mat}</td><td><input type="number" id="pe-t-${k}" value="${d.total}" min="0" style="width:65px"></td><td><input type="number" id="pe-f-${k}" value="${d.feitas}" min="0" style="width:65px"></td><td><input type="number" id="pe-q-${k}" value="${d.feitas_q||0}" min="0" style="width:65px"></td><td><select id="pe-s-${k}" style="min-width:160px"><option value="pendente" ${d.status==='pendente'?'selected':''}>⏳ Pendente</option><option value="revisao" ${d.status==='revisao'?'selected':''}>🔄 Em Revisão</option><option value="concluido" ${d.status==='concluido'?'selected':''}>✅ Concluído</option><option value="caderno" ${d.status==='caderno'?'selected':''}>📓 Caderno TEC</option></select></td></tr>`;}).join('');
+  const mats=Object.keys(PDF_DEF);
+  document.getElementById('pdf-edit-body').innerHTML=mats.map((mat,i)=>{
+    const d=pdfs[mat]||{total:0,feitas:0,feitas_q:0,status:'pendente'};
+    return`<tr>
+      <td style="font-weight:600;font-size:12px">${mat}</td>
+      <td><input type="number" id="pe-t-${i}" value="${d.total}" min="0" style="width:65px"></td>
+      <td><input type="number" id="pe-f-${i}" value="${d.feitas}" min="0" style="width:65px"></td>
+      <td><input type="number" id="pe-q-${i}" value="${d.feitas_q||0}" min="0" style="width:65px"></td>
+      <td><select id="pe-s-${i}" style="min-width:160px">
+        <option value="pendente" ${d.status==='pendente'?'selected':''}>⏳ Pendente</option>
+        <option value="revisao" ${d.status==='revisao'?'selected':''}>🔄 Em Revisão</option>
+        <option value="concluido" ${d.status==='concluido'?'selected':''}>✅ Concluído</option>
+        <option value="caderno" ${d.status==='caderno'?'selected':''}>📓 Caderno TEC</option>
+      </select></td>
+    </tr>`;
+  }).join('');
 }
 
-// ══ SALVAR PDFs — UMA LINHA POR VEZ (corrigido) ══
+// ══ SALVAR PDFs ══
 async function salvarPDFs(){
   setSS('sync');
+  const mats=Object.keys(PDF_DEF);
   try{
-    for(const mat of Object.keys(PDF_DEF)){
-      const k=mat.replace(/[\s\/]/g,'_');
-      const t=parseInt(document.getElementById('pe-t-'+k)?.value)||0;
-      const f=Math.min(parseInt(document.getElementById('pe-f-'+k)?.value)||0,t);
-      const q=parseInt(document.getElementById('pe-q-'+k)?.value)||0;
-      const s=document.getElementById('pe-s-'+k)?.value||'pendente';
+    for(let i=0;i<mats.length;i++){
+      const mat=mats[i];
+      const t=parseInt(document.getElementById('pe-t-'+i)?.value)||0;
+      const f=Math.min(parseInt(document.getElementById('pe-f-'+i)?.value)||0,t);
+      const q=parseInt(document.getElementById('pe-q-'+i)?.value)||0;
+      const s=document.getElementById('pe-s-'+i)?.value||'pendente';
       pdfs[mat]={total:t,feitas:f,feitas_q:q,status:s};
       await sbUpsertOne('pdfs',{materia:mat,total:t,feitas:f,feitas_q:q,status:s});
     }
