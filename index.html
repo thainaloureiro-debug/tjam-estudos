@@ -143,6 +143,51 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .pct-ok{background:rgba(52,211,153,.15);color:var(--success);}
 .pct-warn{background:rgba(245,158,11,.15);color:var(--warning);}
 .pct-bad{background:rgba(240,100,100,.15);color:var(--danger);}
+
+/* Assunto card na aba conteudo */
+.assunto-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:border-color .2s,transform .15s;cursor:pointer;}
+.assunto-card:hover{border-color:var(--accent2);transform:translateY(-1px);}
+.assunto-card.tem-nota{border-left:3px solid var(--accent);}
+.assunto-num{font-family:var(--mono);font-size:11px;color:var(--text3);width:24px;flex-shrink:0;}
+.assunto-info{flex:1;}
+.assunto-nome{font-weight:600;font-size:14px;margin-bottom:4px;}
+.assunto-stats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.assunto-stat{font-size:12px;color:var(--text2);}
+.assunto-nota-preview{font-size:11px;color:var(--text3);margin-top:4px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;}
+
+/* Status badges assunto */
+.st-nao-iniciado{background:rgba(61,69,87,.3);color:var(--text3);border:1px solid var(--border2);}
+.st-estudando{background:rgba(56,189,248,.15);color:var(--accent2);border:1px solid rgba(56,189,248,.3);}
+.st-revisando{background:rgba(245,158,11,.15);color:var(--warning);border:1px solid rgba(245,158,11,.3);}
+.st-concluido{background:rgba(52,211,153,.15);color:var(--success);border:1px solid rgba(52,211,153,.3);}
+
+/* Gráfico de rosca mini */
+.donut-wrap{display:flex;align-items:center;gap:16px;padding:16px 0;}
+.donut-legend{display:flex;flex-direction:column;gap:6px;}
+.donut-leg-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+.donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* Popup assunto */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:250;display:none;align-items:center;justify-content:center;padding:20px;}
+.popup-overlay.open{display:flex;}
+.popup-box{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:28px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;}
+.popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;}
+.popup-title{font-size:18px;font-weight:700;}
+.popup-materia-lbl{font-size:12px;color:var(--text2);margin-top:3px;}
+.popup-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;padding:6px 10px;font-size:16px;line-height:1;flex-shrink:0;}
+.popup-close:hover{color:var(--danger);border-color:var(--danger);}
+.popup-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.popup-stat-box{background:var(--surface2);border-radius:10px;padding:12px;text-align:center;}
+.popup-stat-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.popup-stat-val{font-size:22px;font-weight:800;}
+.popup-section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.popup-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font);font-size:13px;padding:12px;outline:none;resize:vertical;min-height:140px;line-height:1.6;}
+.popup-textarea:focus{border-color:var(--accent);}
+.popup-save-btn{margin-top:12px;width:100%;padding:10px;background:var(--accent);color:#0c0e13;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:background .15s;}
+.popup-save-btn:hover{background:#b8e020;}
+.hist-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;}
+.hist-date{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:3px;}
+
 @media print{nav,header,.filter-bar,.btn,.add-erro-panel,.no-print{display:none !important;}body{background:#fff;color:#000;font-size:12px;}.card{border:1px solid #ddd;background:#fff;}}
 </style>
 </head>
@@ -176,6 +221,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
   <div class="tab" onclick="showPage('materias',this)">📚 Por Matéria</div>
   <div class="tab" onclick="showPage('comparar',this)">⚖️ Comparar</div>
   <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
+  <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
   <div class="tab" onclick="showPage('pdfs',this)">📋 PDFs</div>
   <div class="tab" onclick="showPage('relatorio',this)">📄 Relatório</div>
 </nav>
@@ -351,6 +397,64 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
   <div class="card"><div class="card-title">🔮 Previsão de Conclusão dos PDFs</div><div id="g-previsao"></div></div>
 </div>
 
+<!-- CONTEÚDO -->
+<div id="page-conteudo" class="page">
+  <div class="sec-head">
+    <div class="sec-title">📖 Conteúdo por Assunto</div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Matéria</span>
+    <select id="cont-materia" onchange="renderConteudo()" style="min-width:260px;font-weight:600">
+      <option value="">Selecione uma matéria...</option>
+    </select>
+    <span class="filter-label" style="margin-left:8px">Filtrar</span>
+    <select id="cont-filtro" onchange="renderConteudo()" style="min-width:170px">
+      <option value="todos">Todos os assuntos</option>
+      <option value="nao_iniciado">⬜ Não iniciado</option>
+      <option value="estudando">📖 Estudando</option>
+      <option value="revisao">🔄 Revisando</option>
+      <option value="com_erro">❌ Com erros</option>
+      <option value="com_nota">📌 Com anotação</option>
+      <option value="sem_erro">✅ Sem erros</option>
+    </select>
+  </div>
+
+  <div id="cont-kpis" style="margin-bottom:18px"></div>
+  <div id="cont-lista"></div>
+</div>
+
+<!-- POPUP ASSUNTO -->
+<div id="popup-assunto" class="popup-overlay" onclick="closePopupOut(event)">
+  <div class="popup-box">
+    <div class="popup-header">
+      <div>
+        <div class="popup-title" id="popup-assunto-nome"></div>
+        <div class="popup-materia-lbl" id="popup-assunto-materia-lbl"></div>
+      </div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+
+    <div class="popup-stats" id="popup-stats"></div>
+
+    <!-- STATUS -->
+    <div class="popup-section-title">📊 Status do Assunto</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px" id="popup-status-btns">
+      <button onclick="setAssuntoStatus('nao_iniciado')" class="btn btn-secondary btn-sm" id="stbtn-nao_iniciado">⬜ Não iniciado</button>
+      <button onclick="setAssuntoStatus('estudando')" class="btn btn-secondary btn-sm" id="stbtn-estudando">📖 Estudando</button>
+      <button onclick="setAssuntoStatus('revisando')" class="btn btn-secondary btn-sm" id="stbtn-revisando">🔄 Revisando</button>
+      <button onclick="setAssuntoStatus('concluido')" class="btn btn-secondary btn-sm" id="stbtn-concluido">✅ Concluído</button>
+    </div>
+
+    <!-- NOTA -->
+    <div class="popup-section-title">📝 Anotações / Resumo</div>
+    <textarea class="popup-textarea" id="popup-nota" placeholder="Anote aqui o que estudou, pontos importantes, dúvidas, dicas para não esquecer..."></textarea>
+    <button class="popup-save-btn" onclick="salvarNota()">💾 Salvar Anotação</button>
+
+    <div id="popup-historico" style="margin-top:16px"></div>
+  </div>
+</div>
+
 <!-- PDFs -->
 <div id="page-pdfs" class="page">
   <div class="sec-head"><div class="sec-title">📋 Painel de PDFs / Aulas</div><button class="btn btn-primary" onclick="openModal('modal-pdf')">✏️ Editar</button></div>
@@ -489,7 +593,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={};
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={};
 
 // ══ UTILS ══
 const today=()=>new Date().toISOString().slice(0,10);
@@ -511,7 +615,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,pdfs:renderPDFs,relatorio:renderRelatorio};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,pdfs:renderPDFs,relatorio:renderRelatorio};
 function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
@@ -923,16 +1027,377 @@ function renderRelatorio(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD]=await Promise.all([sbGet('erros','select=*'),sbGet('simulados','select=*'),sbGet('pdfs','select=*'),sbGet('revisoes','select=*')]);
+    const[eD,sD,pD,rD,nD]=await Promise.all([
+      sbGet('erros','select=*'),
+      sbGet('simulados','select=*'),
+      sbGet('pdfs','select=*'),
+      sbGet('revisoes','select=*'),
+      sbGet('notas','select=*')
+    ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
     if(Array.isArray(pD)&&pD.length>0)pD.forEach(row=>{pdfs[row.materia]={total:row.total,feitas:row.feitas,feitas_q:row.feitas_q||0,status:row.status};});
     revisoes={};if(Array.isArray(rD))rD.forEach(r=>{revisoes[r.chave]=r.valor;});
+    notas={};if(Array.isArray(nD))nD.forEach(n=>{notas[n.chave]=n;});
     setSS('ok');document.getElementById('login-loading').textContent='';
   }catch(e){setSS('erro');console.error(e);}
 }
 
-// ══ INIT ══
+// ══ CONTEÚDO ══
+const ST_LABELS={nao_iniciado:'⬜ Não iniciado',estudando:'📖 Estudando',revisando:'🔄 Revisando',concluido:'✅ Concluído'};
+const ST_CSS={nao_iniciado:'st-nao-iniciado',estudando:'st-estudando',revisando:'st-revisando',concluido:'st-concluido'};
+const ST_COLORS={nao_iniciado:'var(--text3)',estudando:'var(--accent2)',revisando:'var(--warning)',concluido:'var(--success)'};
+
+function getAssuntoStatus(mat,ass){return notas[mat+'_'+ass]?.status||'nao_iniciado';}
+
+function renderConteudo(){
+  const sel=document.getElementById('cont-materia');
+  const cur=sel.value;
+  if(sel.options.length<=1){
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  }
+  if(!cur){
+    document.getElementById('cont-kpis').innerHTML='';
+    document.getElementById('cont-lista').innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-title">Selecione uma matéria</div><div class="empty-sub">Escolha no filtro acima para ver os assuntos</div></div>';
+    return;
+  }
+  const filtro=document.getElementById('cont-filtro').value;
+  const ass=MATERIAS[cur]||[];
+
+  // Stats por assunto
+  const byA={};
+  ass.forEach(a=>{byA[a]={feitas:0,erradas:0};});
+  erros.filter(e=>e.materia===cur).forEach(e=>{
+    if(!byA[e.assunto])return;
+    byA[e.assunto].feitas+=(e.qtd_feitas||1);
+    byA[e.assunto].erradas+=(e.qtd_erradas||1);
+  });
+
+  // Contagem de status
+  const stCount={nao_iniciado:0,estudando:0,revisando:0,concluido:0};
+  ass.forEach(a=>{const st=getAssuntoStatus(cur,a);stCount[st]=(stCount[st]||0)+1;});
+
+  // KPIs
+  const totF=Object.values(byA).reduce((s,v)=>s+v.feitas,0);
+  const totE=Object.values(byA).reduce((s,v)=>s+v.erradas,0);
+  const pGeral=totF>0?(totF-totE)/totF:null;
+  const comNota=ass.filter(a=>notas[cur+'_'+a]?.texto).length;
+
+  // Gráfico de rosca SVG
+  const total=ass.length||1;
+  const stData=[
+    {k:'concluido',v:stCount.concluido,c:'#34d399'},
+    {k:'revisando',v:stCount.revisando,c:'#f59e0b'},
+    {k:'estudando',v:stCount.estudando,c:'#38bdf8'},
+    {k:'nao_iniciado',v:stCount.nao_iniciado,c:'#3d4557'},
+  ];
+  const pctConcluido=Math.round(stCount.concluido/total*100);
+  let acc=0;const R=42,CX=54,CY=54,circ=2*Math.PI*R;
+  const slices=stData.map(d=>{
+    const frac=d.v/total;
+    const dash=frac*circ;
+    const off=circ-acc*circ;
+    const slice=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${d.c}" stroke-width="12" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${off}" transform="rotate(-90 ${CX} ${CY})"/>`;
+    acc+=frac;return slice;
+  }).join('');
+  const donutSVG=`<svg width="108" height="108" viewBox="0 0 108 108">${slices}<text x="${CX}" y="${CY+6}" text-anchor="middle" font-size="14" font-weight="800" fill="#dde2ef">${pctConcluido}%</text></svg>`;
+
+  document.getElementById('cont-kpis').innerHTML=`
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:0">
+      <div class="donut-wrap" style="padding:0">
+        ${donutSVG}
+        <div class="donut-legend">
+          ${stData.map(d=>`<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${d.c}"></div><span>${ST_LABELS[d.k].split(' ').slice(1).join(' ')}: <strong>${d.v}</strong></span></div>`).join('')}
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:0;gap:10px">
+        <div class="kpi" style="padding:14px"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Assuntos</div><div class="kpi-value" style="font-size:28px;color:var(--accent2)">${ass.length}</div></div>
+        <div class="kpi" style="padding:14px"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Quest. Feitas</div><div class="kpi-value" style="font-size:28px;color:var(--accent2)">${totF}</div></div>
+        <div class="kpi" style="padding:14px"><div class="kpi-accent" style="background:${pGeral!=null?pC(pGeral):'var(--text3)'}"></div><div class="kpi-label">% Acerto</div><div class="kpi-value" style="font-size:28px">${pK(pGeral,pC(pGeral))}</div></div>
+        <div class="kpi" style="padding:14px"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Com Anotação</div><div class="kpi-value" style="font-size:28px;color:var(--accent)">${comNota}</div><div class="kpi-sub">de ${ass.length}</div></div>
+      </div>
+    </div>`;
+
+  // Barra de progresso visual por status
+  const barHTML=`<div style="display:flex;height:8px;border-radius:6px;overflow:hidden;margin:14px 0;gap:2px">
+    ${stData.filter(d=>d.v>0).map(d=>`<div style="flex:${d.v};background:${d.c};border-radius:3px" title="${ST_LABELS[d.k]}: ${d.v}"></div>`).join('')}
+  </div>`;
+
+  // Filtra e ordena
+  let lista=[...ass];
+  if(filtro==='com_erro') lista=lista.filter(a=>byA[a].erradas>0);
+  else if(filtro==='sem_erro') lista=lista.filter(a=>byA[a].erradas===0);
+  else if(filtro==='com_nota') lista=lista.filter(a=>notas[cur+'_'+a]?.texto);
+  else if(filtro==='revisao') lista=lista.filter(a=>getAssuntoStatus(cur,a)==='revisando');
+  else if(filtro==='nao_iniciado') lista=lista.filter(a=>getAssuntoStatus(cur,a)==='nao_iniciado');
+  lista.sort((a,b)=>byA[b].erradas-byA[a].erradas);
+
+  if(!lista.length){
+    document.getElementById('cont-lista').innerHTML=barHTML+'<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nenhum assunto nesse filtro</div></div>';
+    return;
+  }
+
+  document.getElementById('cont-lista').innerHTML=barHTML+`
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+      ${lista.map((a,i)=>{
+        const d=byA[a];
+        const pAc=d.feitas>0?(d.feitas-d.erradas)/d.feitas:null;
+        const nota=notas[cur+'_'+a];
+        const st=getAssuntoStatus(cur,a);
+        const temNota=!!(nota?.texto);
+        return`<div class="assunto-card${temNota?' tem-nota':''}" onclick="openPopup('${cur.replace(/'/g,"\\'")}','${a.replace(/'/g,"\\'")}')">
+          <div class="assunto-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="assunto-info">
+            <div class="assunto-nome">${a}</div>
+            <div class="assunto-stats">
+              ${d.feitas>0?`<span class="assunto-stat">📝 ${d.feitas} feitas</span>`:'' }
+              ${d.erradas>0?`<span class="assunto-stat" style="color:var(--accent3)">❌ ${d.erradas} erros</span>`:''}
+              ${pAc!=null?pBadge(pAc):''}
+              ${temNota?'<span style="font-size:11px;color:var(--accent)">📌 Anotação</span>':''}
+            </div>
+            ${temNota?`<div class="assunto-nota-preview">💬 ${nota.texto.slice(0,70)}${nota.texto.length>70?'...':''}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <span class="badge ${ST_CSS[st]}">${ST_LABELS[st]}</span>
+            ${d.feitas>0?`<div class="prog" style="width:80px"><div class="prog-fill" style="background:${pAc!=null?pC(pAc):'var(--border2)'};width:${pAc!=null?Math.round(pAc*100):0}%"></div></div>`:''}
+          </div>
+          <div style="color:var(--text3);font-size:18px;flex-shrink:0">›</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ══ POPUP ASSUNTO ══
+let popupMateria='',popupAssunto='';
+
+function openPopup(mat,ass){
+  popupMateria=mat;popupAssunto=ass;
+  document.getElementById('popup-assunto').classList.add('open');
+  document.getElementById('popup-assunto-nome').textContent=ass;
+  document.getElementById('popup-assunto-materia-lbl')||document.getElementById('popup-assunto-materia').setAttribute('id','popup-assunto-materia-lbl');
+  document.getElementById('popup-assunto-materia-lbl').textContent=mat;
+
+  const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+  const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+  const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||1),0);
+  const pAc=totF>0?(totF-totE)/totF:null;
+
+  document.getElementById('popup-stats').innerHTML=`
+    <div class="popup-stat-box"><div class="popup-stat-label">Questões Feitas</div><div class="popup-stat-val" style="color:var(--accent2)">${totF}</div></div>
+    <div class="popup-stat-box"><div class="popup-stat-label">Erros</div><div class="popup-stat-val" style="color:var(--accent3)">${totE}</div></div>
+    <div class="popup-stat-box"><div class="popup-stat-label">% Acerto</div><div class="popup-stat-val" style="color:${pAc!=null?pC(pAc):'var(--text3)'}">${pAc!=null?(pAc*100).toFixed(1)+'%':'—'}</div></div>`;
+
+  // Status buttons highlight
+  const curSt=getAssuntoStatus(mat,ass);
+  ['nao_iniciado','estudando','revisando','concluido'].forEach(s=>{
+    const btn=document.getElementById('stbtn-'+s);
+    if(!btn)return;
+    btn.style.background=s===curSt?ST_COLORS[s]:'';
+    btn.style.color=s===curSt?'#0c0e13':'';
+    btn.style.borderColor=s===curSt?ST_COLORS[s]:'';
+  });
+
+  const nota=notas[mat+'_'+ass];
+  document.getElementById('popup-nota').value=nota?.texto||'';
+
+  const hist=sessoes.sort((a,b)=>b.data.localeCompare(a.data));
+  document.getElementById('popup-historico').innerHTML=hist.length?`
+    <div class="popup-section-title" style="margin-top:20px">📅 Histórico de Sessões</div>
+    ${hist.map(e=>{const f=e.qtd_feitas||1,er=e.qtd_erradas||0,p=f>0?(f-er)/f:null;return`<div class="hist-item">
+      <div class="hist-date">${fmtD(e.data)} · ${e.material||'—'}</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span>${f} feitas</span><span style="color:var(--accent3)">${er} erros</span><span>${pBadge(p)}</span>
+        ${e.motivo?`<span style="font-size:12px;color:var(--text2);font-style:italic">"${e.motivo}"</span>`:''}
+      </div>
+    </div>`;}).join('')}`:'';
+}
+
+async function setAssuntoStatus(status){
+  const chave=popupMateria+'_'+popupAssunto;
+  if(!notas[chave])notas[chave]={chave,texto:'',materia:popupMateria,assunto:popupAssunto};
+  notas[chave].status=status;
+  // Highlight buttons
+  ['nao_iniciado','estudando','revisando','concluido'].forEach(s=>{
+    const btn=document.getElementById('stbtn-'+s);if(!btn)return;
+    btn.style.background=s===status?ST_COLORS[s]:'';
+    btn.style.color=s===status?'#0c0e13':'';
+    btn.style.borderColor=s===status?ST_COLORS[s]:'';
+  });
+  try{
+    await sbUpsertOne('notas',{chave,texto:notas[chave].texto||'',materia:popupMateria,assunto:popupAssunto,status});
+    toast('✓ Status atualizado!');
+    renderConteudo();
+  }catch(e){toast('Erro ao salvar status.');console.error(e);}
+}
+
+async function salvarNota(){
+  const texto=document.getElementById('popup-nota').value.trim();
+  const chave=popupMateria+'_'+popupAssunto;
+  const st=notas[chave]?.status||'nao_iniciado';
+  if(!notas[chave])notas[chave]={chave,texto:'',materia:popupMateria,assunto:popupAssunto,status:st};
+  notas[chave].texto=texto;
+  try{
+    await sbUpsertOne('notas',{chave,texto,materia:popupMateria,assunto:popupAssunto,status:st});
+    toast('✓ Anotação salva!');renderConteudo();
+  }catch(e){toast('Erro ao salvar.');console.error(e);}
+}
+
+function closePopup(){document.getElementById('popup-assunto').classList.remove('open');}
+function closePopupOut(e){if(e.target.id==='popup-assunto')closePopup();}
+
+  // Preenche select de matérias
+  const sel=document.getElementById('cont-materia');
+  const cur=sel.value;
+  if(!cur){
+    // Preenche opções se ainda não tiver
+    if(sel.options.length<=1){
+      Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    }
+    document.getElementById('cont-kpis').innerHTML='';
+    document.getElementById('cont-lista').innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-title">Selecione uma matéria</div><div class="empty-sub">Escolha a matéria no filtro acima para ver os assuntos</div></div>';
+    return;
+  }
+
+  const filtro=document.getElementById('cont-filtro').value;
+  const ass=MATERIAS[cur]||[];
+
+  // Stats por assunto
+  const byA={};
+  ass.forEach(a=>{byA[a]={feitas:0,erradas:0};});
+  erros.filter(e=>e.materia===cur).forEach(e=>{
+    if(!byA[e.assunto])return;
+    byA[e.assunto].feitas+=(e.qtd_feitas||1);
+    byA[e.assunto].erradas+=(e.qtd_erradas||1);
+  });
+
+  // KPIs da matéria
+  const totF=Object.values(byA).reduce((s,v)=>s+v.feitas,0);
+  const totE=Object.values(byA).reduce((s,v)=>s+v.erradas,0);
+  const pGeral=totF>0?(totF-totE)/totF:null;
+  const comErro=Object.values(byA).filter(v=>v.erradas>0).length;
+  const comNota=ass.filter(a=>notas[cur+'_'+a]?.texto).length;
+  const revisados=ass.filter(a=>revisoes[cur+'_'+a]).length;
+
+  document.getElementById('cont-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:0">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Assuntos</div><div class="kpi-value" style="color:var(--accent2)">${ass.length}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Feitas</div><div class="kpi-value" style="color:var(--accent2)">${totF}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:${pGeral!=null?pC(pGeral):'var(--text3)'}"></div><div class="kpi-label">% Acerto</div><div class="kpi-value">${pK(pGeral,pC(pGeral))}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Com Anotação</div><div class="kpi-value" style="color:var(--accent)">${comNota}</div><div class="kpi-sub">de ${ass.length}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Revisados</div><div class="kpi-value" style="color:var(--success)">${revisados}</div><div class="kpi-sub">de ${ass.length}</div></div>
+    </div>`;
+
+  // Filtra assuntos
+  let lista=[...ass];
+  if(filtro==='com_erro') lista=lista.filter(a=>byA[a].erradas>0);
+  else if(filtro==='sem_erro') lista=lista.filter(a=>byA[a].erradas===0);
+  else if(filtro==='com_nota') lista=lista.filter(a=>notas[cur+'_'+a]?.texto);
+  else if(filtro==='revisao') lista=lista.filter(a=>!revisoes[cur+'_'+a]);
+
+  // Ordena por mais erros primeiro
+  lista.sort((a,b)=>byA[b].erradas-byA[a].erradas);
+
+  if(!lista.length){
+    document.getElementById('cont-lista').innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nenhum assunto nesse filtro</div></div>';
+    return;
+  }
+
+  document.getElementById('cont-lista').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+      ${lista.map((a,i)=>{
+        const d=byA[a];
+        const pAc=d.feitas>0?(d.feitas-d.erradas)/d.feitas:null;
+        const pEr=d.feitas>0?d.erradas/d.feitas:null;
+        const nota=notas[cur+'_'+a];
+        const rev=revisoes[cur+'_'+a];
+        const temNota=!!(nota?.texto);
+        const progW=d.feitas>0?Math.min((d.feitas/20)*100,100):0; // considera 20 como meta por assunto
+        return`<div class="assunto-card ${temNota?'tem-nota':''}" onclick="openPopup('${cur}','${a.replace(/'/g,"\\'")}')">
+          <div class="assunto-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="assunto-info">
+            <div class="assunto-nome">${a} ${rev?'<span style="font-size:11px;color:var(--success)">✓ Revisado</span>':''}</div>
+            <div class="assunto-stats">
+              <span class="assunto-stat">📝 ${d.feitas} feitas</span>
+              <span class="assunto-stat" style="color:var(--accent3)">❌ ${d.erradas} erros</span>
+              <span>${pBadge(pAc)}</span>
+              ${pEr!=null?`<span class="pct-badge ${pEr>=0.6?'pct-bad':pEr>=0.3?'pct-warn':'pct-ok'}" style="font-size:10px">Erro: ${pS(pEr)}</span>`:''}
+              ${temNota?'<span style="font-size:11px;color:var(--accent)">📌 Tem anotação</span>':''}
+            </div>
+            ${temNota?`<div class="assunto-nota-preview">💬 ${nota.texto.slice(0,80)}${nota.texto.length>80?'...':''}</div>`:''}
+          </div>
+          <div class="assunto-prog">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-align:right">${d.feitas} questões</div>
+            <div class="prog"><div class="prog-fill" style="background:${pAc!=null?pC(pAc):'var(--border2)'};width:${progW}%"></div></div>
+          </div>
+          <div style="color:var(--text3);font-size:18px;flex-shrink:0">›</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ══ POPUP ASSUNTO ══
+let popupMateria='',popupAssunto='';
+
+function openPopup(mat,ass){
+  popupMateria=mat;popupAssunto=ass;
+  document.getElementById('popup-assunto').classList.add('open');
+  document.getElementById('popup-assunto-nome').textContent=ass;
+  document.getElementById('popup-assunto-materia').textContent=mat;
+
+  // Stats
+  const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+  const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+  const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||1),0);
+  const pAc=totF>0?(totF-totE)/totF:null;
+
+  document.getElementById('popup-stats').innerHTML=`
+    <div class="popup-stat-box">
+      <div class="popup-stat-label">Questões Feitas</div>
+      <div class="popup-stat-val" style="color:var(--accent2)">${totF}</div>
+    </div>
+    <div class="popup-stat-box">
+      <div class="popup-stat-label">Erros</div>
+      <div class="popup-stat-val" style="color:var(--accent3)">${totE}</div>
+    </div>
+    <div class="popup-stat-box">
+      <div class="popup-stat-label">% Acerto</div>
+      <div class="popup-stat-val" style="color:${pAc!=null?pC(pAc):'var(--text3)'}">${pAc!=null?(pAc*100).toFixed(1)+'%':'—'}</div>
+    </div>`;
+
+  // Nota atual
+  const nota=notas[mat+'_'+ass];
+  document.getElementById('popup-nota').value=nota?.texto||'';
+
+  // Histórico de sessões
+  const hist=sessoes.sort((a,b)=>b.data.localeCompare(a.data));
+  document.getElementById('popup-historico').innerHTML=hist.length?`
+    <div class="popup-section-title" style="margin-top:20px">📅 Histórico de Sessões</div>
+    ${hist.map(e=>{const f=e.qtd_feitas||1,er=e.qtd_erradas||0,p=f>0?(f-er)/f:null;return`<div class="hist-item">
+      <div class="hist-date">${fmtD(e.data)} · ${e.material||'—'}</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span>${f} feitas</span>
+        <span style="color:var(--accent3)">${er} erros</span>
+        <span>${pBadge(p)}</span>
+        ${e.motivo?`<span style="font-size:12px;color:var(--text2);font-style:italic">"${e.motivo}"</span>`:''}
+      </div>
+    </div>`;}).join('')}`:'';
+}
+
+async function salvarNota(){
+  const texto=document.getElementById('popup-nota').value.trim();
+  const chave=popupMateria+'_'+popupAssunto;
+  notas[chave]={chave,texto,atualizado_em:new Date().toISOString()};
+  try{
+    await sbUpsertOne('notas',{chave,texto,materia:popupMateria,assunto:popupAssunto});
+    toast('✓ Anotação salva!');
+    renderConteudo();
+  }catch(e){toast('Erro ao salvar. Verifique a conexão.');console.error(e);}
+}
+
+function closePopup(){document.getElementById('popup-assunto').classList.remove('open');}
+function closePopupOut(e){if(e.target.id==='popup-assunto')closePopup();}
+
+
 async function init(){
   fMS('err-materia',null);
   await carregarDados();
