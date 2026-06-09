@@ -211,6 +211,20 @@ body.light .confirm-box{background:#fff;}
 .theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text2);transition:transform .2s,background .2s;}
 body.light .theme-toggle{background:#c8f135;}
 body.light .theme-toggle::after{transform:translateX(20px);background:#0c0e13;}
+
+body.light .pct-ok{background:rgba(16,185,129,.12);color:#065f46;}
+body.light .pct-warn{background:rgba(217,119,6,.12);color:#92400e;}
+body.light .pct-bad{background:rgba(220,38,38,.12);color:#991b1b;}
+body.light .badge-blue{background:rgba(37,99,235,.1);color:#1d4ed8;}
+body.light .badge-orange{background:rgba(234,88,12,.1);color:#c2410c;}
+body.light .badge-yellow{background:rgba(101,163,13,.1);color:#3f6212;}
+body.light .badge-green{background:rgba(21,128,61,.1);color:#14532d;}
+body.light .badge-red{background:rgba(185,28,28,.1);color:#7f1d1d;}
+body.light .badge-gray{background:rgba(75,85,99,.1);color:#374151;}
+.nota-tag{font-size:11px;font-weight:600;color:#a78bfa;background:rgba(167,139,250,.15);padding:2px 8px;border-radius:20px;}
+body.light .nota-tag{color:#6d28d9;background:rgba(109,40,217,.1);}
+.nota-preview{font-size:12px;color:var(--text2);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px;}
+body.light .nota-preview{color:#4a5568;}
 </style>
 </head>
 <body>
@@ -1209,9 +1223,9 @@ function renderConteudo(){
               ${d.feitas>0?`<span class="assunto-stat">📝 ${d.feitas} feitas</span>`:'' }
               ${d.erradas>0?`<span class="assunto-stat" style="color:var(--accent3)">❌ ${d.erradas} erros</span>`:''}
               ${pAc!=null?pBadge(pAc):''}
-              ${temNota?'<span style="font-size:11px;color:var(--accent)">📌 Anotação</span>':''}
+              ${temNota?'<span class="nota-tag">📌 Anotação</span>':''}
             </div>
-            ${temNota?`<div class="assunto-nota-preview">💬 ${nota.texto.slice(0,70)}${nota.texto.length>70?'...':''}</div>`:''}
+            ${temNota?`<div class="nota-preview">💬 ${nota.texto.slice(0,70)}${nota.texto.length>70?'...':''}</div>`:''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
             <span class="badge ${ST_CSS[st]}">${ST_LABELS[st]}</span>
