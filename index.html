@@ -228,7 +228,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 <main>
 
 <!-- DASHBOARD -->
-<div id="page-dashboard" class="page active">
+<div id="page-dashboard" class="page">
   <div class="sec-head">
     <div class="sec-title">📊 Dashboard</div>
     <button class="btn btn-danger btn-sm no-print" onclick="document.getElementById('confirm-modal').classList.add('open')">🗑 Zerar dados</button>
@@ -556,8 +556,16 @@ const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'applic
 function checkLogin(){return sessionStorage.getItem('tjam_ok')==='1';}
 function doLogin(){
   const v=document.getElementById('login-input').value;
-  if(v===SENHA){sessionStorage.setItem('tjam_ok','1');document.getElementById('login-screen').classList.add('hidden');document.getElementById('login-loading').textContent='Carregando dados...';init();}
-  else{document.getElementById('login-error').textContent='Senha incorreta.';document.getElementById('login-input').value='';document.getElementById('login-input').focus();}
+  if(v===SENHA){
+    sessionStorage.setItem('tjam_ok','1');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('login-loading').textContent='';
+    init();
+  } else {
+    document.getElementById('login-error').textContent='Senha incorreta.';
+    document.getElementById('login-input').value='';
+    document.getElementById('login-input').focus();
+  }
 }
 function doLogout(){sessionStorage.removeItem('tjam_ok');location.reload();}
 
@@ -1023,7 +1031,6 @@ function renderRelatorio(){
   document.getElementById('rel-content').innerHTML=html;
 }
 
-// ══ CARREGAR DADOS ══
 async function carregarDados(){
   setSS('sync');
   try{
@@ -1039,8 +1046,21 @@ async function carregarDados(){
     if(Array.isArray(pD)&&pD.length>0)pD.forEach(row=>{pdfs[row.materia]={total:row.total,feitas:row.feitas,feitas_q:row.feitas_q||0,status:row.status};});
     revisoes={};if(Array.isArray(rD))rD.forEach(r=>{revisoes[r.chave]=r.valor;});
     notas={};if(Array.isArray(nD))nD.forEach(n=>{notas[n.chave]=n;});
-    setSS('ok');document.getElementById('login-loading').textContent='';
-  }catch(e){setSS('erro');console.error(e);}
+    setSS('ok');
+  }catch(e){
+    setSS('erro');
+    console.warn('Supabase indisponível — usando dados locais.',e);
+  }
+}
+
+async function init(){
+  fMS('err-materia',null);
+  document.getElementById('page-dashboard').classList.add('active');
+  document.querySelector('.tab')?.classList.add('active');
+  try{ await carregarDados(); }catch(e){ setSS('erro'); }
+  initComparar();
+  renderDashboard();renderRegistro();renderSimulados();renderRanking();
+  renderMaterias();renderGraficos();renderConteudo();renderPDFs();renderRelatorio();
 }
 
 // ══ CONTEÚDO ══
@@ -1397,16 +1417,13 @@ async function salvarNota(){
 function closePopup(){document.getElementById('popup-assunto').classList.remove('open');}
 function closePopupOut(e){if(e.target.id==='popup-assunto')closePopup();}
 
-
-async function init(){
-  fMS('err-materia',null);
-  await carregarDados();
-  initComparar();
-  renderDashboard();renderRegistro();renderSimulados();renderRanking();renderMaterias();renderGraficos();renderPDFs();renderRelatorio();
+// ══ ARRANQUE — deve ficar após todas as funções ══
+if(checkLogin()){
+  document.getElementById('login-screen').classList.add('hidden');
+  init();
+} else {
+  setTimeout(()=>document.getElementById('login-input').focus(),100);
 }
-
-if(checkLogin()){document.getElementById('login-screen').classList.add('hidden');init();}
-else{setTimeout(()=>document.getElementById('login-input').focus(),100);}
 </script>
 </body>
 </html>
