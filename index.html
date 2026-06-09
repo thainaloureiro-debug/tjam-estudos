@@ -1265,6 +1265,7 @@ async function salvarNota(){
 function closePopup(){document.getElementById('popup-assunto').classList.remove('open');}
 function closePopupOut(e){if(e.target.id==='popup-assunto')closePopup();}
 
+function renderConteudo(){
   // Preenche select de matérias
   const sel=document.getElementById('cont-materia');
   const cur=sel.value;
@@ -1362,7 +1363,7 @@ function openPopup(mat,ass){
   popupMateria=mat;popupAssunto=ass;
   document.getElementById('popup-assunto').classList.add('open');
   document.getElementById('popup-assunto-nome').textContent=ass;
-  document.getElementById('popup-assunto-materia').textContent=mat;
+  document.getElementById('popup-assunto-materia-lbl').textContent=mat;
 
   // Stats
   const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
