@@ -605,15 +605,16 @@ function loadTheme(){
 loadTheme();
 
 // ══ SUPABASE ══
-async function sbGet(t,q=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${q}&order=id.asc`,{headers:H});return r.json();}
+async function sbGet(t,q=''){
+  const orderCol=t==='pdfs'?'materia':t==='revisoes'||t==='notas'?'chave':'id';
+  const r=await fetch(`${SB_URL}/rest/v1/${t}?${q}&order=${orderCol}.asc`,{headers:H});
+  return r.json();
+}
 async function sbIns(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});return r.json();}
 async function sbDel(t,id){await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:H});}
 async function sbDelWhere(t,col,op,val){await fetch(`${SB_URL}/rest/v1/${t}?${col}=${op}.${val}`,{method:'DELETE',headers:H});}
 async function sbUpsertOne(t,body){
-  // Tenta atualizar primeiro (PATCH). Se não existir, insere (POST).
-  const pkCol = t==='pdfs'?'materia':t==='revisoes'?'chave':'id';
-  const pkVal = body[pkCol];
-  // Usa upsert nativo do Supabase com on_conflict
+  const pkCol=t==='pdfs'?'materia':t==='revisoes'?'chave':t==='notas'?'chave':'id';
   const r=await fetch(`${SB_URL}/rest/v1/${t}?on_conflict=${pkCol}`,{
     method:'POST',
     headers:{...H,'Prefer':'resolution=merge-duplicates'},
