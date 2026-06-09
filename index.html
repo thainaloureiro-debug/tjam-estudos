@@ -188,7 +188,29 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .hist-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;}
 .hist-date{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:3px;}
 
-@media print{nav,header,.filter-bar,.btn,.add-erro-panel,.no-print{display:none !important;}body{background:#fff;color:#000;font-size:12px;}.card{border:1px solid #ddd;background:#fff;}}
+body.light{
+  --bg:#f0f2f7;--surface:#ffffff;--surface2:#f0f2f7;--surface3:#e4e8f0;
+  --border:#d0d5e0;--border2:#b8bfd0;
+  --text:#1a1f2e;--text2:#4a5568;--text3:#8896a8;
+}
+body.light .kpi{background:#fff;}
+body.light table tbody tr:hover td{background:#f0f2f7;}
+body.light .erro-header{background:#fff;}
+body.light .erro-row.open .erro-header{background:#f0f2f7;}
+body.light .sim-card{background:#fff;}
+body.light .assunto-card{background:#fff;}
+body.light input,body.light select,body.light textarea{background:#f0f2f7;color:#1a1f2e;}
+body.light .modal{background:#fff;}
+body.light .login-box{background:#fff;}
+body.light .popup-box{background:#fff;}
+body.light .add-erro-panel{background:#fff;}
+body.light .confirm-box{background:#fff;}
+
+/* TOGGLE DARK/LIGHT */
+.theme-toggle{width:44px;height:24px;border-radius:12px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text2);transition:transform .2s,background .2s;}
+body.light .theme-toggle{background:#c8f135;}
+body.light .theme-toggle::after{transform:translateX(20px);background:#0c0e13;}
 </style>
 </head>
 <body>
@@ -208,7 +230,9 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 
 <header>
   <div class="logo">⚖️ TJ-AM <span class="logo-badge">Assistente Judiciário</span></div>
-  <div style="display:flex;align-items:center;gap:16px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:11px;color:var(--text3)" id="theme-label">🌙</span>
+    <button class="theme-toggle no-print" onclick="toggleTheme()" title="Alternar modo claro/escuro"></button>
     <div style="font-size:12px;font-family:var(--mono)" id="sync-status">Conectando...</div>
     <button class="btn btn-secondary btn-sm no-print" onclick="doLogout()">Sair</button>
   </div>
@@ -568,6 +592,17 @@ function doLogin(){
   }
 }
 function doLogout(){sessionStorage.removeItem('tjam_ok');location.reload();}
+
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  localStorage.setItem('tjam_theme',isLight?'light':'dark');
+  document.getElementById('theme-label').textContent=isLight?'☀️':'🌙';
+}
+function loadTheme(){
+  const t=localStorage.getItem('tjam_theme');
+  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-label').textContent='☀️';}
+}
+loadTheme();
 
 // ══ SUPABASE ══
 async function sbGet(t,q=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${q}&order=id.asc`,{headers:H});return r.json();}
