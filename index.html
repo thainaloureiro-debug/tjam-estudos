@@ -225,6 +225,22 @@ body.light .badge-gray{background:rgba(75,85,99,.1);color:#374151;}
 body.light .nota-tag{color:#6d28d9;background:rgba(109,40,217,.1);}
 .nota-preview{font-size:12px;color:var(--text2);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px;}
 body.light .nota-preview{color:#4a5568;}
+
+/* REVISÃO */
+.rev-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:border-color .2s;}
+.rev-card:hover{border-color:var(--border2);}
+.rev-card.urgente{border-left:3px solid var(--danger);}
+.rev-card.atencao{border-left:3px solid var(--warning);}
+.rev-card.ok{border-left:3px solid var(--success);}
+.rev-dias{font-family:var(--mono);font-size:22px;font-weight:800;min-width:52px;text-align:center;line-height:1;}
+.rev-info{flex:1;}
+.rev-nome{font-weight:600;font-size:14px;margin-bottom:3px;}
+.rev-meta{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.dias-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.dias-urgente{background:rgba(240,100,100,.15);color:var(--danger);}
+.dias-atencao{background:rgba(245,158,11,.15);color:var(--warning);}
+.dias-ok{background:rgba(52,211,153,.15);color:var(--success);}
+.dias-nunca{background:rgba(124,135,156,.15);color:var(--text2);}
 </style>
 </head>
 <body>
@@ -260,6 +276,7 @@ body.light .nota-preview{color:#4a5568;}
   <div class="tab" onclick="showPage('comparar',this)">⚖️ Comparar</div>
   <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
   <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
+  <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
   <div class="tab" onclick="showPage('pdfs',this)">📋 PDFs</div>
   <div class="tab" onclick="showPage('relatorio',this)">📄 Relatório</div>
 </nav>
@@ -493,6 +510,46 @@ body.light .nota-preview{color:#4a5568;}
   </div>
 </div>
 
+<!-- REVISÃO -->
+<div id="page-revisao" class="page">
+  <div class="sec-head">
+    <div class="sec-title">🔁 Fila de Revisão</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label class="fi" style="color:var(--text2)">Dias sem praticar:</label>
+      <select id="rev-limite" onchange="renderRevisao()" style="min-width:130px">
+        <option value="7">+ de 7 dias</option>
+        <option value="15" selected>+ de 15 dias</option>
+        <option value="30">+ de 30 dias</option>
+        <option value="0">Todos</option>
+      </select>
+      <label class="fi" style="color:var(--text2)">Matéria:</label>
+      <select id="rev-materia" onchange="renderRevisao()" style="min-width:200px">
+        <option value="">Todas</option>
+      </select>
+      <label class="fi" style="color:var(--text2)">Meta de acerto:</label>
+      <select id="rev-meta" onchange="renderRevisao()" style="min-width:130px">
+        <option value="0">Qualquer %</option>
+        <option value="50">Abaixo de 50%</option>
+        <option value="60">Abaixo de 60%</option>
+        <option value="75" selected>Abaixo de 75%</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div id="rev-kpis" style="margin-bottom:18px"></div>
+
+  <!-- Legenda -->
+  <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+    <span class="dias-badge dias-urgente">🔴 +30 dias sem praticar</span>
+    <span class="dias-badge dias-atencao">🟡 15-30 dias</span>
+    <span class="dias-badge dias-ok">🟢 Menos de 15 dias</span>
+    <span class="dias-badge dias-nunca">⬜ Nunca praticado</span>
+  </div>
+
+  <div id="rev-lista"></div>
+</div>
+
 <!-- PDFs -->
 <div id="page-pdfs" class="page">
   <div class="sec-head"><div class="sec-title">📋 Painel de PDFs / Aulas</div><button class="btn btn-primary" onclick="openModal('modal-pdf')">✏️ Editar</button></div>
@@ -673,7 +730,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,pdfs:renderPDFs,relatorio:renderRelatorio};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,pdfs:renderPDFs,relatorio:renderRelatorio};
 function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
@@ -1079,6 +1136,92 @@ function renderRelatorio(){
   if(tipo==='comparacao'){const cmp=document.getElementById('cmp-result')?.innerHTML;html+=`<div class="card"><div class="card-title">⚖️ Comparação</div>${cmp&&!cmp.includes('empty')?cmp:'<div style="padding:20px;text-align:center;color:#666">Faça uma comparação na aba Comparar primeiro.</div>'}</div>`;}
   if(!fE.length&&!fS.length&&tipo!=='comparacao')html+='<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Sem dados no período</div></div>';
   document.getElementById('rel-content').innerHTML=html;
+}
+
+// ══ REVISÃO ══
+function renderRevisao(){
+  fMS('rev-materia','Todas');
+  const limite=parseInt(document.getElementById('rev-limite').value)||15;
+  const matFilt=document.getElementById('rev-materia').value;
+  const metaFilt=parseInt(document.getElementById('rev-meta').value)||0;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const dados=[];
+  Object.keys(MATERIAS).forEach(mat=>{
+    if(matFilt&&mat!==matFilt)return;
+    MATERIAS[mat].forEach(ass=>{
+      const st=getAssuntoStatus(mat,ass);
+      if(st==='concluido')return;
+      const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+      let ultimaData=null;
+      sessoes.forEach(e=>{if(!e.data)return;if(!ultimaData||e.data>ultimaData)ultimaData=e.data;});
+      let dias=null;
+      if(ultimaData){const d=new Date(ultimaData+'T12:00');dias=Math.floor((hoje-d)/(1000*60*60*24));}
+      const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+      const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||1),0);
+      const pAc=totF>0?(totF-totE)/totF:null;
+      if(limite>0&&dias!==null&&dias<limite)return;
+      if(metaFilt>0&&pAc!==null&&pAc*100>=metaFilt)return;
+      dados.push({mat,ass,dias,ultimaData,totF,totE,pAc,st,sessoes:sessoes.length});
+    });
+  });
+  dados.sort((a,b)=>{
+    if(a.dias===null&&b.dias===null)return 0;
+    if(a.dias===null)return-1;
+    if(b.dias===null)return 1;
+    return b.dias-a.dias;
+  });
+  const nunca=dados.filter(d=>d.dias===null).length;
+  const urgente=dados.filter(d=>d.dias!==null&&d.dias>=30).length;
+  const atencao=dados.filter(d=>d.dias!==null&&d.dias>=15&&d.dias<30).length;
+  let concluidos=0;
+  Object.keys(MATERIAS).forEach(mat=>MATERIAS[mat].forEach(a=>{if(getAssuntoStatus(mat,a)==='concluido')concluidos++;}));
+  const totalAss=Object.values(MATERIAS).flat().length;
+  document.getElementById('rev-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div><div class="kpi-label">🔴 Urgente +30d</div><div class="kpi-value" style="color:var(--danger)">${urgente}</div><div class="kpi-sub">assuntos</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">🟡 Atenção 15-30d</div><div class="kpi-value" style="color:var(--warning)">${atencao}</div><div class="kpi-sub">assuntos</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--text2)"></div><div class="kpi-label">⬜ Nunca praticado</div><div class="kpi-value" style="color:var(--text2)">${nunca}</div><div class="kpi-sub">assuntos</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">✅ Concluídos</div><div class="kpi-value" style="color:var(--success)">${concluidos}</div><div class="kpi-sub">de ${totalAss}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">📋 Na fila</div><div class="kpi-value" style="color:var(--accent)">${dados.length}</div><div class="kpi-sub">para revisar</div></div>
+    </div>`;
+  if(!dados.length){
+    document.getElementById('rev-lista').innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">Nenhum assunto na fila!</div><div class="empty-sub">Todos praticados recentemente ou concluídos</div></div>`;
+    return;
+  }
+  const STS={nao_iniciado:'⬜ Não iniciado',estudando:'📖 Estudando',revisando:'🔄 Revisando'};
+  document.getElementById('rev-lista').innerHTML=dados.map(d=>{
+    const diasCls=d.dias===null?'dias-nunca':d.dias>=30?'dias-urgente':d.dias>=15?'dias-atencao':'dias-ok';
+    const cardCls=d.dias===null?'':d.dias>=30?'urgente':d.dias>=15?'atencao':'ok';
+    const diasColor=d.dias===null?'var(--text3)':d.dias>=30?'var(--danger)':d.dias>=15?'var(--warning)':'var(--success)';
+    const diasLabel=d.dias===null?'Nunca praticado':`${d.dias} dia${d.dias!==1?'s':''} sem praticar`;
+    return`<div class="rev-card ${cardCls}" onclick="irParaAssunto('${d.mat.replace(/'/g,"\\'")}','${d.ass.replace(/'/g,"\\'")}')">
+      <div class="rev-dias" style="color:${diasColor}">${d.dias===null?'∞':d.dias}<div style="font-size:10px;font-weight:500;color:var(--text3)">${d.dias===null?'nunca':'dias'}</div></div>
+      <div class="rev-info">
+        <div class="rev-nome">${d.ass}</div>
+        <div class="rev-meta">
+          <span class="badge ${MB[d.mat]||'badge-blue'}" style="font-size:10px">${d.mat}</span>
+          <span class="dias-badge ${diasCls}">${diasLabel}</span>
+          ${d.totF>0?`<span style="font-size:12px;color:var(--text2)">${d.totF} feitas · ${d.totE} erros · ${pBadge(d.pAc)}</span>`:'<span style="font-size:12px;color:var(--text3)">Sem questões ainda</span>'}
+          <span style="font-size:11px;color:var(--text3)">${STS[d.st]||''}</span>
+        </div>
+        ${d.ultimaData?`<div style="font-size:11px;color:var(--text3);margin-top:3px">Última prática: ${fmtD(d.ultimaData)}</div>`:''}
+      </div>
+      <div style="color:var(--text3);font-size:18px;flex-shrink:0">›</div>
+    </div>`;
+  }).join('');
+}
+
+function irParaAssunto(mat,ass){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-conteudo').classList.add('active');
+  document.querySelector('[onclick*="conteudo"]')?.classList.add('active');
+  const sel=document.getElementById('cont-materia');
+  if(!sel.querySelector(`option[value="${mat}"]`)){
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  }
+  sel.value=mat;renderConteudo();
+  setTimeout(()=>openPopup(mat,ass),400);
 }
 
 async function carregarDados(){
