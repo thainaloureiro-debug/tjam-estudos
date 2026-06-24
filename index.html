@@ -261,6 +261,23 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
 .dias-atencao{background:rgba(245,158,11,.15);color:var(--warning);}
 .dias-ok{background:rgba(52,211,153,.15);color:var(--success);}
 .dias-nunca{background:rgba(124,135,156,.15);color:var(--text2);}
+
+/* LEI SECA */
+.lei-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;transition:border-color .2s;}
+.lei-card:hover{border-color:var(--border2);}
+.lei-card.com-progresso{border-left:3px solid var(--accent);}
+.lei-titulo{font-size:16px;font-weight:700;margin-bottom:4px;}
+.lei-materia-tag{font-size:11px;color:var(--text2);margin-bottom:14px;}
+.lei-progresso-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.lei-artigo-display{font-family:var(--mono);font-size:28px;font-weight:800;color:var(--accent);line-height:1;}
+.lei-artigo-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.lei-hist-item{font-size:12px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
+.lei-hist-item:last-child{border-bottom:none;}
+/* STREAK */
+.streak-card{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;text-align:center;}
+.streak-num{font-size:56px;font-weight:800;line-height:1;color:var(--accent3);}
+.streak-label{font-size:12px;color:var(--text2);margin-top:4px;}
+.streak-fire{font-size:32px;}
 </style>
 </head>
 <body>
@@ -297,6 +314,7 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
   <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
   <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
   <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
+  <div class="tab" onclick="showPage('leiseca',this)">📜 Lei Seca</div>
   <div class="tab" onclick="showPage('pdfs',this)">📋 PDFs</div>
   <div class="tab" onclick="showPage('relatorio',this)">📄 Relatório</div>
   <div class="tab" onclick="showPage('diario',this)">📅 Diário</div>
@@ -336,6 +354,7 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
         <div class="form-group"><label>Assunto *</label><select id="err-assunto"><option value="">Selecione a matéria</option></select></div>
         <div class="form-group"><label>Questões feitas na sessão *</label><input type="number" id="err-qtd-feitas" min="1" value="10" placeholder="Ex: 10"></div>
         <div class="form-group"><label>Questões erradas na sessão *</label><input type="number" id="err-qtd-erradas" min="0" value="0" placeholder="Ex: 3"></div>
+        <div class="form-group"><label>⏱ Tempo gasto (minutos)</label><input type="number" id="err-min" min="0" value="0" placeholder="Ex: 45" oninput="updateErrMin()"><div style="font-size:11px;color:var(--text3);margin-top:3px" id="err-min-hm"></div></div>
         <div class="form-group"><label>Nº da Questão (opcional)</label><input type="text" id="err-questao" placeholder="Ex: Q45"></div>
         <div class="form-group"><label>Material</label><input type="text" id="err-material" placeholder="Ex: Apostila, PDF..."></div>
       </div>
@@ -571,6 +590,50 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
   <div id="rev-lista"></div>
 </div>
 
+<!-- LEI SECA -->
+<div id="page-leiseca" class="page">
+  <div class="sec-head">
+    <div class="sec-title">📜 Lei Seca</div>
+    <button class="btn btn-primary" onclick="openModal('modal-add-lei')">+ Adicionar Lei</button>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Matéria</span>
+    <select id="ls-materia" onchange="renderLeiSeca()" style="min-width:220px;font-weight:600">
+      <option value="">Todas as matérias</option>
+    </select>
+  </div>
+
+  <div id="ls-lista"></div>
+</div>
+
+<!-- MODAL ADD LEI -->
+<div id="modal-add-lei" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lei')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">📜 Nova Lei / Normativo</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Matéria *</label>
+        <select id="al-materia">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nome da Lei *</label>
+        <input type="text" id="al-nome" placeholder="Ex: Constituição Federal">
+      </div>
+      <div class="form-group">
+        <label>Total de Artigos (opcional)</label>
+        <input type="number" id="al-total" min="1" placeholder="Ex: 250">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-lei')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovaLei()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- PDFs -->
 <div id="page-pdfs" class="page">
   <div class="sec-head"><div class="sec-title">📋 Painel de PDFs / Aulas</div><button class="btn btn-primary" onclick="openModal('modal-pdf')">✏️ Editar</button></div>
@@ -613,13 +676,13 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Imprimir</button>
   </div>
 
-  <!-- Filtros rápidos de período -->
-  <div class="filter-bar no-print" style="margin-bottom:18px">
+  <!-- Filtros rápidos -->
+  <div class="filter-bar no-print">
     <span class="filter-label">Ver</span>
     <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('hoje')">Hoje</button>
     <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('7')">Últimos 7 dias</button>
     <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('30')">Últimos 30 dias</button>
-    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('tudo')">Histórico completo</button>
+    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('tudo')">Histórico</button>
     <span class="filter-sep">ou</span>
     <label class="fi">De:</label><input type="date" id="di-from" onchange="renderDiario()" style="width:148px">
     <span class="filter-sep">→</span>
@@ -629,45 +692,31 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
   <!-- Resumo visual -->
   <div id="di-resumo" style="margin-bottom:18px"></div>
 
-  <!-- Registrar novo dia -->
-  <div class="card no-print" style="margin-bottom:18px">
-    <div class="card-title">➕ Registrar sessão de estudo</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-      <div class="diario-input-group" id="dg-teoria">
-        <div class="diario-icon">📖</div>
-        <div class="diario-label">Teoria</div>
-        <input type="number" class="diario-min-input" id="di-teoria" min="0" placeholder="0" oninput="updateDiarioHM('teoria')">
-        <div class="diario-hm" id="di-teoria-hm">—</div>
-      </div>
-      <div class="diario-input-group" id="dg-questoes">
-        <div class="diario-icon">✏️</div>
-        <div class="diario-label">Questões</div>
-        <input type="number" class="diario-min-input" id="di-questoes" min="0" placeholder="0" oninput="updateDiarioHM('questoes')">
-        <div class="diario-hm" id="di-questoes-hm">—</div>
-      </div>
-      <div class="diario-input-group" id="dg-lei">
-        <div class="diario-icon">⚖️</div>
-        <div class="diario-label">Lei Seca</div>
-        <input type="number" class="diario-min-input" id="di-lei" min="0" placeholder="0" oninput="updateDiarioHM('lei')">
-        <div class="diario-hm" id="di-lei-hm">—</div>
-      </div>
+  <!-- Registrar Teoria -->
+  <div class="card no-print" style="margin-bottom:14px">
+    <div class="card-title">📖 Registrar Tempo de Teoria</div>
+    <div id="di-teoria-linhas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+      <div class="form-group"><label>Data</label><input type="date" id="di-teoria-data"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addDiarioLinha('teoria')" style="margin-bottom:0;height:38px">+ Adicionar matéria</button>
+      <button class="btn btn-primary" onclick="salvarDiarioTipo('teoria')" style="height:38px">💾 Salvar Teoria</button>
     </div>
-    <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
-      <div class="form-group" style="flex:1;min-width:140px">
-        <label>Data</label>
-        <input type="date" id="di-data">
-      </div>
-      <div class="form-group" style="flex:2;min-width:200px">
-        <label>Observação (opcional)</label>
-        <input type="text" id="di-obs" placeholder="Ex: Fiz simulado, estudei no turno da manhã...">
-      </div>
-      <button class="btn btn-primary" onclick="salvarDiario()" style="height:38px">💾 Salvar</button>
+  </div>
+
+  <!-- Registrar Lei Seca -->
+  <div class="card no-print" style="margin-bottom:14px">
+    <div class="card-title">⚖️ Registrar Tempo de Lei Seca</div>
+    <div id="di-lei-linhas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+      <div class="form-group"><label>Data</label><input type="date" id="di-lei-data"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addDiarioLinha('lei')" style="height:38px">+ Adicionar lei</button>
+      <button class="btn btn-primary" onclick="salvarDiarioTipo('lei')" style="height:38px">💾 Salvar Lei Seca</button>
     </div>
   </div>
 
   <!-- Histórico -->
   <div class="card">
-    <div class="card-title">📋 Histórico de Sessões</div>
+    <div class="card-title">📋 Histórico</div>
     <div id="di-historico"></div>
   </div>
 </div>
@@ -795,7 +844,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[];
 
 // ══ UTILS ══
 const today=()=>new Date().toISOString().slice(0,10);
@@ -817,7 +866,19 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+
+// Leis pré-cadastradas por matéria
+const LEIS_BASE={
+  'Direito Constitucional':['Constituição Federal'],
+  'Direito Administrativo':['Lei 8.112/1990 — Estatuto dos Servidores','Lei 9.784/1999 — Processo Administrativo'],
+  'Direito Processual Civil':['CPC — Lei 13.105/2015'],
+  'Direito Processual Penal':['CPP — Decreto-Lei 3.689/1941'],
+  'Estatuto dos Servidores':['Lei 8.112/1990 — Estatuto dos Servidores'],
+  'Acessibilidade':['Lei 13.146/2015 — Estatuto da Pessoa com Deficiência'],
+  'Informática e Processo Digital':['Lei 11.419/2006 — Processo Eletrônico'],
+  'Organização Judiciária':['Código de Organização Judiciária do Amazonas'],
+};
 function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
@@ -834,25 +895,57 @@ async function zerarDados(){
 }
 
 // ══ MODALS ══
-function openModal(id){document.getElementById(id).classList.add('open');if(id==='modal-simulado'){document.getElementById('s-data').value=today();switchSimTab('geral',document.querySelector('.modal-tab'));}if(id==='modal-pdf')renderPDFEdit();}
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-simulado'){document.getElementById('s-data').value=today();switchSimTab('geral',document.querySelector('.modal-tab'));}
+  if(id==='modal-pdf')renderPDFEdit();
+  if(id==='modal-add-lei'){
+    const sel=document.getElementById('al-materia');
+    sel.innerHTML='<option value="">Selecione...</option>';
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    document.getElementById('al-nome').value='';
+    document.getElementById('al-total').value='';
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function closeModalOut(e,id){if(e.target.id===id)closeModal(id);}
 function switchSimTab(tab,el){document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('sim-tab-geral').style.display=tab==='geral'?'block':'none';document.getElementById('sim-tab-materias').style.display=tab==='materias'?'block':'none';if(tab==='materias'){document.getElementById('sim-mat-rows').innerHTML=Object.keys(MATERIAS).map(mat=>{const k=mat.replace(/[\s\/]/g,'_');return`<tr><td style="font-size:12px;font-weight:600">${mat}</td><td><input type="number" id="sm-q-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-a-${k}" min="0" placeholder="0" style="width:58px"></td><td><input type="number" id="sm-e-${k}" min="0" placeholder="0" style="width:58px"></td></tr>`;}).join('');}}
 
 // ══ ADD ERRO ══
-function toggleAddPanel(){const p=document.getElementById('add-panel');const open=p.classList.toggle('open');if(open){fMS('err-materia',null);document.getElementById('err-data').value=today();['err-materia','err-assunto','err-questao','err-material','err-motivo'].forEach(id=>document.getElementById(id).value='');document.getElementById('err-assunto').innerHTML='<option value="">Selecione a matéria</option>';document.getElementById('err-qtd-feitas').value=10;document.getElementById('err-qtd-erradas').value=0;}}
+function toggleAddPanel(){
+  const p=document.getElementById('add-panel');const open=p.classList.toggle('open');
+  if(open){
+    fMS('err-materia',null);
+    document.getElementById('err-data').value=today();
+    ['err-materia','err-assunto','err-questao','err-material','err-motivo'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('err-assunto').innerHTML='<option value="">Selecione a matéria</option>';
+    document.getElementById('err-qtd-feitas').value=10;
+    document.getElementById('err-qtd-erradas').value=0;
+    document.getElementById('err-min').value=0;
+    document.getElementById('err-min-hm').textContent='';
+  }
+}
+function updateErrMin(){
+  const v=parseInt(document.getElementById('err-min').value)||0;
+  document.getElementById('err-min-hm').textContent=v>0?minToHM(v):'';
+}
 function updateAssuntos(){const mat=document.getElementById('err-materia').value;const sel=document.getElementById('err-assunto');sel.innerHTML='<option value="">Selecione...</option>';if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});}
 async function salvarErro(){
   const data=document.getElementById('err-data').value,materia=document.getElementById('err-materia').value,assunto=document.getElementById('err-assunto').value;
   const qtdF=parseInt(document.getElementById('err-qtd-feitas').value)||1;
   const qtdE=parseInt(document.getElementById('err-qtd-erradas').value)||0;
+  const minQ=parseInt(document.getElementById('err-min').value)||0;
   if(!data||!materia||!assunto){alert('Preencha Data, Matéria e Assunto.');return;}
   if(qtdE>qtdF){alert('Erradas não pode ser maior que feitas.');return;}
   setSS('sync');
   try{
-    const res=await sbIns('erros',{data,materia,assunto,qtd_feitas:qtdF,qtd_erradas:qtdE,questao:document.getElementById('err-questao').value||null,material:document.getElementById('err-material').value||null,motivo:document.getElementById('err-motivo').value||null});
+    const res=await sbIns('erros',{data,materia,assunto,qtd_feitas:qtdF,qtd_erradas:qtdE,min_questoes:minQ,
+      questao:document.getElementById('err-questao').value||null,
+      material:document.getElementById('err-material').value||null,
+      motivo:document.getElementById('err-motivo').value||null});
     if(res&&res[0])erros.push(res[0]);
-    document.getElementById('add-panel').classList.remove('open');setSS('ok');toast('✓ Sessão registrada!');renderRegistro();renderDashboard();
+    document.getElementById('add-panel').classList.remove('open');
+    setSS('ok');toast('✓ Sessão registrada!');renderRegistro();renderDashboard();
   }catch(e){setSS('erro');toast('Erro ao salvar.');}
 }
 async function deletarErro(id){if(!confirm('Remover?'))return;setSS('sync');await sbDel('erros',id);erros=erros.filter(e=>e.id!==id);setSS('ok');toast('Removido.');renderRegistro();renderDashboard();}
@@ -873,22 +966,9 @@ function toggleSimMat(id){const el=document.getElementById('simmat-'+id);if(el)e
 
 // ══ DASHBOARD ══
 function renderDashboard(){
+  renderDashboardExtra();
   const from=document.getElementById('dash-from').value,to=document.getElementById('dash-to').value;
   const fE=fD(erros,from,to),fS=fD(simulados,from,to);
-  const tQ=fS.reduce((s,x)=>s+x.total,0),tA=fS.reduce((s,x)=>s+x.acertos,0),pG=tQ>0?tA/tQ:null;
-  // Stats do diário
-  const st=calcStats(fE);
-  const mC=new Set(fE.map(e=>e.materia)).size;
-  document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Resolvidas</div><div class="kpi-value" style="color:var(--accent2)">${(tQ+st.feitas).toLocaleString('pt-BR')}</div><div class="kpi-sub">simulados + diário</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Total de Acertos</div><div class="kpi-value" style="color:var(--success)">${(tA+st.acertos).toLocaleString('pt-BR')}</div><div class="kpi-sub">${tQ+st.feitas>0?pS((tA+st.acertos)/(tQ+st.feitas))+' das questões':'—'}</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total de Erros</div><div class="kpi-value" style="color:var(--accent3)">${((tQ-tA)+st.erradas).toLocaleString('pt-BR')}</div><div class="kpi-sub">simulados + diário</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:${pG==null?'var(--text3)':pC(pG)}"></div><div class="kpi-label">Taxa — Simulados</div><div class="kpi-value">${pK(pG,pC(pG))}</div><div class="kpi-sub">média nos simulados</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:${st.pct==null?'var(--text3)':pC(st.pct)}"></div><div class="kpi-label">Taxa — Diário</div><div class="kpi-value">${pK(st.pct,pC(st.pct))}</div><div class="kpi-sub">nas sessões de questões</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Simulados Feitos</div><div class="kpi-value" style="color:var(--accent)">${fS.length}</div><div class="kpi-sub">${from||to?'no período':'todos'}</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Matérias c/ Registro</div><div class="kpi-value" style="color:var(--accent2)">${mC}</div><div class="kpi-sub">de ${Object.keys(MATERIAS).length} matérias</div></div>
-    <div class="kpi"><div class="kpi-accent" style="background:var(--text3)"></div><div class="kpi-label">Sessões Registradas</div><div class="kpi-value" style="color:var(--text2)">${fE.length}</div><div class="kpi-sub">${from||to?'no período':'todas'}</div></div>`;
-
   const cnt={};fE.forEach(e=>{const k=e.assunto+'|||'+e.materia;cnt[k]=(cnt[k]||0)+(e.qtd_erradas||1);});
   const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,10);const maxV=sorted[0]?.[1]||1;
   const cols=['var(--accent3)','var(--accent)','var(--accent2)'];
@@ -1315,20 +1395,10 @@ function irParaAssunto(mat,ass){
 function minToHM(min){
   if(!min||min<=0)return'—';
   const h=Math.floor(min/60),m=min%60;
-  if(h===0)return`${m}min`;
-  if(m===0)return`${h}h`;
-  return`${h}h ${m}min`;
-}
-function updateDiarioHM(tipo){
-  const val=parseInt(document.getElementById('di-'+tipo)?.value)||0;
-  const el=document.getElementById('di-'+tipo+'-hm');
-  const grp=document.getElementById('dg-'+tipo);
-  if(el)el.textContent=val>0?minToHM(val):'—';
-  if(grp)grp.classList.toggle('filled',val>0);
+  if(h===0)return`${m}min`;if(m===0)return`${h}h`;return`${h}h ${m}min`;
 }
 function setDiarioPeriodo(p){
-  const hoje=today();
-  let from='',to=hoje;
+  const hoje=today();let from='',to=hoje;
   if(p==='hoje'){from=hoje;}
   else if(p==='7'){const d=new Date();d.setDate(d.getDate()-6);from=d.toISOString().slice(0,10);}
   else if(p==='30'){const d=new Date();d.setDate(d.getDate()-29);from=d.toISOString().slice(0,10);}
@@ -1337,28 +1407,129 @@ function setDiarioPeriodo(p){
   document.getElementById('di-to').value=to;
   renderDiario();
 }
-async function salvarDiario(){
-  const data=document.getElementById('di-data').value||today();
-  const teoria=parseInt(document.getElementById('di-teoria').value)||0;
-  const questoes=parseInt(document.getElementById('di-questoes').value)||0;
-  const lei=parseInt(document.getElementById('di-lei').value)||0;
-  const obs=document.getElementById('di-obs').value.trim();
-  if(!teoria&&!questoes&&!lei){alert('Preencha pelo menos um campo de tempo.');return;}
-  setSS('sync');
+
+// Leis disponíveis (começa com CF, carrega as personalizadas do banco)
+let leisSeca=[];
+function getLeisPorMateria(mat){
+  const base={'Direito Constitucional':['Constituição Federal'],'Direito Administrativo':['Lei 8.112/1990','Lei 9.784/1999'],'Direito Processual Civil':['CPC - Lei 13.105/2015'],'Direito Processual Penal':['CPP - Decreto-Lei 3.689/1941'],'Estatuto dos Servidores':['Lei 8.112/1990'],'Acessibilidade':['Lei 13.146/2015'],'Informática e Processo Digital':['Lei 11.419/2006']};
+  const personalizadas=leisSeca.filter(l=>l.materia===mat).map(l=>l.lei);
+  const padrao=base[mat]||[];
+  return[...new Set([...padrao,...personalizadas])];
+}
+
+let diarioLinhasCount={teoria:0,lei:0};
+function addDiarioLinha(tipo){
+  const cont=document.getElementById(`di-${tipo}-linhas`);
+  const idx=diarioLinhasCount[tipo]++;
+  const div=document.createElement('div');
+  div.id=`di-${tipo}-linha-${idx}`;
+  div.style.cssText='display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end';
+
+  if(tipo==='teoria'){
+    div.innerHTML=`
+      <div class="form-group">
+        <label>Matéria</label>
+        <select id="di-t-mat-${idx}" onchange="updateAssuntosDiario(${idx})">
+          <option value="">Selecione...</option>
+          ${Object.keys(MATERIAS).map(m=>`<option value="${m}">${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Assunto</label>
+        <select id="di-t-ass-${idx}"><option value="">Selecione a matéria</option></select>
+      </div>
+      <div class="form-group">
+        <label>Minutos</label>
+        <input type="number" id="di-t-min-${idx}" min="0" placeholder="Ex: 45" style="width:90px"
+          oninput="document.getElementById('di-t-hm-${idx}').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="di-t-hm-${idx}"></div>
+      </div>
+      <button class="btn btn-ghost" onclick="document.getElementById('di-teoria-linha-${idx}').remove()" style="margin-bottom:22px">✕</button>`;
+  } else {
+    div.innerHTML=`
+      <div class="form-group">
+        <label>Matéria</label>
+        <select id="di-l-mat-${idx}" onchange="updateLeisDiario(${idx})">
+          <option value="">Selecione...</option>
+          ${Object.keys(MATERIAS).map(m=>`<option value="${m}">${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Lei / Assunto</label>
+        <div style="display:flex;gap:6px">
+          <select id="di-l-lei-${idx}" style="flex:1"><option value="">Selecione a matéria</option></select>
+          <button class="btn btn-secondary btn-sm" onclick="addLeiPersonalizada(${idx})" title="Adicionar nova lei" style="padding:6px 8px;flex-shrink:0">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Minutos</label>
+        <input type="number" id="di-l-min-${idx}" min="0" placeholder="Ex: 30" style="width:90px"
+          oninput="document.getElementById('di-l-hm-${idx}').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="di-l-hm-${idx}"></div>
+      </div>
+      <button class="btn btn-ghost" onclick="document.getElementById('di-lei-linha-${idx}').remove()" style="margin-bottom:22px">✕</button>`;
+  }
+  cont.appendChild(div);
+}
+
+function updateAssuntosDiario(idx){
+  const mat=document.getElementById(`di-t-mat-${idx}`).value;
+  const sel=document.getElementById(`di-t-ass-${idx}`);
+  sel.innerHTML='<option value="">Selecione...</option>';
+  if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+}
+function updateLeisDiario(idx){
+  const mat=document.getElementById(`di-l-mat-${idx}`).value;
+  const sel=document.getElementById(`di-l-lei-${idx}`);
+  sel.innerHTML='<option value="">Selecione...</option>';
+  if(mat)getLeisPorMateria(mat).forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;sel.appendChild(o);});
+}
+async function addLeiPersonalizada(idx){
+  const mat=document.getElementById(`di-l-mat-${idx}`).value;
+  if(!mat){alert('Selecione a matéria primeiro.');return;}
+  const nome=prompt('Nome da lei (ex: Lei 8.429/1992 — Improbidade):');
+  if(!nome||!nome.trim())return;
   try{
-    const res=await sbIns('diarios',{data,min_teoria:teoria,min_questoes:questoes,min_lei:lei,obs:obs||null});
-    if(res&&res[0])diarios.push(res[0]);
-    // Limpa campos
-    ['di-teoria','di-questoes','di-lei','di-obs'].forEach(id=>document.getElementById(id).value='');
-    ['teoria','questoes','lei'].forEach(t=>{
-      const el=document.getElementById('di-'+t+'-hm');if(el)el.textContent='—';
-      const grp=document.getElementById('dg-'+t);if(grp)grp.classList.remove('filled');
-    });
-    setSS('ok');toast('✓ Sessão registrada!');renderDiario();
+    const res=await sbIns('leis_seca',{materia:mat,lei:nome.trim()});
+    if(res&&res[0])leisSeca.push(res[0]);
+    updateLeisDiario(idx);
+    // Seleciona a lei recém criada
+    const sel=document.getElementById(`di-l-lei-${idx}`);
+    sel.value=nome.trim();
+    toast('✓ Lei adicionada!');
+  }catch(e){toast('Erro ao salvar lei.');console.error(e);}
+}
+
+async function salvarDiarioTipo(tipo){
+  const dataId=tipo==='teoria'?'di-teoria-data':'di-lei-data';
+  const data=document.getElementById(dataId).value||today();
+  const linhas=document.querySelectorAll(`[id^="di-${tipo==='teoria'?'t':'l'}-min-"]`);
+  if(!linhas.length){alert('Adicione pelo menos uma linha.');return;}
+  setSS('sync');
+  let salvos=0;
+  try{
+    for(const inp of linhas){
+      const idx=inp.id.split('-').pop();
+      const min=parseInt(inp.value)||0;
+      if(!min)continue;
+      const matEl=document.getElementById(tipo==='teoria'?`di-t-mat-${idx}`:`di-l-mat-${idx}`);
+      const assEl=document.getElementById(tipo==='teoria'?`di-t-ass-${idx}`:`di-l-lei-${idx}`);
+      const mat=matEl?.value||'';
+      const ass=assEl?.value||'';
+      if(!mat)continue;
+      const res=await sbIns('diarios',{data,tipo,materia:mat,assunto:ass,minutos:min});
+      if(res&&res[0])diarios.push(res[0]);
+      salvos++;
+    }
+    // Limpa linhas
+    document.getElementById(`di-${tipo}-linhas`).innerHTML='';
+    diarioLinhasCount[tipo]=0;
+    setSS('ok');toast(`✓ ${salvos} registro${salvos!==1?'s':''} salvo${salvos!==1?'s':''}!`);renderDiario();
   }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
 }
+
 async function deletarDiario(id){
-  if(!confirm('Remover este registro?'))return;
+  if(!confirm('Remover?'))return;
   setSS('sync');
   await sbDel('diarios',id);
   diarios=diarios.filter(d=>d.id!==id);
@@ -1366,128 +1537,414 @@ async function deletarDiario(id){
 }
 
 function renderDiario(){
-  // Preenche data padrão
-  const dataInput=document.getElementById('di-data');
-  if(dataInput&&!dataInput.value)dataInput.value=today();
+  // Preenche datas padrão
+  ['di-teoria-data','di-lei-data'].forEach(id=>{
+    const el=document.getElementById(id);if(el&&!el.value)el.value=today();
+  });
+  // Inicializa linhas se vazias
+  if(!document.querySelector('[id^="di-t-min-"]'))addDiarioLinha('teoria');
+  if(!document.querySelector('[id^="di-l-min-"]'))addDiarioLinha('lei');
 
   const from=document.getElementById('di-from').value;
   const to=document.getElementById('di-to').value;
-  let filt=fD(diarios,from,to);
-  filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
+  const filtDiarios=fD(diarios,from,to);
+  const filtErros=fD(erros,from,to);
 
-  // Totais do período
-  const totT=filt.reduce((s,d)=>s+(d.min_teoria||0),0);
-  const totQ=filt.reduce((s,d)=>s+(d.min_questoes||0),0);
-  const totL=filt.reduce((s,d)=>s+(d.min_lei||0),0);
-  const totG=totT+totQ+totL;
+  // Totais de tempo
+  const totT=filtDiarios.filter(d=>d.tipo==='teoria').reduce((s,d)=>s+(d.minutos||0),0);
+  const totL=filtDiarios.filter(d=>d.tipo==='lei').reduce((s,d)=>s+(d.minutos||0),0);
+  const totQ=filtErros.reduce((s,e)=>s+(e.min_questoes||0),0);
+  const totG=totT+totL+totQ;
 
-  // Acurácia do período (das sessões de questões)
-  const errosPeriodo=fD(erros,from,to);
-  const stPeriodo=calcStats(errosPeriodo);
+  // Stats de questões do período (do registro)
+  const stP=calcStats(filtErros);
 
-  // Gráfico de rosca SVG para distribuição de tempo
-  function rosetaSVG(vals,colors,size=90){
+  // SVG rosca tempo
+  function rosetaSVG(vals,colors,labels,size=100){
     const total=vals.reduce((a,b)=>a+b,0)||1;
-    const R=32,CX=size/2,CY=size/2,circ=2*Math.PI*R;
+    const R=36,CX=size/2,CY=size/2,circ=2*Math.PI*R;
     let acc=0;
     const slices=vals.map((v,i)=>{
       const frac=v/total;const dash=frac*circ;const off=circ-acc*circ;
-      const s=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[i]}" stroke-width="10" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${off}" transform="rotate(-90 ${CX} ${CY})"/>`;
+      const s=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[i]}" stroke-width="12"
+        stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${off}" transform="rotate(-90 ${CX} ${CY})">
+        <title>${labels[i]}: ${minToHM(vals[i])}</title></circle>`;
       acc+=frac;return s;
     }).join('');
-    return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slices}</svg>`;
+    return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slices}
+      <text x="${CX}" y="${CY+5}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text2)">${minToHM(total)}</text></svg>`;
   }
+  const tempoSVG=totG>0?rosetaSVG([totT,totQ,totL],['#38bdf8','#c8f135','#fb7c5b'],['Teoria','Questões','Lei Seca']):'';
 
-  const tempoSVG=rosetaSVG([totT,totQ,totL],['#38bdf8','#c8f135','#fb7c5b']);
-  const acuraciaColor=stPeriodo.pct!=null?pC(stPeriodo.pct):'var(--text3)';
-  const acuraciaVal=stPeriodo.pct!=null?(stPeriodo.pct*100).toFixed(1)+'%':'—';
-
-  // SVG acurácia rosca
-  const R2=32,circ2=2*Math.PI*R2;
-  const fracAc=stPeriodo.pct!=null?stPeriodo.pct:0;
-  const acSVG=`<svg width="90" height="90" viewBox="0 0 90 90">
-    <circle cx="45" cy="45" r="${R2}" fill="none" stroke="var(--surface2)" stroke-width="10"/>
-    <circle cx="45" cy="45" r="${R2}" fill="none" stroke="${acuraciaColor}" stroke-width="10"
-      stroke-dasharray="${fracAc*circ2} ${circ2}" stroke-dashoffset="${circ2/4}" transform="rotate(-90 45 45)"/>
-    <text x="45" y="50" text-anchor="middle" font-size="13" font-weight="800" fill="${acuraciaColor}">${acuraciaVal}</text>
+  // SVG rosca acurácia
+  const fracAc=stP.pct!=null?stP.pct:0;
+  const acColor=stP.pct!=null?pC(stP.pct):'var(--text3)';
+  const R2=36,circ2=2*Math.PI*R2;
+  const acSVG=`<svg width="100" height="100" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${R2}" fill="none" stroke="var(--surface2)" stroke-width="12"/>
+    <circle cx="50" cy="50" r="${R2}" fill="none" stroke="${acColor}" stroke-width="12"
+      stroke-dasharray="${fracAc*circ2} ${circ2}" stroke-dashoffset="${circ2/4}" transform="rotate(-90 50 50)"/>
+    <text x="50" y="55" text-anchor="middle" font-size="14" font-weight="800" fill="${acColor}">${stP.pct!=null?(stP.pct*100).toFixed(0)+'%':'—'}</text>
   </svg>`;
 
   document.getElementById('di-resumo').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <!-- Tempo total -->
       <div class="card">
         <div class="card-title">⏱ Distribuição de Tempo</div>
         <div style="display:flex;align-items:center;gap:20px">
-          ${totG>0?tempoSVG:'<div style="color:var(--text3);font-size:12px">Sem registros</div>'}
-          <div style="display:flex;flex-direction:column;gap:10px;flex:1">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#38bdf8;flex-shrink:0"></div><span style="font-size:12px">📖 Teoria</span></div>
-              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#38bdf8">${minToHM(totT)}</span>
+          ${totG>0?tempoSVG:`<div style="color:var(--text3);font-size:13px">Sem registros</div>`}
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#38bdf8"></div><span style="font-size:12px">📖 Teoria</span></div>
+              <span style="font-family:var(--mono);font-weight:700;color:#38bdf8">${minToHM(totT)}</span>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#c8f135;flex-shrink:0"></div><span style="font-size:12px">✏️ Questões</span></div>
-              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#c8f135">${minToHM(totQ)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#c8f135"></div><span style="font-size:12px">✏️ Questões</span></div>
+              <span style="font-family:var(--mono);font-weight:700;color:#c8f135">${minToHM(totQ)}</span>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#fb7c5b;flex-shrink:0"></div><span style="font-size:12px">⚖️ Lei Seca</span></div>
-              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fb7c5b">${minToHM(totL)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#fb7c5b"></div><span style="font-size:12px">⚖️ Lei Seca</span></div>
+              <span style="font-family:var(--mono);font-weight:700;color:#fb7c5b">${minToHM(totL)}</span>
             </div>
             <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between">
               <span style="font-size:12px;color:var(--text2)">Total</span>
-              <span style="font-family:var(--mono);font-size:13px;font-weight:800">${minToHM(totG)}</span>
+              <span style="font-family:var(--mono);font-size:14px;font-weight:800">${minToHM(totG)}</span>
             </div>
           </div>
         </div>
       </div>
-      <!-- Acurácia -->
       <div class="card">
         <div class="card-title">🎯 Acurácia no Período</div>
         <div style="display:flex;align-items:center;gap:20px">
           ${acSVG}
-          <div style="display:flex;flex-direction:column;gap:10px;flex:1">
-            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Questões feitas</span><span style="font-family:var(--mono);font-weight:700">${stPeriodo.feitas}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--success)">Acertos</span><span style="font-family:var(--mono);font-weight:700;color:var(--success)">${stPeriodo.acertos}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--accent3)">Erros</span><span style="font-family:var(--mono);font-weight:700;color:var(--accent3)">${stPeriodo.erradas}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Sessões</span><span style="font-family:var(--mono);font-weight:700">${filt.length}</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Questões feitas</span><span style="font-family:var(--mono);font-weight:700">${stP.feitas}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--success)">Acertos</span><span style="font-family:var(--mono);font-weight:700;color:var(--success)">${stP.acertos}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--accent3)">Erros</span><span style="font-family:var(--mono);font-weight:700;color:var(--accent3)">${stP.erradas}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Sessões</span><span style="font-family:var(--mono);font-weight:700">${filtErros.length}</span></div>
           </div>
         </div>
       </div>
     </div>`;
 
-  // Histórico
+  // Histórico agrupado por data
+  const byData={};
+  [...filtDiarios].forEach(d=>{if(!byData[d.data])byData[d.data]=[];byData[d.data].push(d);});
+  // Adiciona questões do registro
+  filtErros.forEach(e=>{
+    if(!e.min_questoes)return;
+    if(!byData[e.data])byData[e.data]=[];
+    // Agrupa minutos de questões por data
+    const existing=byData[e.data].find(x=>x.tipo==='questoes_registro');
+    if(existing)existing.minutos+=(e.min_questoes||0);
+    else byData[e.data].push({tipo:'questoes_registro',minutos:e.min_questoes||0,data:e.data});
+  });
+
+  const datas=Object.keys(byData).sort((a,b)=>b.localeCompare(a));
   const div=document.getElementById('di-historico');
-  if(!filt.length){
-    div.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Nenhum registro no período</div><div class="empty-sub">Registre uma sessão acima</div></div>';
+  if(!datas.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Nenhum registro</div><div class="empty-sub">Registre uma sessão acima</div></div>';
     return;
   }
-  div.innerHTML=`<div style="display:flex;flex-direction:column">
-    ${filt.map(d=>{
-      const tot=(d.min_teoria||0)+(d.min_questoes||0)+(d.min_lei||0);
-      return`<div class="diario-hist-row">
-        <div class="diario-hist-date">${fmtD(d.data)}</div>
-        <div class="diario-hist-bars">
-          ${d.min_teoria?`<div class="diario-bar-item"><div class="diario-dot" style="background:#38bdf8"></div><span style="color:#38bdf8;font-weight:600">${minToHM(d.min_teoria)}</span><span style="color:var(--text3)">teoria</span></div>`:''}
-          ${d.min_questoes?`<div class="diario-bar-item"><div class="diario-dot" style="background:#c8f135"></div><span style="color:#c8f135;font-weight:600">${minToHM(d.min_questoes)}</span><span style="color:var(--text3)">questões</span></div>`:''}
-          ${d.min_lei?`<div class="diario-bar-item"><div class="diario-dot" style="background:#fb7c5b"></div><span style="color:#fb7c5b;font-weight:600">${minToHM(d.min_lei)}</span><span style="color:var(--text3)">lei seca</span></div>`:''}
-          <div class="diario-bar-item" style="margin-left:4px"><span style="color:var(--text2);font-size:11px">Total: <strong>${minToHM(tot)}</strong></span></div>
-          ${d.obs?`<span style="font-size:12px;color:var(--text2);font-style:italic">"${d.obs}"</span>`:''}
+
+  div.innerHTML=datas.map(data=>{
+    const itens=byData[data];
+    const totDia=itens.reduce((s,i)=>s+(i.minutos||0),0);
+    const teoria=itens.filter(i=>i.tipo==='teoria');
+    const lei=itens.filter(i=>i.tipo==='lei');
+    const questMin=itens.find(i=>i.tipo==='questoes_registro');
+    // Stats questões do dia
+    const errosDia=filtErros.filter(e=>e.data===data);
+    const stDia=calcStats(errosDia);
+
+    return`<div style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:700;font-size:15px">${fmtD(data)}</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-family:var(--mono);font-size:13px;color:var(--text2)">Total: <strong style="color:var(--text)">${minToHM(totDia)}</strong></span>
+          ${stDia.feitas>0?`<span>${pBadge(stDia.pct)}</span>`:''}
         </div>
-        <button class="btn btn-ghost btn-sm no-print" onclick="deletarDiario(${d.id})">🗑</button>
-      </div>`;
-    }).join('')}
-  </div>`;
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${teoria.map(t=>`<div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:8px 12px">
+          <div style="font-size:10px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:1px">📖 Teoria</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${t.materia||'—'}</div>
+          ${t.assunto?`<div style="font-size:11px;color:var(--text2)">${t.assunto}</div>`:''}
+          <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:#38bdf8;margin-top:4px">${minToHM(t.minutos)}</div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;margin-top:4px" onclick="deletarDiario(${t.id})">🗑</button>
+        </div>`).join('')}
+        ${questMin?`<div style="background:rgba(200,241,53,.1);border:1px solid rgba(200,241,53,.2);border-radius:8px;padding:8px 12px">
+          <div style="font-size:10px;font-weight:700;color:#c8f135;text-transform:uppercase;letter-spacing:1px">✏️ Questões</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${stDia.feitas} feitas · ${stDia.erradas} erros</div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:#c8f135;margin-top:4px">${minToHM(questMin.minutos)}</div>
+        </div>`:''}
+        ${lei.map(l=>`<div style="background:rgba(251,124,91,.1);border:1px solid rgba(251,124,91,.2);border-radius:8px;padding:8px 12px">
+          <div style="font-size:10px;font-weight:700;color:#fb7c5b;text-transform:uppercase;letter-spacing:1px">⚖️ Lei Seca</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${l.materia||'—'}</div>
+          ${l.assunto?`<div style="font-size:11px;color:var(--text2)">${l.assunto}</div>`:''}
+          <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:#fb7c5b;margin-top:4px">${minToHM(l.minutos)}</div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;margin-top:4px" onclick="deletarDiario(${l.id})">🗑</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ STREAK ══
+function calcStreak(){
+  // Pega todas as datas únicas de estudo (diários + erros)
+  const datas=new Set();
+  diarios.forEach(d=>{if(d.data)datas.add(d.data);});
+  erros.forEach(e=>{if(e.data)datas.add(e.data);});
+  if(!datas.size)return 0;
+  const sorted=[...datas].sort((a,b)=>b.localeCompare(a));
+  const hoje=today();
+  const ontem=new Date();ontem.setDate(ontem.getDate()-1);
+  const ontemStr=ontem.toISOString().slice(0,10);
+  // Sequência deve incluir hoje ou ontem
+  if(sorted[0]!==hoje&&sorted[0]!==ontemStr)return 0;
+  let streak=1,prev=sorted[0];
+  for(let i=1;i<sorted.length;i++){
+    const curr=sorted[i];
+    const diff=(new Date(prev+'T12:00')-new Date(curr+'T12:00'))/(1000*60*60*24);
+    if(Math.round(diff)===1){streak++;prev=curr;}else break;
+  }
+  return streak;
+}
+
+function calcTempoTotal(from='',to=''){
+  const fd=fD(diarios,from,to);
+  const fe=fD(erros,from,to);
+  const teoria=fd.filter(d=>d.tipo==='teoria').reduce((s,d)=>s+(d.minutos||0),0);
+  const lei=fd.filter(d=>d.tipo==='lei').reduce((s,d)=>s+(d.minutos||0),0);
+  const questoes=fe.reduce((s,e)=>s+(e.min_questoes||0),0);
+  return{teoria,lei,questoes,total:teoria+lei+questoes};
+}
+
+// Atualiza dashboard com streak e tempo
+function renderDashboardExtra(){
+  const streak=calcStreak();
+  const tempo=calcTempoTotal();
+  const from=document.getElementById('dash-from')?.value||'';
+  const to=document.getElementById('dash-to')?.value||'';
+  const fE=fD(erros,from,to),fS=fD(simulados,from,to);
+  const tQ=fS.reduce((s,x)=>s+x.total,0),tA=fS.reduce((s,x)=>s+x.acertos,0),pG=tQ>0?tA/tQ:null;
+  const st=calcStats(fE);
+  const mC=new Set(fE.map(e=>e.materia)).size;
+
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi streak-card" style="grid-column:span 1">
+      <div class="streak-fire">🔥</div>
+      <div class="streak-num">${streak}</div>
+      <div class="streak-label">dias em sequência</div>
+    </div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Resolvidas</div><div class="kpi-value" style="color:var(--accent2)">${(tQ+st.feitas).toLocaleString('pt-BR')}</div><div class="kpi-sub">simulados + diário</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Total de Acertos</div><div class="kpi-value" style="color:var(--success)">${(tA+st.acertos).toLocaleString('pt-BR')}</div><div class="kpi-sub">${tQ+st.feitas>0?pS((tA+st.acertos)/(tQ+st.feitas))+' das questões':'—'}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total de Erros</div><div class="kpi-value" style="color:var(--accent3)">${((tQ-tA)+st.erradas).toLocaleString('pt-BR')}</div><div class="kpi-sub">simulados + diário</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:${pG==null?'var(--text3)':pC(pG)}"></div><div class="kpi-label">Taxa — Simulados</div><div class="kpi-value">${pK(pG,pC(pG))}</div><div class="kpi-sub">média nos simulados</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:${st.pct==null?'var(--text3)':pC(st.pct)}"></div><div class="kpi-label">Taxa — Diário</div><div class="kpi-value">${pK(st.pct,pC(st.pct))}</div><div class="kpi-sub">nas sessões de questões</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#38bdf8"></div><div class="kpi-label">⏱ Tempo Total</div><div class="kpi-value" style="font-size:28px;color:#38bdf8">${minToHM(tempo.total)||'—'}</div><div class="kpi-sub">teoria + questões + lei</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#38bdf8"></div><div class="kpi-label">📖 Teoria</div><div class="kpi-value" style="font-size:28px;color:#38bdf8">${minToHM(tempo.teoria)||'—'}</div><div class="kpi-sub">tempo estudado</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#c8f135"></div><div class="kpi-label">✏️ Questões</div><div class="kpi-value" style="font-size:28px;color:#c8f135">${minToHM(tempo.questoes)||'—'}</div><div class="kpi-sub">tempo em questões</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#fb7c5b"></div><div class="kpi-label">⚖️ Lei Seca</div><div class="kpi-value" style="font-size:28px;color:#fb7c5b">${minToHM(tempo.lei)||'—'}</div><div class="kpi-sub">tempo em lei seca</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Simulados Feitos</div><div class="kpi-value" style="color:var(--accent)">${fS.length}</div><div class="kpi-sub">${from||to?'no período':'todos'}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Matérias c/ Registro</div><div class="kpi-value" style="color:var(--accent2)">${mC}</div><div class="kpi-sub">de ${Object.keys(MATERIAS).length}</div></div>`;
+}
+
+// ══ LEI SECA ══
+function getAllLeis(){
+  // Base + personalizadas do banco
+  const todas=[];
+  Object.entries(LEIS_BASE).forEach(([mat,leis])=>{
+    leis.forEach(l=>todas.push({materia:mat,lei:l,base:true}));
+  });
+  leisSeca.forEach(l=>todas.push({id:l.id,materia:l.materia,lei:l.lei,base:false}));
+  return todas;
+}
+
+function getLeiProgresso(mat,lei){
+  return leisProgresso.filter(p=>p.materia===mat&&p.lei===lei).sort((a,b)=>b.data.localeCompare(a.data));
+}
+
+function renderLeiSeca(){
+  // Preenche filtro de matérias
+  const sel=document.getElementById('ls-materia');
+  const cur=sel.value;
+  if(sel.options.length<=1){
+    const mats=[...new Set(Object.keys(LEIS_BASE))];
+    mats.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  }
+
+  const todas=getAllLeis().filter(l=>!cur||l.materia===cur);
+  const div=document.getElementById('ls-lista');
+
+  if(!todas.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📜</div><div class="empty-title">Nenhuma lei cadastrada</div><div class="empty-sub">Clique em "+ Adicionar Lei" para começar</div></div>';
+    return;
+  }
+
+  div.innerHTML=todas.map(l=>{
+    const prog=getLeiProgresso(l.materia,l.lei);
+    const ultimo=prog[0];
+    const temProg=!!ultimo;
+    const cid=`${l.materia}|||${l.lei}`.replace(/[^a-z0-9]/gi,'_');
+
+    // Stats do histórico
+    const totalSessoes=prog.length;
+    const totalLidos=prog.reduce((s,p)=>s+(p.total_sessao||0),0);
+
+    return`<div class="lei-card ${temProg?'com-progresso':''}">
+
+      <!-- Cabeçalho -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div class="lei-titulo">${l.lei}</div>
+          <div style="margin-top:4px"><span class="badge ${MB[l.materia]||'badge-blue'}">${l.materia}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${temProg?`<div style="text-align:right">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Parei no</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent);font-family:var(--mono)">Art. ${ultimo.artigo_atual}</div>
+            <div style="font-size:11px;color:var(--text3)">${fmtD(ultimo.data)}</div>
+          </div>`:''}
+          ${!l.base?`<button class="btn btn-ghost btn-sm" onclick="deletarLeiCustom(${l.id})">🗑</button>`:''}
+        </div>
+      </div>
+
+      <!-- Barra de progresso se tiver total -->
+      ${ultimo?.total_artigos?`<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--text2)">Progresso na lei</span>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--success)">${(ultimo.artigo_atual/ultimo.total_artigos*100).toFixed(0)}% — ${ultimo.artigo_atual} de ${ultimo.total_artigos} artigos</span>
+        </div>
+        <div class="prog" style="height:8px"><div class="prog-fill prog-green" style="width:${Math.min(ultimo.artigo_atual/ultimo.total_artigos*100,100).toFixed(0)}%"></div></div>
+      </div>`:''}
+
+      <!-- Formulário nova sessão -->
+      <div class="lei-progresso-wrap">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">➕ Registrar nova sessão</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px">
+          <div class="form-group">
+            <label>📅 Data da sessão</label>
+            <input type="date" id="art-data-${cid}" value="${today()}">
+          </div>
+          <div class="form-group">
+            <label>📍 Parei no artigo</label>
+            <input type="number" id="art-atual-${cid}" min="1" placeholder="${ultimo?ultimo.artigo_atual:1}">
+          </div>
+          <div class="form-group">
+            <label>📖 Total de artigos da lei</label>
+            <input type="number" id="art-total-${cid}" min="1" placeholder="${ultimo?.total_artigos||'Ex: 250'}">
+          </div>
+          <div class="form-group">
+            <label>📝 Artigos lidos nesta sessão</label>
+            <input type="number" id="art-sessao-${cid}" min="0" placeholder="Ex: 15">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:end">
+          <div class="form-group" style="flex:1">
+            <label>💬 Observação</label>
+            <input type="text" id="art-obs-${cid}" placeholder="Ex: Estudei direitos fundamentais...">
+          </div>
+          <button class="btn btn-primary" onclick="salvarProgresso('${l.materia.replace(/'/g,"\\'")}','${l.lei.replace(/'/g,"\\'")}')">💾 Salvar sessão</button>
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      ${prog.length>0?`<div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">📋 Histórico (${totalSessoes} sessão${totalSessoes!==1?'ões':''}${totalLidos>0?' · '+totalLidos+' artigos lidos no total':''})</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" id="hist-from-${cid}" onchange="renderLeiSeca()" style="width:140px;font-size:11px;padding:4px 8px">
+            <input type="date" id="hist-to-${cid}" onchange="renderLeiSeca()" style="width:140px;font-size:11px;padding:4px 8px">
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px 12px;font-size:10px;font-weight:700;color:var(--text3);text-align:left;text-transform:uppercase;letter-spacing:.8px">Data</th>
+              <th style="padding:8px 12px;font-size:10px;font-weight:700;color:var(--text3);text-align:left;text-transform:uppercase;letter-spacing:.8px">Parei no</th>
+              <th style="padding:8px 12px;font-size:10px;font-weight:700;color:var(--text3);text-align:left;text-transform:uppercase;letter-spacing:.8px">Lidos na sessão</th>
+              <th style="padding:8px 12px;font-size:10px;font-weight:700;color:var(--text3);text-align:left;text-transform:uppercase;letter-spacing:.8px">Observação</th>
+              <th style="padding:8px 12px"></th>
+            </tr></thead>
+            <tbody>
+              ${prog.map((p,i)=>`<tr style="border-top:1px solid var(--border);${i%2===1?'background:var(--surface2)':''}">
+                <td style="padding:9px 12px;font-family:var(--mono);font-size:12px">${fmtD(p.data)}</td>
+                <td style="padding:9px 12px;font-family:var(--mono);font-weight:700;color:var(--accent)">Art. ${p.artigo_atual}${p.total_artigos?' / '+p.total_artigos:''}</td>
+                <td style="padding:9px 12px;font-family:var(--mono);color:var(--accent2)">${p.total_sessao?p.total_sessao+' artigos':'—'}</td>
+                <td style="padding:9px 12px;font-size:12px;color:var(--text2);font-style:italic">${p.obs||'—'}</td>
+                <td style="padding:9px 12px"><button class="btn btn-ghost" style="font-size:10px;padding:2px 6px" onclick="deletarProgresso(${p.id})">🗑</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`:`<div style="margin-top:12px;text-align:center;font-size:13px;color:var(--text3);padding:16px">Nenhuma sessão registrada ainda. Registre sua primeira leitura acima!</div>`}
+    </div>`;
+  }).join('');
+}
+
+async function salvarProgresso(mat,lei){
+  const cid=`${mat}|||${lei}`.replace(/[^a-z0-9]/gi,'_');
+  const data=document.getElementById(`art-data-${cid}`)?.value||today();
+  const artAtual=parseInt(document.getElementById(`art-atual-${cid}`)?.value)||0;
+  const artTotal=parseInt(document.getElementById(`art-total-${cid}`)?.value)||null;
+  const totalSessao=parseInt(document.getElementById(`art-sessao-${cid}`)?.value)||null;
+  const obs=document.getElementById(`art-obs-${cid}`)?.value?.trim()||null;
+  if(!artAtual){alert('Informe o artigo onde parou.');return;}
+  setSS('sync');
+  try{
+    const res=await sbIns('leis_progresso',{materia:mat,lei,data,artigo_atual:artAtual,total_artigos:artTotal||null,total_sessao:totalSessao||null,obs});
+    if(res&&res[0])leisProgresso.push(res[0]);
+    // Limpa campos
+    ['art-atual','art-total','art-sessao','art-obs'].forEach(f=>{
+      const el=document.getElementById(`${f}-${cid}`);if(el)el.value='';
+    });
+    document.getElementById(`art-data-${cid}`).value=today();
+    setSS('ok');toast('✓ Sessão registrada!');renderLeiSeca();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function deletarProgresso(id){
+  if(!confirm('Remover este registro?'))return;
+  setSS('sync');
+  await sbDel('leis_progresso',id);
+  leisProgresso=leisProgresso.filter(p=>p.id!==id);
+  setSS('ok');toast('Removido.');renderLeiSeca();
+}
+
+async function salvarNovaLei(){
+  const mat=document.getElementById('al-materia').value;
+  const nome=document.getElementById('al-nome').value.trim();
+  if(!mat||!nome){alert('Preencha matéria e nome da lei.');return;}
+  setSS('sync');
+  try{
+    const res=await sbIns('leis_seca',{materia:mat,lei:nome});
+    if(res&&res[0])leisSeca.push(res[0]);
+    closeModal('modal-add-lei');setSS('ok');toast('✓ Lei adicionada!');renderLeiSeca();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function deletarLeiCustom(id){
+  if(!confirm('Remover esta lei?'))return;
+  setSS('sync');
+  await sbDel('leis_seca',id);
+  leisSeca=leisSeca.filter(l=>l.id!==id);
+  setSS('ok');toast('Removida.');renderLeiSeca();
 }
 
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
       sbGet('revisoes','select=*'),
       sbGet('notas','select=*'),
-      sbGet('diarios','select=*')
+      sbGet('diarios','select=*'),
+      sbGet('leis_seca','select=*'),
+      sbGet('leis_progresso','select=*')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -1495,6 +1952,8 @@ async function carregarDados(){
     revisoes={};if(Array.isArray(rD))rD.forEach(r=>{revisoes[r.chave]=r.valor;});
     notas={};if(Array.isArray(nD))nD.forEach(n=>{notas[n.chave]=n;});
     diarios=Array.isArray(dD)?dD:[];
+    leisSeca=Array.isArray(lD)?lD:[];
+    leisProgresso=Array.isArray(lpD)?lpD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
