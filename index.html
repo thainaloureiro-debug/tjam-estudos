@@ -226,6 +226,26 @@ body.light .nota-tag{color:#6d28d9;background:rgba(109,40,217,.1);}
 .nota-preview{font-size:12px;color:var(--text2);font-style:italic;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px;}
 body.light .nota-preview{color:#4a5568;}
 
+/* DIÁRIO */
+.diario-input-group{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s;}
+.diario-input-group:hover{border-color:var(--border2);}
+.diario-input-group.filled{border-color:var(--accent);}
+.diario-icon{font-size:28px;margin-bottom:4px;}
+.diario-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;}
+.diario-min-input{background:var(--surface3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:28px;font-weight:800;padding:10px 14px;outline:none;width:100%;text-align:center;transition:border-color .15s;}
+.diario-min-input:focus{border-color:var(--accent);}
+.diario-hm{font-size:12px;color:var(--text3);text-align:center;margin-top:2px;min-height:18px;}
+.diario-hist-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.diario-hist-row:last-child{border-bottom:none;}
+.diario-hist-date{font-family:var(--mono);font-size:12px;color:var(--text2);min-width:80px;}
+.diario-hist-bars{flex:1;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.diario-bar-item{display:flex;align-items:center;gap:6px;font-size:12px;}
+.diario-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+/* Rosca acurácia */
+.acuracia-wrap{display:flex;align-items:center;justify-content:center;gap:20px;padding:10px 0;}
+body.light .diario-input-group{background:#f8fafc;border-color:#d0d5e0;}
+body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;}
+
 /* REVISÃO */
 .rev-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:border-color .2s;}
 .rev-card:hover{border-color:var(--border2);}
@@ -279,6 +299,7 @@ body.light .nota-preview{color:#4a5568;}
   <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
   <div class="tab" onclick="showPage('pdfs',this)">📋 PDFs</div>
   <div class="tab" onclick="showPage('relatorio',this)">📄 Relatório</div>
+  <div class="tab" onclick="showPage('diario',this)">📅 Diário</div>
 </nav>
 <main>
 
@@ -585,6 +606,72 @@ body.light .nota-preview{color:#4a5568;}
   <div id="rel-content"></div>
 </div>
 
+<!-- DIÁRIO -->
+<div id="page-diario" class="page">
+  <div class="sec-head">
+    <div class="sec-title">📅 Diário de Estudo</div>
+    <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+
+  <!-- Filtros rápidos de período -->
+  <div class="filter-bar no-print" style="margin-bottom:18px">
+    <span class="filter-label">Ver</span>
+    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('hoje')">Hoje</button>
+    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('7')">Últimos 7 dias</button>
+    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('30')">Últimos 30 dias</button>
+    <button class="btn btn-secondary btn-sm" onclick="setDiarioPeriodo('tudo')">Histórico completo</button>
+    <span class="filter-sep">ou</span>
+    <label class="fi">De:</label><input type="date" id="di-from" onchange="renderDiario()" style="width:148px">
+    <span class="filter-sep">→</span>
+    <label class="fi">Até:</label><input type="date" id="di-to" onchange="renderDiario()" style="width:148px">
+  </div>
+
+  <!-- Resumo visual -->
+  <div id="di-resumo" style="margin-bottom:18px"></div>
+
+  <!-- Registrar novo dia -->
+  <div class="card no-print" style="margin-bottom:18px">
+    <div class="card-title">➕ Registrar sessão de estudo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="diario-input-group" id="dg-teoria">
+        <div class="diario-icon">📖</div>
+        <div class="diario-label">Teoria</div>
+        <input type="number" class="diario-min-input" id="di-teoria" min="0" placeholder="0" oninput="updateDiarioHM('teoria')">
+        <div class="diario-hm" id="di-teoria-hm">—</div>
+      </div>
+      <div class="diario-input-group" id="dg-questoes">
+        <div class="diario-icon">✏️</div>
+        <div class="diario-label">Questões</div>
+        <input type="number" class="diario-min-input" id="di-questoes" min="0" placeholder="0" oninput="updateDiarioHM('questoes')">
+        <div class="diario-hm" id="di-questoes-hm">—</div>
+      </div>
+      <div class="diario-input-group" id="dg-lei">
+        <div class="diario-icon">⚖️</div>
+        <div class="diario-label">Lei Seca</div>
+        <input type="number" class="diario-min-input" id="di-lei" min="0" placeholder="0" oninput="updateDiarioHM('lei')">
+        <div class="diario-hm" id="di-lei-hm">—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:140px">
+        <label>Data</label>
+        <input type="date" id="di-data">
+      </div>
+      <div class="form-group" style="flex:2;min-width:200px">
+        <label>Observação (opcional)</label>
+        <input type="text" id="di-obs" placeholder="Ex: Fiz simulado, estudei no turno da manhã...">
+      </div>
+      <button class="btn btn-primary" onclick="salvarDiario()" style="height:38px">💾 Salvar</button>
+    </div>
+  </div>
+
+  <!-- Histórico -->
+  <div class="card">
+    <div class="card-title">📋 Histórico de Sessões</div>
+    <div id="di-historico"></div>
+  </div>
+</div>
+
 </main>
 
 <!-- MODAL SIMULADO -->
@@ -708,7 +795,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={};
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[];
 
 // ══ UTILS ══
 const today=()=>new Date().toISOString().slice(0,10);
@@ -730,7 +817,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,pdfs:renderPDFs,relatorio:renderRelatorio};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
 function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
@@ -1224,21 +1311,190 @@ function irParaAssunto(mat,ass){
   setTimeout(()=>openPopup(mat,ass),400);
 }
 
+// ══ DIÁRIO ══
+function minToHM(min){
+  if(!min||min<=0)return'—';
+  const h=Math.floor(min/60),m=min%60;
+  if(h===0)return`${m}min`;
+  if(m===0)return`${h}h`;
+  return`${h}h ${m}min`;
+}
+function updateDiarioHM(tipo){
+  const val=parseInt(document.getElementById('di-'+tipo)?.value)||0;
+  const el=document.getElementById('di-'+tipo+'-hm');
+  const grp=document.getElementById('dg-'+tipo);
+  if(el)el.textContent=val>0?minToHM(val):'—';
+  if(grp)grp.classList.toggle('filled',val>0);
+}
+function setDiarioPeriodo(p){
+  const hoje=today();
+  let from='',to=hoje;
+  if(p==='hoje'){from=hoje;}
+  else if(p==='7'){const d=new Date();d.setDate(d.getDate()-6);from=d.toISOString().slice(0,10);}
+  else if(p==='30'){const d=new Date();d.setDate(d.getDate()-29);from=d.toISOString().slice(0,10);}
+  else{from='';to='';}
+  document.getElementById('di-from').value=from;
+  document.getElementById('di-to').value=to;
+  renderDiario();
+}
+async function salvarDiario(){
+  const data=document.getElementById('di-data').value||today();
+  const teoria=parseInt(document.getElementById('di-teoria').value)||0;
+  const questoes=parseInt(document.getElementById('di-questoes').value)||0;
+  const lei=parseInt(document.getElementById('di-lei').value)||0;
+  const obs=document.getElementById('di-obs').value.trim();
+  if(!teoria&&!questoes&&!lei){alert('Preencha pelo menos um campo de tempo.');return;}
+  setSS('sync');
+  try{
+    const res=await sbIns('diarios',{data,min_teoria:teoria,min_questoes:questoes,min_lei:lei,obs:obs||null});
+    if(res&&res[0])diarios.push(res[0]);
+    // Limpa campos
+    ['di-teoria','di-questoes','di-lei','di-obs'].forEach(id=>document.getElementById(id).value='');
+    ['teoria','questoes','lei'].forEach(t=>{
+      const el=document.getElementById('di-'+t+'-hm');if(el)el.textContent='—';
+      const grp=document.getElementById('dg-'+t);if(grp)grp.classList.remove('filled');
+    });
+    setSS('ok');toast('✓ Sessão registrada!');renderDiario();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+async function deletarDiario(id){
+  if(!confirm('Remover este registro?'))return;
+  setSS('sync');
+  await sbDel('diarios',id);
+  diarios=diarios.filter(d=>d.id!==id);
+  setSS('ok');toast('Removido.');renderDiario();
+}
+
+function renderDiario(){
+  // Preenche data padrão
+  const dataInput=document.getElementById('di-data');
+  if(dataInput&&!dataInput.value)dataInput.value=today();
+
+  const from=document.getElementById('di-from').value;
+  const to=document.getElementById('di-to').value;
+  let filt=fD(diarios,from,to);
+  filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
+
+  // Totais do período
+  const totT=filt.reduce((s,d)=>s+(d.min_teoria||0),0);
+  const totQ=filt.reduce((s,d)=>s+(d.min_questoes||0),0);
+  const totL=filt.reduce((s,d)=>s+(d.min_lei||0),0);
+  const totG=totT+totQ+totL;
+
+  // Acurácia do período (das sessões de questões)
+  const errosPeriodo=fD(erros,from,to);
+  const stPeriodo=calcStats(errosPeriodo);
+
+  // Gráfico de rosca SVG para distribuição de tempo
+  function rosetaSVG(vals,colors,size=90){
+    const total=vals.reduce((a,b)=>a+b,0)||1;
+    const R=32,CX=size/2,CY=size/2,circ=2*Math.PI*R;
+    let acc=0;
+    const slices=vals.map((v,i)=>{
+      const frac=v/total;const dash=frac*circ;const off=circ-acc*circ;
+      const s=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[i]}" stroke-width="10" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${off}" transform="rotate(-90 ${CX} ${CY})"/>`;
+      acc+=frac;return s;
+    }).join('');
+    return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slices}</svg>`;
+  }
+
+  const tempoSVG=rosetaSVG([totT,totQ,totL],['#38bdf8','#c8f135','#fb7c5b']);
+  const acuraciaColor=stPeriodo.pct!=null?pC(stPeriodo.pct):'var(--text3)';
+  const acuraciaVal=stPeriodo.pct!=null?(stPeriodo.pct*100).toFixed(1)+'%':'—';
+
+  // SVG acurácia rosca
+  const R2=32,circ2=2*Math.PI*R2;
+  const fracAc=stPeriodo.pct!=null?stPeriodo.pct:0;
+  const acSVG=`<svg width="90" height="90" viewBox="0 0 90 90">
+    <circle cx="45" cy="45" r="${R2}" fill="none" stroke="var(--surface2)" stroke-width="10"/>
+    <circle cx="45" cy="45" r="${R2}" fill="none" stroke="${acuraciaColor}" stroke-width="10"
+      stroke-dasharray="${fracAc*circ2} ${circ2}" stroke-dashoffset="${circ2/4}" transform="rotate(-90 45 45)"/>
+    <text x="45" y="50" text-anchor="middle" font-size="13" font-weight="800" fill="${acuraciaColor}">${acuraciaVal}</text>
+  </svg>`;
+
+  document.getElementById('di-resumo').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <!-- Tempo total -->
+      <div class="card">
+        <div class="card-title">⏱ Distribuição de Tempo</div>
+        <div style="display:flex;align-items:center;gap:20px">
+          ${totG>0?tempoSVG:'<div style="color:var(--text3);font-size:12px">Sem registros</div>'}
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#38bdf8;flex-shrink:0"></div><span style="font-size:12px">📖 Teoria</span></div>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#38bdf8">${minToHM(totT)}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#c8f135;flex-shrink:0"></div><span style="font-size:12px">✏️ Questões</span></div>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#c8f135">${minToHM(totQ)}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#fb7c5b;flex-shrink:0"></div><span style="font-size:12px">⚖️ Lei Seca</span></div>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fb7c5b">${minToHM(totL)}</span>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between">
+              <span style="font-size:12px;color:var(--text2)">Total</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:800">${minToHM(totG)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Acurácia -->
+      <div class="card">
+        <div class="card-title">🎯 Acurácia no Período</div>
+        <div style="display:flex;align-items:center;gap:20px">
+          ${acSVG}
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1">
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Questões feitas</span><span style="font-family:var(--mono);font-weight:700">${stPeriodo.feitas}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--success)">Acertos</span><span style="font-family:var(--mono);font-weight:700;color:var(--success)">${stPeriodo.acertos}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--accent3)">Erros</span><span style="font-family:var(--mono);font-weight:700;color:var(--accent3)">${stPeriodo.erradas}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text2)">Sessões</span><span style="font-family:var(--mono);font-weight:700">${filt.length}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Histórico
+  const div=document.getElementById('di-historico');
+  if(!filt.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Nenhum registro no período</div><div class="empty-sub">Registre uma sessão acima</div></div>';
+    return;
+  }
+  div.innerHTML=`<div style="display:flex;flex-direction:column">
+    ${filt.map(d=>{
+      const tot=(d.min_teoria||0)+(d.min_questoes||0)+(d.min_lei||0);
+      return`<div class="diario-hist-row">
+        <div class="diario-hist-date">${fmtD(d.data)}</div>
+        <div class="diario-hist-bars">
+          ${d.min_teoria?`<div class="diario-bar-item"><div class="diario-dot" style="background:#38bdf8"></div><span style="color:#38bdf8;font-weight:600">${minToHM(d.min_teoria)}</span><span style="color:var(--text3)">teoria</span></div>`:''}
+          ${d.min_questoes?`<div class="diario-bar-item"><div class="diario-dot" style="background:#c8f135"></div><span style="color:#c8f135;font-weight:600">${minToHM(d.min_questoes)}</span><span style="color:var(--text3)">questões</span></div>`:''}
+          ${d.min_lei?`<div class="diario-bar-item"><div class="diario-dot" style="background:#fb7c5b"></div><span style="color:#fb7c5b;font-weight:600">${minToHM(d.min_lei)}</span><span style="color:var(--text3)">lei seca</span></div>`:''}
+          <div class="diario-bar-item" style="margin-left:4px"><span style="color:var(--text2);font-size:11px">Total: <strong>${minToHM(tot)}</strong></span></div>
+          ${d.obs?`<span style="font-size:12px;color:var(--text2);font-style:italic">"${d.obs}"</span>`:''}
+        </div>
+        <button class="btn btn-ghost btn-sm no-print" onclick="deletarDiario(${d.id})">🗑</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
       sbGet('revisoes','select=*'),
-      sbGet('notas','select=*')
+      sbGet('notas','select=*'),
+      sbGet('diarios','select=*')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
     if(Array.isArray(pD)&&pD.length>0)pD.forEach(row=>{pdfs[row.materia]={total:row.total,feitas:row.feitas,feitas_q:row.feitas_q||0,status:row.status};});
     revisoes={};if(Array.isArray(rD))rD.forEach(r=>{revisoes[r.chave]=r.valor;});
     notas={};if(Array.isArray(nD))nD.forEach(n=>{notas[n.chave]=n;});
+    diarios=Array.isArray(dD)?dD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
