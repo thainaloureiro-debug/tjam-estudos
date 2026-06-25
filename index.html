@@ -344,27 +344,45 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
 
 <!-- REGISTRO -->
 <div id="page-registro" class="page">
-  <div class="sec-head"><div class="sec-title">📝 Registro de Erros</div><span style="font-size:12px;color:var(--text3)" id="reg-count-label"></span></div>
+  <div class="sec-head">
+    <div class="sec-title">📝 Registro de Erros</div>
+    <span style="font-size:12px;color:var(--text3)" id="reg-count-label"></span>
+  </div>
+
+  <!-- FORMULÁRIO -->
   <div class="add-erro-panel" id="add-panel">
-    <div class="add-erro-toggle" onclick="toggleAddPanel()"><div class="toggle-icon">+</div>Registrar nova sessão de questões</div>
+    <div class="add-erro-toggle" onclick="toggleAddPanel()">
+      <div class="toggle-icon">+</div>Registrar nova sessão de erros
+    </div>
     <div class="add-erro-form">
-      <div class="form-grid">
-        <div class="form-group"><label>Data *</label><input type="date" id="err-data"></div>
-        <div class="form-group"><label>Matéria *</label><select id="err-materia" onchange="updateAssuntos()"><option value="">Selecione...</option></select></div>
-        <div class="form-group"><label>Assunto *</label><select id="err-assunto"><option value="">Selecione a matéria</option></select></div>
-        <div class="form-group"><label>Questões feitas na sessão *</label><input type="number" id="err-qtd-feitas" min="1" value="10" placeholder="Ex: 10"></div>
-        <div class="form-group"><label>Questões erradas na sessão *</label><input type="number" id="err-qtd-erradas" min="0" value="0" placeholder="Ex: 3"></div>
-        <div class="form-group"><label>⏱ Tempo gasto (minutos)</label><input type="number" id="err-min" min="0" value="0" placeholder="Ex: 45" oninput="updateErrMin()"><div style="font-size:11px;color:var(--text3);margin-top:3px" id="err-min-hm"></div></div>
-        <div class="form-group"><label>Nº da Questão (opcional)</label><input type="text" id="err-questao" placeholder="Ex: Q45"></div>
-        <div class="form-group"><label>Material</label><input type="text" id="err-material" placeholder="Ex: Apostila, PDF..."></div>
+
+      <!-- Cabeçalho -->
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;margin-top:16px;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:14px">
+        <div class="form-group">
+          <label>📅 Data *</label>
+          <input type="date" id="err-data">
+        </div>
+        <div class="form-group">
+          <label>📚 Matéria *</label>
+          <select id="err-materia" onchange="updateAssuntosMulti()">
+            <option value="">Selecione a matéria...</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group" style="margin-top:14px"><label>Observações (opcional)</label><textarea id="err-motivo" placeholder="O que errou? O que precisa revisar?"></textarea></div>
-      <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end">
+
+      <!-- Linhas de assunto -->
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Assuntos e erros desta sessão</div>
+      <div id="err-linhas" style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addErroLinha()" style="width:100%;margin-bottom:16px">+ Adicionar assunto</button>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="toggleAddPanel()">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarErro()">Salvar</button>
+        <button class="btn btn-primary" onclick="salvarErroMulti()">💾 Salvar sessão</button>
       </div>
     </div>
   </div>
+
+  <!-- FILTROS -->
   <div class="filter-bar">
     <span class="filter-label">Filtrar</span>
     <label class="fi">De:</label><input type="date" id="reg-from" onchange="renderRegistro()" style="width:148px">
@@ -374,6 +392,7 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     <select id="reg-materia" onchange="renderRegistro()" style="min-width:180px"><option value="">Todas</option></select>
     <button class="btn btn-secondary btn-sm" onclick="clearRegFilters()">Limpar</button>
   </div>
+
   <div id="lista-erros"></div>
 </div>
 
@@ -463,8 +482,9 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
       <label class="fi" style="color:var(--text2)">Matéria:</label>
       <select id="cmp-materia" style="min-width:200px"><option value="">Todas as matérias</option></select>
       <label class="fi" style="color:var(--text2)">Comparar:</label>
-      <select id="cmp-tipo" style="min-width:180px">
+      <select id="cmp-tipo" style="min-width:200px">
         <option value="erros">Erros + % Acerto por assunto</option>
+        <option value="materia">Evolução por matéria</option>
         <option value="simulados">Simulados</option>
         <option value="resumo">Resumo geral</option>
       </select>
@@ -554,40 +574,96 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
 <div id="page-revisao" class="page">
   <div class="sec-head">
     <div class="sec-title">🔁 Fila de Revisão</div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <label class="fi" style="color:var(--text2)">Dias sem praticar:</label>
-      <select id="rev-limite" onchange="renderRevisao()" style="min-width:130px">
-        <option value="7">+ de 7 dias</option>
-        <option value="15" selected>+ de 15 dias</option>
-        <option value="30">+ de 30 dias</option>
-        <option value="0">Todos</option>
-      </select>
-      <label class="fi" style="color:var(--text2)">Matéria:</label>
-      <select id="rev-materia" onchange="renderRevisao()" style="min-width:200px">
-        <option value="">Todas</option>
-      </select>
-      <label class="fi" style="color:var(--text2)">Meta de acerto:</label>
-      <select id="rev-meta" onchange="renderRevisao()" style="min-width:130px">
-        <option value="0">Qualquer %</option>
-        <option value="50">Abaixo de 50%</option>
-        <option value="60">Abaixo de 60%</option>
-        <option value="75" selected>Abaixo de 75%</option>
-      </select>
-    </div>
   </div>
 
-  <!-- KPIs -->
+  <div class="filter-bar">
+    <span class="filter-label">Filtros</span>
+    <label class="fi">De:</label><input type="date" id="rev-from" onchange="renderRevisao()" style="width:148px">
+    <span class="filter-sep">→</span>
+    <label class="fi">Até:</label><input type="date" id="rev-to" onchange="renderRevisao()" style="width:148px">
+    <label class="fi">Dias sem praticar:</label>
+    <select id="rev-limite" onchange="renderRevisao()" style="min-width:130px">
+      <option value="7">+ de 7 dias</option>
+      <option value="15" selected>+ de 15 dias</option>
+      <option value="30">+ de 30 dias</option>
+      <option value="0">Todos</option>
+    </select>
+    <label class="fi">Matéria:</label>
+    <select id="rev-materia" onchange="renderRevisao()" style="min-width:180px"><option value="">Todas</option></select>
+    <label class="fi">Meta de acerto:</label>
+    <select id="rev-meta" onchange="renderRevisao()" style="min-width:130px">
+      <option value="0">Qualquer %</option>
+      <option value="50">Abaixo de 50%</option>
+      <option value="60">Abaixo de 60%</option>
+      <option value="75" selected>Abaixo de 75%</option>
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="cF('rev-from','rev-to');renderRevisao()">Limpar</button>
+  </div>
+
   <div id="rev-kpis" style="margin-bottom:18px"></div>
 
-  <!-- Legenda -->
   <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-    <span class="dias-badge dias-urgente">🔴 +30 dias sem praticar</span>
+    <span class="dias-badge dias-urgente">🔴 +30 dias</span>
     <span class="dias-badge dias-atencao">🟡 15-30 dias</span>
-    <span class="dias-badge dias-ok">🟢 Menos de 15 dias</span>
-    <span class="dias-badge dias-nunca">⬜ Nunca praticado</span>
+    <span class="dias-badge dias-ok">🟢 menos de 15 dias</span>
+    <span class="dias-badge dias-nunca">⬜ nunca praticado</span>
   </div>
 
   <div id="rev-lista"></div>
+</div>
+
+<!-- POPUP REGISTRAR REVISÃO -->
+<div id="popup-revisao" class="popup-overlay" onclick="if(event.target.id==='popup-revisao')closePopupRevisao()">
+  <div class="popup-box">
+    <div class="popup-header">
+      <div>
+        <div class="popup-title" id="prev-assunto-nome"></div>
+        <div class="popup-materia-lbl" id="prev-assunto-materia"></div>
+      </div>
+      <button class="popup-close" onclick="closePopupRevisao()">✕</button>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div class="popup-stats" id="prev-stats"></div>
+
+    <!-- Formulário de registro -->
+    <div class="popup-section-title">➕ Registrar sessão de revisão</div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <label>📅 Data</label>
+        <input type="date" id="prev-data">
+      </div>
+      <div class="form-group">
+        <label>📚 Tipo de revisão</label>
+        <select id="prev-tipo">
+          <option value="teoria">📖 Teoria</option>
+          <option value="questoes">✏️ Questões</option>
+          <option value="ambos">📖+✏️ Teoria + Questões</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>⏱ Tempo gasto (minutos)</label>
+        <input type="number" id="prev-min" min="0" placeholder="Ex: 30" oninput="document.getElementById('prev-min-hm').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="prev-min-hm"></div>
+      </div>
+      <div class="form-group">
+        <label>✏️ Questões feitas</label>
+        <input type="number" id="prev-qfeitas" min="0" placeholder="Ex: 10">
+      </div>
+      <div class="form-group">
+        <label>❌ Questões erradas</label>
+        <input type="number" id="prev-qerradas" min="0" placeholder="Ex: 3">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>💬 Observação</label>
+      <textarea id="prev-obs" placeholder="O que revisou? O que ainda precisa fixar?" style="min-height:60px"></textarea>
+    </div>
+    <button class="popup-save-btn" onclick="salvarRevisaoRegistro()">💾 Salvar Revisão</button>
+
+    <!-- Histórico do assunto -->
+    <div id="prev-historico" style="margin-top:18px"></div>
+  </div>
 </div>
 
 <!-- LEI SECA -->
@@ -847,7 +923,7 @@ const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-bl
 let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[];
 
 // ══ UTILS ══
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const fmtD=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;};
 const pS=v=>v==null||isNaN(v)?'—':(v*100).toFixed(1)+'%';
 const pK=(v,c)=>v==null||isNaN(v)?'<span style="color:var(--text3)">—</span>':`<span style="color:${c||'inherit'}">${(v*100).toFixed(1)}<span style="font-size:22px;font-weight:600;vertical-align:baseline;opacity:.8">%</span></span>`;
@@ -913,42 +989,124 @@ function switchSimTab(tab,el){document.querySelectorAll('.modal-tab').forEach(t=
 
 // ══ ADD ERRO ══
 function toggleAddPanel(){
-  const p=document.getElementById('add-panel');const open=p.classList.toggle('open');
+  const p=document.getElementById('add-panel');
+  const open=p.classList.toggle('open');
   if(open){
     fMS('err-materia',null);
     document.getElementById('err-data').value=today();
-    ['err-materia','err-assunto','err-questao','err-material','err-motivo'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('err-assunto').innerHTML='<option value="">Selecione a matéria</option>';
-    document.getElementById('err-qtd-feitas').value=10;
-    document.getElementById('err-qtd-erradas').value=0;
-    document.getElementById('err-min').value=0;
-    document.getElementById('err-min-hm').textContent='';
+    document.getElementById('err-materia').value='';
+    document.getElementById('err-linhas').innerHTML='';
+    erroLinhaIdx=0;
+    addErroLinha();
   }
 }
-function updateErrMin(){
-  const v=parseInt(document.getElementById('err-min').value)||0;
-  document.getElementById('err-min-hm').textContent=v>0?minToHM(v):'';
+
+let erroLinhaIdx=0;
+
+function updateAssuntosMulti(){
+  const mat=document.getElementById('err-materia').value;
+  document.querySelectorAll('[id^="el-ass-"]').forEach(sel=>{
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Selecione...</option>';
+    if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{
+      const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);
+    });
+    if(cur)sel.value=cur;
+  });
 }
-function updateAssuntos(){const mat=document.getElementById('err-materia').value;const sel=document.getElementById('err-assunto');sel.innerHTML='<option value="">Selecione...</option>';if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});}
-async function salvarErro(){
-  const data=document.getElementById('err-data').value,materia=document.getElementById('err-materia').value,assunto=document.getElementById('err-assunto').value;
-  const qtdF=parseInt(document.getElementById('err-qtd-feitas').value)||1;
-  const qtdE=parseInt(document.getElementById('err-qtd-erradas').value)||0;
-  const minQ=parseInt(document.getElementById('err-min').value)||0;
-  if(!data||!materia||!assunto){alert('Preencha Data, Matéria e Assunto.');return;}
-  if(qtdE>qtdF){alert('Erradas não pode ser maior que feitas.');return;}
+
+function addErroLinha(){
+  const idx=erroLinhaIdx++;
+  const div=document.createElement('div');
+  div.id=`el-${idx}`;
+  div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative';
+  div.innerHTML=`
+    <button onclick="document.getElementById('el-${idx}').remove()"
+      style="position:absolute;top:10px;right:10px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px">✕</button>
+
+    <!-- Sessão: assunto + números -->
+    <div style="display:grid;grid-template-columns:1fr 80px 80px 110px;gap:10px;margin-bottom:12px">
+      <div class="form-group">
+        <label>📌 Assunto *</label>
+        <select id="el-ass-${idx}"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group">
+        <label>✅ Feitas</label>
+        <input type="number" id="el-feitas-${idx}" min="0" value="10">
+      </div>
+      <div class="form-group">
+        <label>❌ Erradas</label>
+        <input type="number" id="el-erradas-${idx}" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label>⏱ Minutos</label>
+        <input type="number" id="el-min-${idx}" min="0" placeholder="0"
+          oninput="document.getElementById('el-hm-${idx}').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:10px;color:var(--text3);margin-top:2px" id="el-hm-${idx}"></div>
+      </div>
+    </div>
+
+    <!-- Erro específico -->
+    <div style="background:rgba(240,100,100,.07);border:1px solid rgba(240,100,100,.2);border-radius:8px;padding:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">
+        ❌ Detalhes do erro (opcional)
+      </div>
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:10px;margin-bottom:8px">
+        <div class="form-group">
+          <label>Nº Questão</label>
+          <input type="text" id="el-questao-${idx}" placeholder="Ex: Q45">
+        </div>
+        <div class="form-group">
+          <label>Por que errou? O que confundiu?</label>
+          <input type="text" id="el-motivo-${idx}" placeholder="Ex: Confundi a regra de próclise com ênclise...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Material / Fonte</label>
+        <input type="text" id="el-material-${idx}" placeholder="Ex: Apostila pág. 45, questão de concurso 2023, PDF CESPE...">
+      </div>
+    </div>`;
+
+  document.getElementById('err-linhas').appendChild(div);
+  updateAssuntosMulti();
+}
+
+async function salvarErroMulti(){
+  const data=document.getElementById('err-data').value;
+  const materia=document.getElementById('err-materia').value;
+  if(!data||!materia){alert('Preencha a data e a matéria.');return;}
+  const linhasIds=[...document.getElementById('err-linhas').children].map(c=>c.id.replace('el-',''));
+  if(!linhasIds.length){alert('Adicione pelo menos um assunto.');return;}
   setSS('sync');
-  try{
-    const res=await sbIns('erros',{data,materia,assunto,qtd_feitas:qtdF,qtd_erradas:qtdE,min_questoes:minQ,
-      questao:document.getElementById('err-questao').value||null,
-      material:document.getElementById('err-material').value||null,
-      motivo:document.getElementById('err-motivo').value||null});
-    if(res&&res[0])erros.push(res[0]);
-    document.getElementById('add-panel').classList.remove('open');
-    setSS('ok');toast('✓ Sessão registrada!');renderRegistro();renderDashboard();
-  }catch(e){setSS('erro');toast('Erro ao salvar.');}
+  let salvos=0;
+  for(const idx of linhasIds){
+    const assunto=document.getElementById(`el-ass-${idx}`)?.value;
+    if(!assunto)continue;
+    const feitas=parseInt(document.getElementById(`el-feitas-${idx}`)?.value)||0;
+    const erradas=parseInt(document.getElementById(`el-erradas-${idx}`)?.value)||0;
+    const min=parseInt(document.getElementById(`el-min-${idx}`)?.value)||0;
+    const questao=document.getElementById(`el-questao-${idx}`)?.value?.trim()||null;
+    const motivo=document.getElementById(`el-motivo-${idx}`)?.value?.trim()||null;
+    const material=document.getElementById(`el-material-${idx}`)?.value?.trim()||null;
+    if(erradas>feitas){alert(`"${assunto}": erradas não pode ser maior que feitas.`);return;}
+    try{
+      const res=await sbIns('erros',{data,materia,assunto,qtd_feitas:feitas,qtd_erradas:erradas,min_questoes:min||null,questao,motivo,material});
+      if(res&&res[0]){erros.push(res[0]);salvos++;}
+    }catch(e){console.error('Erro ao salvar linha:',e);}
+  }
+  document.getElementById('add-panel').classList.remove('open');
+  setSS('ok');
+  toast(`✓ ${salvos} registro${salvos!==1?'s':''} salvo${salvos!==1?'s':''}!`);
+  renderRegistro();renderDashboard();
 }
-async function deletarErro(id){if(!confirm('Remover?'))return;setSS('sync');await sbDel('erros',id);erros=erros.filter(e=>e.id!==id);setSS('ok');toast('Removido.');renderRegistro();renderDashboard();}
+
+async function deletarErro(id){
+  if(!confirm('Remover?'))return;
+  setSS('sync');
+  await sbDel('erros',id);
+  erros=erros.filter(e=>e.id!==id);
+  setSS('ok');toast('Removido.');renderRegistro();renderDashboard();
+}
 
 // ══ SIMULADOS ══
 async function salvarSimulado(){
@@ -997,32 +1155,51 @@ function renderRegistro(){
   let filt=fD(erros,from,to);if(mat)filt=filt.filter(e=>e.materia===mat);
   filt=[...filt].sort((a,b)=>b.data.localeCompare(a.data));
   const st=calcStats(filt);
-  document.getElementById('reg-count-label').textContent=`${filt.length} sessão${filt.length!==1?'ões':''} · ${st.feitas} feitas · ${pS(st.pct)} acerto`;
+  const comErro=filt.filter(e=>(e.qtd_erradas||0)>0).length;
+  document.getElementById('reg-count-label').textContent=
+    `${filt.length} registro${filt.length!==1?'s':''} · ${comErro} com erros · ${st.feitas} questões · ${pS(st.pct)} acerto`;
   const div=document.getElementById('lista-erros');
-  if(!filt.length){div.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Nenhum registro</div><div class="empty-sub">Registre uma sessão de questões acima</div></div>';return;}
+  if(!filt.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Nenhum registro</div><div class="empty-sub">Clique em "+ Registrar nova sessão de erros"</div></div>';
+    return;
+  }
   div.innerHTML=filt.map(e=>{
     const f=e.qtd_feitas||1,er=e.qtd_erradas||0,ac=f-er,p=f>0?ac/f:null;
-    return`<div class="erro-row" id="erow-${e.id}">
+    const temErro=er>0;
+    const borderColor=temErro?'var(--danger)':'var(--border)';
+    return`<div class="erro-row" id="erow-${e.id}" style="border-color:${temErro?'rgba(240,100,100,.4)':''}">
       <div class="erro-header" onclick="toggleErroRow(${e.id})">
         <span class="erro-chevron">▶</span>
         <span class="erro-date">${fmtD(e.data)}</span>
         <span class="badge ${MB[e.materia]||'badge-blue'}">${e.materia}</span>
         <span class="erro-assunto">${e.assunto}</span>
-        <span style="margin-left:auto;flex-shrink:0">${pBadge(p)}</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--text3);flex-shrink:0">${er} erro${er!==1?'s':''} / ${f}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0">
+          ${temErro?`<span style="background:rgba(240,100,100,.15);color:var(--danger);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">❌ ${er} erro${er!==1?'s':''}</span>`:''}
+          ${pBadge(p)}
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">${f} feitas</span>
+          ${e.min_questoes?`<span style="font-size:11px;color:var(--text3)">⏱ ${minToHM(e.min_questoes)}</span>`:''}
+        </div>
       </div>
       <div class="erro-body">
         <div class="erro-body-grid">
-          <div><div class="efl">Data</div><div class="efv">${fmtD(e.data)}</div></div>
           <div><div class="efl">Feitas</div><div class="efv" style="font-family:var(--mono)">${f}</div></div>
-          <div><div class="efl">Erradas</div><div class="efv" style="font-family:var(--mono);color:var(--accent3)">${er}</div></div>
+          <div><div class="efl">Erradas</div><div class="efv" style="font-family:var(--mono);color:var(--danger);font-weight:700">${er}</div></div>
           <div><div class="efl">Acertos</div><div class="efv" style="font-family:var(--mono);color:var(--success)">${ac}</div></div>
-          <div><div class="efl">% Acerto</div><div class="efv" style="font-weight:700;color:${p!=null?pC(p):'var(--text3)'}">${pS(p)}</div></div>
-          <div><div class="efl">Questão</div><div class="efv" style="font-family:var(--mono)">${e.questao||'—'}</div></div>
-          <div><div class="efl">Material</div><div class="efv">${e.material||'—'}</div></div>
+          <div><div class="efl">% Acerto</div><div class="efv" style="font-weight:700">${pBadge(p)}</div></div>
+          ${e.questao?`<div><div class="efl">Questão</div><div class="efv" style="font-family:var(--mono)">${e.questao}</div></div>`:''}
+          ${e.material?`<div><div class="efl">Material</div><div class="efv">${e.material}</div></div>`:''}
+          ${e.min_questoes?`<div><div class="efl">Tempo</div><div class="efv">${minToHM(e.min_questoes)}</div></div>`:''}
         </div>
-        ${e.motivo?`<div class="erro-motivo-box">💬 "${e.motivo}"</div>`:''}
-        <div style="margin-top:12px;display:flex;justify-content:flex-end"><button class="btn btn-ghost" onclick="deletarErro(${e.id})">🗑 Remover</button></div>
+        ${temErro&&e.motivo?`
+          <div style="margin-top:12px;background:rgba(240,100,100,.08);border:1px solid rgba(240,100,100,.25);border-radius:8px;padding:12px">
+            <div style="font-size:10px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">❌ Por que errou</div>
+            <div style="font-size:13px;color:var(--text)">${e.motivo}</div>
+          </div>`:''}
+        ${temErro&&!e.motivo?`
+          <div style="margin-top:10px;font-size:12px;color:var(--text3);font-style:italic">Motivo do erro não registrado.</div>`:''}
+        <div style="margin-top:12px;display:flex;justify-content:flex-end">
+          <button class="btn btn-ghost" onclick="deletarErro(${e.id})">🗑 Remover</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1061,35 +1238,76 @@ function renderRanking(){
 
 // ══ POR MATÉRIA ══
 function renderMaterias(){
-  const sel=document.getElementById('sel-materia');const cur=sel.value;sel.innerHTML='';Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});if(cur)sel.value=cur;
+  const sel=document.getElementById('sel-materia');const cur=sel.value;sel.innerHTML='';
+  Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  if(cur)sel.value=cur;
   const mat=sel.value,from=document.getElementById('mat-from').value,to=document.getElementById('mat-to').value;
-  const fE=fD(erros,from,to).filter(e=>e.materia===mat);const ass=MATERIAS[mat]||[];const MX=[3,4,5,6,7,8,9,10,11];
-  const byA={};ass.forEach(a=>{byA[a]={erradas:0,feitas:0,ms:new Array(12).fill(0)};});
-  fE.forEach(e=>{if(!byA[e.assunto])return;byA[e.assunto].erradas+=(e.qtd_erradas||1);byA[e.assunto].feitas+=(e.qtd_feitas||1);if(e.data){const mo=new Date(e.data+'T12:00').getMonth();byA[e.assunto].ms[mo]+=(e.qtd_erradas||1);}});
-  const stMat=calcStats(fE);const cE=Object.values(byA).filter(v=>v.feitas>0).length;
+  const fE=fD(erros,from,to).filter(e=>e.materia===mat);
+  const ass=MATERIAS[mat]||[];
+  const MX=[3,4,5,6,7,8,9,10,11];
+
+  // Por assunto: feitas, erradas, última data, histórico mensal
+  const byA={};
+  ass.forEach(a=>{byA[a]={erradas:0,feitas:0,ms:new Array(12).fill(0),ultimaData:null};});
+  fE.forEach(e=>{
+    if(!byA[e.assunto])return;
+    byA[e.assunto].erradas+=(e.qtd_erradas||0);
+    byA[e.assunto].feitas+=(e.qtd_feitas||1);
+    if(e.data){
+      const mo=new Date(e.data+'T12:00').getMonth();
+      byA[e.assunto].ms[mo]+=(e.qtd_erradas||0);
+      if(!byA[e.assunto].ultimaData||e.data>byA[e.assunto].ultimaData)
+        byA[e.assunto].ultimaData=e.data;
+    }
+  });
+
+  const stMat=calcStats(fE);
+  const cE=Object.values(byA).filter(v=>v.feitas>0).length;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+
+  // KPIs
+  const pErr=stMat.feitas>0?stMat.erradas/stMat.feitas:null;
   document.getElementById('mat-content').innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
       <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Feitas</div><div class="kpi-value" style="color:var(--accent2)">${stMat.feitas}</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div><div class="kpi-label">Total de Erros</div><div class="kpi-value" style="color:var(--accent3)">${stMat.erradas}</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:${stMat.pct!=null?pC(stMat.pct):'var(--text3)'}"></div><div class="kpi-label">% Acerto</div><div class="kpi-value">${pK(stMat.pct,pC(stMat.pct))}</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Assuntos Praticados</div><div class="kpi-value" style="color:var(--accent)">${cE}</div><div class="kpi-sub">de ${ass.length} assuntos</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:${pErr!=null?pC(1-pErr):'var(--text3)'}"></div><div class="kpi-label">% Erro</div><div class="kpi-value" style="color:${pErr!=null?pC(1-pErr):'var(--text3)'}">${pErr!=null?(pErr*100).toFixed(1)+'<span style="font-size:22px;font-weight:600;opacity:.8">%</span>':'—'}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Assuntos Praticados</div><div class="kpi-value" style="color:var(--accent)">${cE}</div><div class="kpi-sub">de ${ass.length}</div></div>
     </div>
-    <div class="card"><div class="card-title">Assuntos — ${mat}</div><div class="tbl-wrap"><table>
-      <thead><tr><th>Pos.</th><th>Assunto</th>${MX.map(i=>`<th>${ML[i]}</th>`).join('')}<th>Feitas</th><th>Erros</th><th>% Acerto</th><th>% Erro</th><th>Revisado</th></tr></thead>
+    <div class="card"><div class="card-title">📊 Detalhamento por Assunto — ${mat}</div><div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Pos.</th><th>Assunto</th>
+        ${MX.map(i=>`<th>${ML[i]}</th>`).join('')}
+        <th>Feitas</th><th>Erros</th><th>% Acerto</th><th>% Erro</th>
+        <th>Última vez</th><th>Revisado</th>
+      </tr></thead>
       <tbody>${[...ass].sort((a,b)=>byA[b].erradas-byA[a].erradas).map((a,i)=>{
         const d=byA[a];const rk=revisoes[mat+'_'+a]||false;
         const cls=i===0&&d.erradas>0?'r1':i===1&&d.erradas>0?'r2':i===2&&d.erradas>0?'r3':'';
         const pAc=d.feitas>0?(d.feitas-d.erradas)/d.feitas:null;
         const pEr=d.feitas>0?d.erradas/d.feitas:null;
+        // Dias sem praticar
+        let diasLabel='—',diasColor='var(--text3)';
+        if(d.ultimaData){
+          const ult=new Date(d.ultimaData+'T12:00');
+          const dias=Math.floor((hoje-ult)/(1000*60*60*24));
+          diasLabel=dias===0?'Hoje':dias===1?'Ontem':`${dias}d atrás`;
+          diasColor=dias>30?'var(--danger)':dias>15?'var(--warning)':'var(--success)';
+        }
         return`<tr>
           <td><span class="rank ${cls}">${i+1}</span></td>
           <td style="font-weight:600">${a}</td>
-          ${MX.map(mi=>`<td style="font-family:var(--mono);font-size:12px">${d.ms[mi]||'—'}</td>`).join('')}
+          ${MX.map(mi=>`<td style="font-family:var(--mono);font-size:12px;color:${d.ms[mi]>0?'var(--accent3)':'var(--text3)'}">${d.ms[mi]||'—'}</td>`).join('')}
           <td style="font-family:var(--mono)">${d.feitas||'—'}</td>
-          <td style="font-family:var(--mono);color:var(--accent3)">${d.erradas||'—'}</td>
+          <td style="font-family:var(--mono);font-weight:700;color:${d.erradas>0?'var(--danger)':'var(--text3)'}">${d.erradas||'—'}</td>
           <td>${pBadge(pAc)}</td>
-          <td>${d.feitas>0?`<span class="pct-badge ${pEr>=0.6?'pct-bad':pEr>=0.3?'pct-warn':'pct-ok'}">${pS(pEr)}</span>`:'—'}</td>
-          <td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${rk?'var(--success)':'var(--text3)'}"><input type="checkbox" ${rk?'checked':''} onchange="toggleRev('${mat}','${a}',this.checked)" style="width:15px;height:15px">${rk?'Revisado':'Pendente'}</label></td>
+          <td>${pEr!=null?`<span class="pct-badge ${pEr>=0.6?'pct-bad':pEr>=0.3?'pct-warn':'pct-ok'}">${pS(pEr)}</span>`:'—'}</td>
+          <td style="font-size:12px;font-weight:600;color:${diasColor}">${diasLabel}</td>
+          <td><label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:${rk?'var(--success)':'var(--text3)'}">
+            <input type="checkbox" ${rk?'checked':''} onchange="toggleRev('${mat}','${a}',this.checked)" style="width:15px;height:15px">
+            ${rk?'✅':'⬜'}
+          </label></td>
         </tr>`;
       }).join('')}</tbody>
     </table></div></div>`;
@@ -1117,6 +1335,7 @@ function renderComparar(){
   let html='';
   if(tipo==='resumo'||tipo==='erros')html+=bCE(aF,aT,bF,bT,mat,lA,lB);
   if(tipo==='resumo'||tipo==='simulados')html+=bCS(aF,aT,bF,bT,lA,lB);
+  if(tipo==='materia')html+=bCM(aF,aT,bF,bT,lA,lB);
   document.getElementById('cmp-result').innerHTML=html||'<div class="empty"><div class="empty-sub">Sem dados</div></div>';
 }
 
@@ -1183,6 +1402,90 @@ function bCS(aF,aT,bF,bT,lA,lB){
 }
 
 function printComparar(){const res=document.getElementById('cmp-result').innerHTML;if(!res||res.includes('empty')){alert('Faça uma comparação primeiro.');return;}const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comparação TJ-AM</title><style>body{font-family:sans-serif;padding:24px;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px 12px;}.card{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}</style></head><body><h1>⚖️ TJ-AM — Comparação</h1><p>${fmtD(today())}</p>${res}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
+
+// Comparação por matéria — mostra evolução de cada matéria entre dois períodos
+function bCM(aF,aT,bF,bT,lA,lB){
+  const mats=Object.keys(MATERIAS);
+  const rows=mats.map(mat=>{
+    const fA=fD(erros,aF,aT).filter(e=>e.materia===mat);
+    const fB=fD(erros,bF,bT).filter(e=>e.materia===mat);
+    const stA=calcStats(fA),stB=calcStats(fB);
+    return{mat,stA,stB,
+      diffErr:stB.erradas-stA.erradas,
+      diffPct:stA.pct!=null&&stB.pct!=null?stB.pct-stA.pct:null
+    };
+  }).filter(r=>r.stA.feitas>0||r.stB.feitas>0);
+
+  if(!rows.length)return'<div class="empty"><div class="empty-sub">Sem dados nos períodos selecionados</div></div>';
+
+  // Ordena por maior melhora de % acerto
+  rows.sort((a,b)=>(b.diffPct||0)-(a.diffPct||0));
+
+  return`<div class="card" style="margin-bottom:16px">
+    <div class="card-title">📊 Evolução por Matéria — ${lA} vs ${lB}</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Matéria</th>
+        <th style="color:var(--accent2)">${lA}</th>
+        <th></th>
+        <th style="color:var(--accent3)">${lB}</th>
+        <th>Δ Erros</th>
+        <th>Δ % Acerto</th>
+        <th>Tendência</th>
+      </tr></thead>
+      <tbody>${rows.map(r=>{
+        const pA=r.stA.pct,pB=r.stB.pct;
+        const melhorou=r.diffPct!=null&&r.diffPct>0.02;
+        const piorou=r.diffPct!=null&&r.diffPct<-0.02;
+        const tendencia=melhorou?'🟢 Melhorou':piorou?'🔴 Piorou':'⚪ Estável';
+        const diffErrColor=r.diffErr<0?'var(--success)':r.diffErr>0?'var(--danger)':'var(--text3)';
+        const diffPctColor=melhorou?'var(--success)':piorou?'var(--danger)':'var(--text3)';
+        return`<tr>
+          <td style="font-weight:600">${r.mat}</td>
+          <td>
+            ${r.stA.feitas>0?`<div style="font-size:12px">${r.stA.feitas} feitas · ${r.stA.erradas} erros</div>
+            <div>${pBadge(pA)}</div>`:'<span style="color:var(--text3);font-size:12px">Sem dados</span>'}
+          </td>
+          <td style="color:var(--text3);font-size:18px;text-align:center">→</td>
+          <td>
+            ${r.stB.feitas>0?`<div style="font-size:12px">${r.stB.feitas} feitas · ${r.stB.erradas} erros</div>
+            <div>${pBadge(pB)}</div>`:'<span style="color:var(--text3);font-size:12px">Sem dados</span>'}
+          </td>
+          <td style="font-family:var(--mono);font-weight:700;color:${diffErrColor}">
+            ${r.stA.feitas>0||r.stB.feitas>0?
+              (r.diffErr===0?'= igual':r.diffErr<0?`▼ ${Math.abs(r.diffErr)} menos`:`▲ ${r.diffErr} mais`)
+              :'—'}
+          </td>
+          <td style="font-family:var(--mono);font-weight:700;color:${diffPctColor}">
+            ${r.diffPct!=null?
+              (Math.abs(r.diffPct)<0.001?'= igual':r.diffPct>0?`▲ +${(r.diffPct*100).toFixed(1)}%`:`▼ ${(r.diffPct*100).toFixed(1)}%`)
+              :'—'}
+          </td>
+          <td style="font-size:13px">${tendencia}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+
+    <!-- Resumo visual -->
+    <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🟢 Melhoraram</div>
+        <div style="font-size:28px;font-weight:800;color:var(--success)">${rows.filter(r=>r.diffPct!=null&&r.diffPct>0.02).length}</div>
+        <div style="font-size:11px;color:var(--text3)">matérias com mais acerto</div>
+      </div>
+      <div style="background:rgba(124,135,156,.1);border:1px solid rgba(124,135,156,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚪ Estáveis</div>
+        <div style="font-size:28px;font-weight:800;color:var(--text2)">${rows.filter(r=>r.diffPct==null||Math.abs(r.diffPct)<=0.02).length}</div>
+        <div style="font-size:11px;color:var(--text3)">sem mudança significativa</div>
+      </div>
+      <div style="background:rgba(240,100,100,.1);border:1px solid rgba(240,100,100,.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🔴 Pioraram</div>
+        <div style="font-size:28px;font-weight:800;color:var(--danger)">${rows.filter(r=>r.diffPct!=null&&r.diffPct<-0.02).length}</div>
+        <div style="font-size:11px;color:var(--text3)">matérias com menos acerto</div>
+      </div>
+    </div>
+  </div>`;
+}
 
 // ══ GRÁFICOS ══
 function renderGraficos(){
@@ -1311,6 +1614,8 @@ function renderRevisao(){
   const limite=parseInt(document.getElementById('rev-limite').value)||15;
   const matFilt=document.getElementById('rev-materia').value;
   const metaFilt=parseInt(document.getElementById('rev-meta').value)||0;
+  const from=document.getElementById('rev-from')?.value||'';
+  const to=document.getElementById('rev-to')?.value||'';
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const dados=[];
   Object.keys(MATERIAS).forEach(mat=>{
@@ -1318,7 +1623,7 @@ function renderRevisao(){
     MATERIAS[mat].forEach(ass=>{
       const st=getAssuntoStatus(mat,ass);
       if(st==='concluido')return;
-      const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+      const sessoes=fD(erros,from,to).filter(e=>e.materia===mat&&e.assunto===ass);
       let ultimaData=null;
       sessoes.forEach(e=>{if(!e.data)return;if(!ultimaData||e.data>ultimaData)ultimaData=e.data;});
       let dias=null;
@@ -1361,7 +1666,7 @@ function renderRevisao(){
     const cardCls=d.dias===null?'':d.dias>=30?'urgente':d.dias>=15?'atencao':'ok';
     const diasColor=d.dias===null?'var(--text3)':d.dias>=30?'var(--danger)':d.dias>=15?'var(--warning)':'var(--success)';
     const diasLabel=d.dias===null?'Nunca praticado':`${d.dias} dia${d.dias!==1?'s':''} sem praticar`;
-    return`<div class="rev-card ${cardCls}" onclick="irParaAssunto('${d.mat.replace(/'/g,"\\'")}','${d.ass.replace(/'/g,"\\'")}')">
+    return`<div class="rev-card ${cardCls}" onclick="openPopupRevisao('${d.mat.replace(/'/g,"\\'")}','${d.ass.replace(/'/g,"\\'")}')">
       <div class="rev-dias" style="color:${diasColor}">${d.dias===null?'∞':d.dias}<div style="font-size:10px;font-weight:500;color:var(--text3)">${d.dias===null?'nunca':'dias'}</div></div>
       <div class="rev-info">
         <div class="rev-nome">${d.ass}</div>
@@ -1377,6 +1682,83 @@ function renderRevisao(){
     </div>`;
   }).join('');
 }
+
+function openPopupRevisao(mat,ass){
+  const pop=document.getElementById('popup-revisao');
+  pop.classList.add('open');
+  document.getElementById('prev-assunto-nome').textContent=ass;
+  document.getElementById('prev-assunto-materia').textContent=mat;
+  document.getElementById('prev-data').value=today();
+  document.getElementById('prev-min').value='';
+  document.getElementById('prev-min-hm').textContent='';
+  document.getElementById('prev-qfeitas').value='';
+  document.getElementById('prev-qerradas').value='';
+  document.getElementById('prev-obs').value='';
+  pop._mat=mat;pop._ass=ass;
+
+  // Stats
+  const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+  const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+  const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||1),0);
+  const pAc=totF>0?(totF-totE)/totF:null;
+  const ultData=sessoes.map(e=>e.data).sort((a,b)=>b.localeCompare(a))[0];
+  document.getElementById('prev-stats').innerHTML=`
+    <div class="popup-stat-box"><div class="popup-stat-label">Questões Feitas</div><div class="popup-stat-val" style="color:var(--accent2)">${totF}</div></div>
+    <div class="popup-stat-box"><div class="popup-stat-label">Erros</div><div class="popup-stat-val" style="color:var(--accent3)">${totE}</div></div>
+    <div class="popup-stat-box"><div class="popup-stat-label">% Acerto</div><div class="popup-stat-val" style="color:${pAc!=null?pC(pAc):'var(--text3)'}">${pAc!=null?(pAc*100).toFixed(1)+'%':'—'}</div></div>`;
+
+  // Histórico
+  const hist=[...sessoes].sort((a,b)=>b.data.localeCompare(a.data));
+  document.getElementById('prev-historico').innerHTML=hist.length?`
+    <div class="popup-section-title">📅 Histórico de Sessões</div>
+    ${hist.map(e=>{const f=e.qtd_feitas||1,er=e.qtd_erradas||0,p=f>0?(f-er)/f:null;
+      return`<div class="hist-item">
+        <div class="hist-date">${fmtD(e.data)} · ${e.material||'—'} ${e.min_questoes?'· ⏱ '+minToHM(e.min_questoes):''}</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span>${f} feitas</span><span style="color:var(--accent3)">${er} erros</span><span>${pBadge(p)}</span>
+          ${e.motivo?`<span style="font-size:12px;color:var(--text2);font-style:italic">"${e.motivo}"</span>`:''}
+        </div>
+      </div>`;
+    }).join('')}`:'<div style="color:var(--text3);font-size:13px;padding:12px 0">Nenhuma sessão anterior registrada.</div>';
+}
+
+async function salvarRevisaoRegistro(){
+  const pop=document.getElementById('popup-revisao');
+  const mat=pop._mat,ass=pop._ass;
+  const data=document.getElementById('prev-data').value||today();
+  const tipo=document.getElementById('prev-tipo').value;
+  const min=parseInt(document.getElementById('prev-min').value)||0;
+  const qFeitas=parseInt(document.getElementById('prev-qfeitas').value)||0;
+  const qErradas=parseInt(document.getElementById('prev-qerradas').value)||0;
+  const obs=document.getElementById('prev-obs').value.trim();
+  if(!qFeitas&&!min){alert('Preencha pelo menos o tempo ou as questões feitas.');return;}
+  if(qErradas>qFeitas){alert('Erradas não pode ser maior que feitas.');return;}
+  setSS('sync');
+  try{
+    // Salva como sessão de questões no registro normal
+    const res=await sbIns('erros',{
+      data,materia:mat,assunto:ass,
+      qtd_feitas:qFeitas||1,qtd_erradas:qErradas,
+      min_questoes:min||null,
+      material:`Revisão (${tipo==='teoria'?'Teoria':tipo==='questoes'?'Questões':'Teoria+Questões'})`,
+      motivo:obs||null
+    });
+    if(res&&res[0])erros.push(res[0]);
+    // Atualiza status para revisando se não for concluído
+    const st=getAssuntoStatus(mat,ass);
+    if(st==='nao_iniciado'||st==='estudando'){
+      const chave=mat+'_'+ass;
+      if(!notas[chave])notas[chave]={chave,texto:'',materia:mat,assunto:ass,status:'revisando'};
+      notas[chave].status='revisando';
+      await sbUpsertOne('notas',{chave,texto:notas[chave].texto||'',materia:mat,assunto:ass,status:'revisando'});
+    }
+    closePopupRevisao();
+    setSS('ok');toast('✓ Revisão registrada!');
+    renderRevisao();renderDashboard();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+function closePopupRevisao(){document.getElementById('popup-revisao').classList.remove('open');}
 
 function irParaAssunto(mat,ass){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
