@@ -583,10 +583,10 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     <label class="fi">Até:</label><input type="date" id="rev-to" onchange="renderRevisao()" style="width:148px">
     <label class="fi">Dias sem praticar:</label>
     <select id="rev-limite" onchange="renderRevisao()" style="min-width:130px">
+      <option value="0" selected>Todos</option>
       <option value="7">+ de 7 dias</option>
-      <option value="15" selected>+ de 15 dias</option>
+      <option value="15">+ de 15 dias</option>
       <option value="30">+ de 30 dias</option>
-      <option value="0">Todos</option>
     </select>
     <label class="fi">Matéria:</label>
     <select id="rev-materia" onchange="renderRevisao()" style="min-width:180px"><option value="">Todas</option></select>
@@ -609,7 +609,13 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     <span class="dias-badge dias-nunca">⬜ nunca praticado</span>
   </div>
 
-  <div id="rev-lista"></div>
+  <div id="rev-lista" style="margin-bottom:24px"></div>
+
+  <!-- Gráfico -->
+  <div class="card">
+    <div class="card-title">📊 Visão Geral por Matéria</div>
+    <div id="rev-grafico"></div>
+  </div>
 </div>
 
 <!-- POPUP REGISTRAR REVISÃO -->
@@ -1611,76 +1617,166 @@ function renderRelatorio(){
 // ══ REVISÃO ══
 function renderRevisao(){
   fMS('rev-materia','Todas');
-  const limite=parseInt(document.getElementById('rev-limite').value)||15;
+  const limite=parseInt(document.getElementById('rev-limite').value)||0;
   const matFilt=document.getElementById('rev-materia').value;
   const metaFilt=parseInt(document.getElementById('rev-meta').value)||0;
   const from=document.getElementById('rev-from')?.value||'';
   const to=document.getElementById('rev-to')?.value||'';
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const dados=[];
+
+  // Monta dados de TODOS os assuntos (inclusive concluídos e nunca praticados)
+  const todos=[];
   Object.keys(MATERIAS).forEach(mat=>{
     if(matFilt&&mat!==matFilt)return;
     MATERIAS[mat].forEach(ass=>{
       const st=getAssuntoStatus(mat,ass);
-      if(st==='concluido')return;
-      const sessoes=fD(erros,from,to).filter(e=>e.materia===mat&&e.assunto===ass);
+      // Pega TODAS as sessões sem filtro de data para calcular última data real
+      const todasSessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+      // Sessões no período filtrado (para stats)
+      const sessoesFilt=from||to?fD(todasSessoes,from,to):todasSessoes;
+      // Última data GERAL (não filtrada)
       let ultimaData=null;
-      sessoes.forEach(e=>{if(!e.data)return;if(!ultimaData||e.data>ultimaData)ultimaData=e.data;});
+      todasSessoes.forEach(e=>{if(!e.data)return;if(!ultimaData||e.data>ultimaData)ultimaData=e.data;});
       let dias=null;
       if(ultimaData){const d=new Date(ultimaData+'T12:00');dias=Math.floor((hoje-d)/(1000*60*60*24));}
-      const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
-      const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||1),0);
+      const totF=todasSessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+      const totE=todasSessoes.reduce((s,e)=>s+(e.qtd_erradas||0),0);
       const pAc=totF>0?(totF-totE)/totF:null;
-      if(limite>0&&dias!==null&&dias<limite)return;
-      if(metaFilt>0&&pAc!==null&&pAc*100>=metaFilt)return;
-      dados.push({mat,ass,dias,ultimaData,totF,totE,pAc,st,sessoes:sessoes.length});
+      const numRevisoes=todasSessoes.length; // cada registro = 1 revisão
+      todos.push({mat,ass,dias,ultimaData,totF,totE,pAc,st,numRevisoes});
     });
   });
+
+  // Stats gerais
+  const totalAss=todos.length;
+  const nuncaPraticado=todos.filter(d=>d.numRevisoes===0).length;
+  const praticados=todos.filter(d=>d.numRevisoes>0).length;
+  const concluidos=todos.filter(d=>d.st==='concluido').length;
+  const urgente=todos.filter(d=>d.st!=='concluido'&&d.dias!==null&&d.dias>=30).length;
+  const atencao=todos.filter(d=>d.st!=='concluido'&&d.dias!==null&&d.dias>=15&&d.dias<30).length;
+
+  document.getElementById('rev-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr)">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div><div class="kpi-label">🔴 Urgente +30d</div><div class="kpi-value" style="color:var(--danger)">${urgente}</div><div class="kpi-sub">sem praticar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">🟡 Atenção 15-30d</div><div class="kpi-value" style="color:var(--warning)">${atencao}</div><div class="kpi-sub">sem praticar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--text3)"></div><div class="kpi-label">⬜ Nunca praticado</div><div class="kpi-value" style="color:var(--text2)">${nuncaPraticado}</div><div class="kpi-sub">de ${totalAss}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">📝 Praticados</div><div class="kpi-value" style="color:var(--accent2)">${praticados}</div><div class="kpi-sub">ao menos 1x</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">✅ Concluídos</div><div class="kpi-value" style="color:var(--success)">${concluidos}</div><div class="kpi-sub">de ${totalAss}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">📋 Total Assuntos</div><div class="kpi-value" style="color:var(--accent)">${totalAss}</div><div class="kpi-sub">${matFilt?matFilt:'todas as matérias'}</div></div>
+    </div>`;
+
+  // Aplica filtros para a lista
+  let dados=[...todos];
+  if(limite>0)dados=dados.filter(d=>d.st!=='concluido'&&(d.dias===null||d.dias>=limite));
+  if(metaFilt>0)dados=dados.filter(d=>d.pAc===null||d.pAc*100<metaFilt);
+
+  // Ordena: nunca praticado → mais dias → menos revisões
   dados.sort((a,b)=>{
-    if(a.dias===null&&b.dias===null)return 0;
+    if(a.numRevisoes===0&&b.numRevisoes===0)return a.ass.localeCompare(b.ass);
+    if(a.numRevisoes===0)return-1;
+    if(b.numRevisoes===0)return 1;
+    if(a.dias===null&&b.dias===null)return b.numRevisoes-a.numRevisoes;
     if(a.dias===null)return-1;
     if(b.dias===null)return 1;
     return b.dias-a.dias;
   });
-  const nunca=dados.filter(d=>d.dias===null).length;
-  const urgente=dados.filter(d=>d.dias!==null&&d.dias>=30).length;
-  const atencao=dados.filter(d=>d.dias!==null&&d.dias>=15&&d.dias<30).length;
-  let concluidos=0;
-  Object.keys(MATERIAS).forEach(mat=>MATERIAS[mat].forEach(a=>{if(getAssuntoStatus(mat,a)==='concluido')concluidos++;}));
-  const totalAss=Object.values(MATERIAS).flat().length;
-  document.getElementById('rev-kpis').innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
-      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div><div class="kpi-label">🔴 Urgente +30d</div><div class="kpi-value" style="color:var(--danger)">${urgente}</div><div class="kpi-sub">assuntos</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">🟡 Atenção 15-30d</div><div class="kpi-value" style="color:var(--warning)">${atencao}</div><div class="kpi-sub">assuntos</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--text2)"></div><div class="kpi-label">⬜ Nunca praticado</div><div class="kpi-value" style="color:var(--text2)">${nunca}</div><div class="kpi-sub">assuntos</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">✅ Concluídos</div><div class="kpi-value" style="color:var(--success)">${concluidos}</div><div class="kpi-sub">de ${totalAss}</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">📋 Na fila</div><div class="kpi-value" style="color:var(--accent)">${dados.length}</div><div class="kpi-sub">para revisar</div></div>
-    </div>`;
+
+  const STS={nao_iniciado:'⬜ Não iniciado',estudando:'📖 Estudando',revisando:'🔄 Revisando',concluido:'✅ Concluído'};
+
+  const lista=document.getElementById('rev-lista');
   if(!dados.length){
-    document.getElementById('rev-lista').innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">Nenhum assunto na fila!</div><div class="empty-sub">Todos praticados recentemente ou concluídos</div></div>`;
-    return;
-  }
-  const STS={nao_iniciado:'⬜ Não iniciado',estudando:'📖 Estudando',revisando:'🔄 Revisando'};
-  document.getElementById('rev-lista').innerHTML=dados.map(d=>{
-    const diasCls=d.dias===null?'dias-nunca':d.dias>=30?'dias-urgente':d.dias>=15?'dias-atencao':'dias-ok';
-    const cardCls=d.dias===null?'':d.dias>=30?'urgente':d.dias>=15?'atencao':'ok';
-    const diasColor=d.dias===null?'var(--text3)':d.dias>=30?'var(--danger)':d.dias>=15?'var(--warning)':'var(--success)';
-    const diasLabel=d.dias===null?'Nunca praticado':`${d.dias} dia${d.dias!==1?'s':''} sem praticar`;
-    return`<div class="rev-card ${cardCls}" onclick="openPopupRevisao('${d.mat.replace(/'/g,"\\'")}','${d.ass.replace(/'/g,"\\'")}')">
-      <div class="rev-dias" style="color:${diasColor}">${d.dias===null?'∞':d.dias}<div style="font-size:10px;font-weight:500;color:var(--text3)">${d.dias===null?'nunca':'dias'}</div></div>
-      <div class="rev-info">
-        <div class="rev-nome">${d.ass}</div>
-        <div class="rev-meta">
-          <span class="badge ${MB[d.mat]||'badge-blue'}" style="font-size:10px">${d.mat}</span>
-          <span class="dias-badge ${diasCls}">${diasLabel}</span>
-          ${d.totF>0?`<span style="font-size:12px;color:var(--text2)">${d.totF} feitas · ${d.totE} erros · ${pBadge(d.pAc)}</span>`:'<span style="font-size:12px;color:var(--text3)">Sem questões ainda</span>'}
-          <span style="font-size:11px;color:var(--text3)">${STS[d.st]||''}</span>
+    lista.innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">Nenhum assunto nesse filtro</div></div>`;
+  } else {
+    lista.innerHTML=dados.map(d=>{
+      const nunca=d.numRevisoes===0;
+      const diasCls=nunca?'dias-nunca':d.dias>=30?'dias-urgente':d.dias>=15?'dias-atencao':'dias-ok';
+      const cardCls=nunca?'':d.dias>=30?'urgente':d.dias>=15?'atencao':'ok';
+      const diasColor=nunca?'var(--text3)':d.dias>=30?'var(--danger)':d.dias>=15?'var(--warning)':'var(--success)';
+      const diasLabel=nunca?'Nunca praticado':`${d.dias} dia${d.dias!==1?'s':''} sem praticar`;
+      return`<div class="rev-card ${cardCls}" onclick="openPopupRevisao('${d.mat.replace(/'/g,"\\'")}','${d.ass.replace(/'/g,"\\'")}')">
+        <div class="rev-dias" style="color:${diasColor}">
+          ${nunca?'∞':d.dias}
+          <div style="font-size:10px;font-weight:500;color:var(--text3)">${nunca?'nunca':'dias'}</div>
         </div>
-        ${d.ultimaData?`<div style="font-size:11px;color:var(--text3);margin-top:3px">Última prática: ${fmtD(d.ultimaData)}</div>`:''}
-      </div>
-      <div style="color:var(--text3);font-size:18px;flex-shrink:0">›</div>
+        <div class="rev-info">
+          <div class="rev-nome">${d.ass}</div>
+          <div class="rev-meta">
+            <span class="badge ${MB[d.mat]||'badge-blue'}" style="font-size:10px">${d.mat}</span>
+            <span class="dias-badge ${diasCls}">${diasLabel}</span>
+            ${d.numRevisoes>0
+              ?`<span style="font-size:12px;color:var(--accent2)">🔁 ${d.numRevisoes} revisão${d.numRevisoes!==1?'ões':''}</span>`
+              :'<span style="font-size:12px;color:var(--text3)">Nenhuma revisão</span>'}
+            ${d.totF>0?`<span style="font-size:12px;color:var(--text2)">${d.totF} feitas · ${pBadge(d.pAc)}</span>`:''}
+            <span style="font-size:11px;color:var(--text3)">${STS[d.st]||''}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">
+            ${d.ultimaData?`📅 Último registro: <strong style="color:var(--text2)">${fmtD(d.ultimaData)}</strong>`:'<span style="color:var(--text3)">Sem registros</span>'}
+          </div>
+        </div>
+        <div style="color:var(--text3);font-size:18px;flex-shrink:0">›</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ══ GRÁFICO por matéria ══
+  renderRevisaoGrafico(matFilt);
+}
+
+function renderRevisaoGrafico(matFilt){
+  const div=document.getElementById('rev-grafico');
+  if(!div)return;
+
+  const mats=matFilt?[matFilt]:Object.keys(MATERIAS);
+
+  // Para cada matéria: conta concluídos, revisados, estudados, nunca praticados
+  const barras=mats.map(mat=>{
+    const ass=MATERIAS[mat]||[];
+    let concluido=0,revisando=0,estudando=0,nunca=0;
+    ass.forEach(a=>{
+      const st=getAssuntoStatus(mat,a);
+      const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===a).length;
+      if(st==='concluido')concluido++;
+      else if(sessoes===0)nunca++;
+      else if(st==='revisando')revisando++;
+      else estudando++;
+    });
+    return{mat,total:ass.length,concluido,revisando,estudando,nunca};
+  });
+
+  const maxTotal=Math.max(...barras.map(b=>b.total),1);
+  const W=600,H=barras.length*44+40,padL=160,padR=20,padT=30,barH=20,gap=24;
+
+  // Legenda
+  const legend=`
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#34d399"></div>✅ Concluído</div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#f59e0b"></div>🔄 Revisando</div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#38bdf8"></div>📖 Estudando/Praticado</div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#3d4557"></div>⬜ Nunca praticado</div>
     </div>`;
+
+  const bars=barras.map((b,i)=>{
+    const y=padT+i*(barH+gap);
+    const w=W-padL-padR;
+    const wC=(b.concluido/maxTotal)*w;
+    const wR=(b.revisando/maxTotal)*w;
+    const wE=(b.estudando/maxTotal)*w;
+    const wN=(b.nunca/maxTotal)*w;
+    const matShort=b.mat.length>22?b.mat.slice(0,20)+'…':b.mat;
+    return`
+      <text x="${padL-8}" y="${y+barH/2+4}" text-anchor="end" font-size="11" fill="var(--text2)">${matShort}</text>
+      <rect x="${padL}" y="${y}" width="${wC}" height="${barH}" fill="#34d399" rx="2">
+        <title>✅ Concluído: ${b.concluido}</title></rect>
+      <rect x="${padL+wC}" y="${y}" width="${wR}" height="${barH}" fill="#f59e0b" rx="2">
+        <title>🔄 Revisando: ${b.revisando}</title></rect>
+      <rect x="${padL+wC+wR}" y="${y}" width="${wE}" height="${barH}" fill="#38bdf8" rx="2">
+        <title>📖 Estudando: ${b.estudando}</title></rect>
+      <rect x="${padL+wC+wR+wE}" y="${y}" width="${wN}" height="${barH}" fill="#3d4557" rx="2">
+        <title>⬜ Nunca praticado: ${b.nunca}</title></rect>
+      <text x="${padL+(wC+wR+wE+wN)+6}" y="${y+barH/2+4}" font-size="11" fill="var(--text3)">${b.total}</text>`;
   }).join('');
+
+  div.innerHTML=legend+`<svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="overflow:visible">${bars}</svg>`;
 }
 
 function openPopupRevisao(mat,ass){
