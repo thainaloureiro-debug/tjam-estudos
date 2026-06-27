@@ -6,34 +6,62 @@
 <title>TJ-AM — Controle de Estudos</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0c0e13;--surface:#13161f;--surface2:#191d28;--surface3:#1f2433;--border:#252b3b;--border2:#2e3548;--accent:#c8f135;--accent2:#38bdf8;--accent3:#fb7c5b;--text:#dde2ef;--text2:#7c879c;--text3:#3d4557;--success:#34d399;--warning:#f59e0b;--danger:#f06464;--radius:14px;--radius-sm:8px;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2230;--surface3:#212840;
+  --border:#21262d;--border2:#30363d;
+  --accent:#f97316;--accent2:#38bdf8;--accent3:#fb7c5b;
+  --accent-hover:#ea6c0a;
+  --text:#e6edf3;--text2:#8b949e;--text3:#3d4557;
+  --success:#34d399;--warning:#f59e0b;--danger:#f06464;
+  --radius:12px;--radius-sm:8px;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --sidebar:240px;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
-::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;}
-.logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px;}
-.logo-badge{background:var(--accent);color:#0c0e13;font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.8px;text-transform:uppercase;}
-nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;overflow-x:auto;scrollbar-width:none;}
-nav::-webkit-scrollbar{display:none;}
-.tab{padding:14px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;user-select:none;}
-.tab:hover{color:var(--text);}.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-main{padding:24px 28px;max-width:1400px;margin:0 auto;}
-.page{display:none;}.page.active{display:block;animation:fadeIn .2s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;display:flex;}
+::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* SIDEBAR */
+#sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;overflow-x:hidden;}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.sidebar-logo-icon{font-size:24px;margin-bottom:6px;}
+.sidebar-logo-title{font-size:15px;font-weight:800;line-height:1.2;}
+.sidebar-logo-sub{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.sidebar-nav{flex:1;padding:12px 8px;}
+.sidebar-section{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:12px 10px 6px;}
+.tab{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;user-select:none;white-space:nowrap;border:none;background:transparent;width:100%;}
+.tab:hover{background:var(--surface2);color:var(--text);}
+.tab.active{background:rgba(249,115,22,.12);color:var(--accent);font-weight:700;}
+.tab .tab-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border);}
+.sync-row{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:var(--text2);}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;}
+
+/* MAIN AREA */
+#app-body{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+#topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
+.topbar-title{font-size:15px;font-weight:700;color:var(--text);}
+main{padding:24px 28px;flex:1;}
+.page{display:none;}.page.active{display:block;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s;}
-.kpi:hover{border-color:var(--border2);}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;}
+.kpi:hover{border-color:var(--border2);transform:translateY(-1px);}
 .kpi-accent{position:absolute;top:0;left:0;right:0;height:2px;}
 .kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;}
-.kpi-value{font-size:40px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1.5px;}
+.kpi-value{font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1.5px;}
 .kpi-sub{font-size:12px;color:var(--text3);margin-top:6px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
-.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.3px;margin-bottom:18px;}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;}
+.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.3px;margin-bottom:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
-.filter-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;margin-bottom:18px;flex-wrap:wrap;}
-.filter-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+.filter-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
 .filter-sep{color:var(--text3);font-size:12px;}
 .fi{display:inline;margin:0;font-size:12px;color:var(--text2);}
 input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;padding:8px 12px;outline:none;transition:border-color .15s,background .15s;}
@@ -42,11 +70,11 @@ select option{background:var(--surface2);}input[type="date"]{font-family:var(--f
 textarea{resize:vertical;min-height:72px;}
 label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;transition:all .15s;white-space:nowrap;}
-.btn-primary{background:var(--accent);color:#0c0e13;}.btn-primary:hover{background:#b8e020;transform:translateY(-1px);}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);}
 .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}.btn-secondary:hover{color:var(--text);border-color:var(--border2);}
 .btn-danger{background:rgba(240,100,100,.12);color:var(--danger);border:1px solid rgba(240,100,100,.25);}
 .btn-ghost{background:transparent;color:var(--text3);padding:4px 8px;font-size:12px;}.btn-ghost:hover{color:var(--danger);}
-.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-sm{padding:5px 10px;font-size:12px;}
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
 th{font-size:11px;font-weight:700;color:var(--text3);text-align:left;padding:9px 14px;border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.8px;}
@@ -55,17 +83,17 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
 .badge-red{background:rgba(240,100,100,.12);color:var(--danger);}
 .badge-green{background:rgba(52,211,153,.12);color:var(--success);}
-.badge-yellow{background:rgba(200,241,53,.12);color:var(--accent);}
+.badge-yellow{background:rgba(249,115,22,.12);color:var(--accent);}
 .badge-blue{background:rgba(56,189,248,.12);color:var(--accent2);}
 .badge-orange{background:rgba(251,124,91,.12);color:var(--accent3);}
-.badge-gray{background:rgba(124,135,156,.12);color:var(--text2);}
+.badge-gray{background:rgba(139,148,158,.12);color:var(--text2);}
 .rank{font-family:var(--mono);font-size:11px;font-weight:600;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface2);color:var(--text3);}
-.rank.r1{background:var(--accent);color:#0c0e13;}.rank.r2{background:var(--accent3);color:#fff;}.rank.r3{background:var(--accent2);color:#0c0e13;}
+.rank.r1{background:var(--accent);color:#fff;}.rank.r2{background:var(--accent3);color:#fff;}.rank.r3{background:var(--accent2);color:#0c0e13;}
 .prog{background:var(--surface2);border-radius:4px;height:5px;overflow:hidden;}
 .prog-fill{height:100%;border-radius:4px;transition:width .5s ease;}
 .prog-accent{background:var(--accent);}.prog-red{background:var(--danger);}.prog-green{background:var(--success);}.prog-blue{background:var(--accent2);}.prog-orange{background:var(--accent3);}
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
-.sec-title{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.sec-title{font-size:20px;font-weight:800;letter-spacing:-.5px;}
 .bar-chart{display:flex;flex-direction:column;gap:9px;}
 .bar-row{display:flex;align-items:center;gap:10px;}
 .bar-name{font-size:12px;color:var(--text2);width:170px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -189,11 +217,17 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .hist-date{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:3px;}
 
 body.light{
-  --bg:#f0f2f7;--surface:#ffffff;--surface2:#f0f2f7;--surface3:#e4e8f0;
-  --border:#d0d5e0;--border2:#b8bfd0;
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#f0f2f7;--surface3:#e4e8f0;
+  --border:#e0e4ed;--border2:#c8cfe0;
   --text:#1a1f2e;--text2:#4a5568;--text3:#8896a8;
 }
+body.light #sidebar{background:#fff;border-right-color:#e0e4ed;}
+body.light .tab:hover{background:#f0f2f7;}
+body.light .tab.active{background:rgba(249,115,22,.08);}
+body.light #topbar{background:#fff;border-bottom-color:#e0e4ed;}
 body.light .kpi{background:#fff;}
+body.light .card{background:#fff;}
+body.light .filter-bar{background:#fff;}
 body.light table tbody tr:hover td{background:#f0f2f7;}
 body.light .erro-header{background:#fff;}
 body.light .erro-row.open .erro-header{background:#f0f2f7;}
@@ -205,6 +239,10 @@ body.light .login-box{background:#fff;}
 body.light .popup-box{background:#fff;}
 body.light .add-erro-panel{background:#fff;}
 body.light .confirm-box{background:#fff;}
+body.light .cal-dia{background:#fff;}
+body.light .cal-tarefa{background:#f0f2f7;}
+body.light .mat-card{background:#fff;}
+body.light .mat-icon{background:#f0f2f7;}
 
 /* TOGGLE DARK/LIGHT */
 .theme-toggle{width:44px;height:24px;border-radius:12px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
@@ -289,6 +327,47 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
 .mat-link{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;margin-top:2px;}
 body.light .mat-card{background:#fff;}
 body.light .mat-icon{background:#f0f2f7;}
+
+/* PLANEJAMENTO */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;}
+.cal-dia{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:140px;}
+.cal-dia.hoje{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.cal-dia-header{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.cal-dia-num{font-size:22px;font-weight:800;margin-bottom:10px;line-height:1;}
+.cal-dia.hoje .cal-dia-num{color:var(--accent);}
+.cal-tarefa{background:var(--surface2);border-radius:7px;padding:7px 9px;margin-bottom:6px;font-size:12px;border-left:3px solid var(--accent2);cursor:pointer;transition:opacity .15s;}
+.cal-tarefa.feito{opacity:.5;text-decoration:line-through;}
+.cal-tarefa.tipo-teoria{border-left-color:#38bdf8;}
+.cal-tarefa.tipo-questoes{border-left-color:#c8f135;}
+.cal-tarefa.tipo-revisao{border-left-color:#f59e0b;}
+.cal-tarefa.tipo-simulado{border-left-color:#fb7c5b;}
+.cal-tarefa.tipo-lei{border-left-color:#a78bfa;}
+.cal-tarefa.tipo-outro{border-left-color:var(--text3);}
+.cal-add-btn{width:100%;background:transparent;border:1px dashed var(--border2);border-radius:7px;color:var(--text3);font-size:11px;padding:6px;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.cal-add-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* Barras semanais */
+.week-bar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;padding-bottom:4px;}
+.week-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;}
+.week-bar{width:100%;border-radius:6px 6px 0 0;transition:height .4s ease;min-height:4px;}
+.week-bar-label{font-size:10px;color:var(--text3);font-weight:600;}
+.week-bar-pct{font-size:11px;font-weight:800;font-family:var(--mono);}
+body.light .cal-dia{background:#fff;}
+body.light .cal-tarefa{background:#f0f2f7;}
+
+/* SUGESTÕES */
+.sug-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:border-color .2s;}
+.sug-card.critico{border-left:3px solid var(--danger);}
+.sug-card.atencao{border-left:3px solid var(--warning);}
+.sug-urgencia{font-family:var(--mono);font-size:22px;font-weight:800;min-width:52px;text-align:center;}
+.sug-info{flex:1;}
+.sug-nome{font-weight:700;font-size:14px;margin-bottom:4px;}
+.sug-meta{font-size:12px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.sug-acoes{display:flex;gap:8px;flex-shrink:0;}
+/* Sugestão inline no modal */
+.sug-inline{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px 14px;margin-top:12px;}
+.sug-inline-title{font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.sug-inline-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(245,158,11,.15);font-size:12px;}
+.sug-inline-item:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -306,39 +385,67 @@ body.light .mat-icon{background:#f0f2f7;}
   </div>
 </div>
 
-<header>
-  <div class="logo">⚖️ TJ-AM <span class="logo-badge">Assistente Judiciário</span></div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span style="font-size:11px;color:var(--text3)" id="theme-label">🌙</span>
-    <button class="theme-toggle no-print" onclick="toggleTheme()" title="Alternar modo claro/escuro"></button>
-    <div style="font-size:12px;font-family:var(--mono)" id="sync-status">Conectando...</div>
-    <button class="btn btn-secondary btn-sm no-print" onclick="doLogout()">Sair</button>
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">⚖️</div>
+    <div class="sidebar-logo-title">TJ-AM Estudos</div>
+    <div class="sidebar-logo-sub">Assistente Judiciário</div>
   </div>
-</header>
-<nav>
-  <div class="tab active" onclick="showPage('dashboard',this)">📊 Dashboard</div>
-  <div class="tab" onclick="showPage('registro',this)">📝 Registro</div>
-  <div class="tab" onclick="showPage('simulados',this)">🎯 Simulados</div>
-  <div class="tab" onclick="showPage('ranking',this)">🏆 Ranking</div>
-  <div class="tab" onclick="showPage('materias',this)">📚 Por Matéria</div>
-  <div class="tab" onclick="showPage('comparar',this)">⚖️ Comparar</div>
-  <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
-  <div class="tab" onclick="showPage('desempenho',this)">🎯 Desempenho</div>
-  <div class="tab" onclick="showPage('materiais',this)">📁 Materiais</div>
-  <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
-  <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
-  <div class="tab" onclick="showPage('leiseca',this)">📜 Lei Seca</div>
-  <div class="tab" onclick="showPage('pdfs',this)">📋 PDFs</div>
-  <div class="tab" onclick="showPage('relatorio',this)">📄 Relatório</div>
-  <div class="tab" onclick="showPage('diario',this)">📅 Diário</div>
-</nav>
-<main>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Principal</div>
+    <button class="tab active" onclick="showPage('dashboard',this)"><span class="tab-icon">📊</span>Dashboard</button>
+    <button class="tab" onclick="showPage('registro',this)"><span class="tab-icon">📝</span>Registro de Erros</button>
+    <button class="tab" onclick="showPage('simulados',this)"><span class="tab-icon">🎯</span>Simulados</button>
+
+    <div class="sidebar-section">Análise</div>
+    <button class="tab" onclick="showPage('ranking',this)"><span class="tab-icon">🏆</span>Ranking</button>
+    <button class="tab" onclick="showPage('materias',this)"><span class="tab-icon">📚</span>Por Matéria</button>
+    <button class="tab" onclick="showPage('comparar',this)"><span class="tab-icon">⚖️</span>Comparar</button>
+    <button class="tab" onclick="showPage('desempenho',this)"><span class="tab-icon">📈</span>Desempenho</button>
+    <button class="tab" onclick="showPage('graficos',this)"><span class="tab-icon">📉</span>Gráficos</button>
+
+    <div class="sidebar-section">Estudo</div>
+    <button class="tab" onclick="showPage('conteudo',this)"><span class="tab-icon">📖</span>Conteúdo</button>
+    <button class="tab" onclick="showPage('revisao',this)"><span class="tab-icon">🔁</span>Revisão</button>
+    <button class="tab" onclick="showPage('leiseca',this)"><span class="tab-icon">📜</span>Lei Seca</button>
+    <button class="tab" onclick="showPage('diario',this)"><span class="tab-icon">📅</span>Diário</button>
+
+    <div class="sidebar-section">Organização</div>
+    <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
+    <button class="tab" onclick="showPage('planejamento',this)"><span class="tab-icon">🗓️</span>Planejamento</button>
+    <button class="tab" onclick="showPage('materiais',this)"><span class="tab-icon">📁</span>Materiais</button>
+    <button class="tab" onclick="showPage('pdfs',this)"><span class="tab-icon">📋</span>PDFs / Aulas</button>
+    <button class="tab" onclick="showPage('relatorio',this)"><span class="tab-icon">📄</span>Relatório</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sync-row" id="sync-status">⚪ Conectando...</div>
+    <div class="theme-row">
+      <span style="font-size:11px;color:var(--text2)" id="theme-label">🌙 Escuro</span>
+      <button class="theme-toggle no-print" onclick="toggleTheme()"></button>
+    </div>
+    <div style="padding:6px 12px">
+      <button class="btn btn-secondary btn-sm no-print" onclick="doLogout()" style="width:100%">Sair</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div id="app-body">
+  <div id="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-danger btn-sm no-print" onclick="document.getElementById('confirm-modal').classList.add('open')">🗑 Zerar dados</button>
+    </div>
+  </div>
+  <main>
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page">
   <div class="sec-head">
     <div class="sec-title">📊 Dashboard</div>
-    <button class="btn btn-danger btn-sm no-print" onclick="document.getElementById('confirm-modal').classList.add('open')">🗑 Zerar dados</button>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
   <div class="filter-bar">
@@ -578,6 +685,131 @@ body.light .mat-icon{background:#f0f2f7;}
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-material')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarMaterial()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUGESTÕES -->
+<div id="page-sugestoes" class="page">
+  <div class="sec-head">
+    <div class="sec-title">💡 Sugestões de Revisão</div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filtrar</span>
+    <label class="fi">Matéria:</label>
+    <select id="sug-materia" onchange="renderSugestoes()" style="min-width:220px">
+      <option value="">Todas as matérias</option>
+    </select>
+    <label class="fi">Mínimo de questões:</label>
+    <select id="sug-min-q" onchange="renderSugestoes()" style="min-width:130px">
+      <option value="0">Qualquer</option>
+      <option value="10">+ de 10</option>
+      <option value="30">+ de 30</option>
+      <option value="50">+ de 50</option>
+      <option value="100">+ de 100</option>
+    </select>
+    <label class="fi">Ordenar por:</label>
+    <select id="sug-ordem" onchange="renderSugestoes()" style="min-width:150px">
+      <option value="erro">Maior % de erro</option>
+      <option value="dias">Mais dias sem praticar</option>
+      <option value="qtd">Mais questões erradas</option>
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('sug-materia').value='';document.getElementById('sug-min-q').value='0';renderSugestoes()">Limpar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div id="sug-kpis" style="margin-bottom:18px"></div>
+
+  <!-- Lista -->
+  <div id="sug-lista"></div>
+</div>
+
+<!-- PLANEJAMENTO -->
+<div id="page-planejamento" class="page">
+  <div class="sec-head">
+    <div class="sec-title">📅 Planejamento Semanal</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="navSemana(-1)">← Anterior</button>
+      <span id="plan-semana-label" style="font-size:13px;font-weight:700;min-width:160px;text-align:center"></span>
+      <button class="btn btn-secondary btn-sm" onclick="navSemana(1)">Próxima →</button>
+      <button class="btn btn-secondary btn-sm" onclick="irParaHoje()">Hoje</button>
+      <span style="color:var(--text3);font-size:12px;margin:0 4px">ou</span>
+      <input type="week" id="plan-week-picker" onchange="irParaSemana(this.value)" style="width:180px;font-size:12px" title="Selecionar semana no calendário">
+      <button class="btn btn-secondary btn-sm no-print" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+
+  <!-- Gráfico barras semanais -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">📊 Aproveitamento por Semana</div>
+    <div id="plan-barras"></div>
+    <div id="plan-kpis-semana" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
+  </div>
+
+  <!-- Calendário -->
+  <div class="cal-grid" id="plan-calendario"></div>
+
+  <!-- Histórico -->
+  <div class="card" style="margin-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:0">📋 Histórico da Semana</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label class="fi" style="color:var(--text2)">Mostrar:</label>
+        <select id="plan-hist-filtro" onchange="renderPlanHistorico()" style="min-width:140px">
+          <option value="todos">Todos</option>
+          <option value="feito">✅ Feitos</option>
+          <option value="pendente">⬜ Pendentes</option>
+        </select>
+      </div>
+    </div>
+    <div id="plan-historico"></div>
+  </div>
+</div>
+
+<!-- MODAL NOVA TAREFA -->
+<div id="modal-tarefa" class="modal-overlay" onclick="closeModalOut(event,'modal-tarefa')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="modal-tarefa-titulo">📅 Nova Tarefa</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📅 Data *</label>
+        <input type="date" id="tar-data">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Tipo *</label>
+        <select id="tar-tipo">
+          <option value="teoria">📖 Teoria</option>
+          <option value="questoes">✏️ Questões</option>
+          <option value="revisao">🔄 Revisão</option>
+          <option value="simulado">🎯 Simulado</option>
+          <option value="lei">⚖️ Lei Seca</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria</label>
+        <select id="tar-materia" onchange="updateTarAssunto();updateSugInline()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto</label>
+        <select id="tar-assunto">
+          <option value="">Geral</option>
+        </select>
+      </div>
+    </div>
+    <!-- Sugestões inline -->
+    <div id="sug-inline-modal"></div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>💬 Observação</label>
+        <input type="text" id="tar-obs" placeholder="Ex: Fazer 20 questões de Ortografia...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-tarefa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTarefa()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -978,6 +1210,7 @@ body.light .mat-icon{background:#f0f2f7;}
 </div>
 
 </main>
+</div><!-- end app-body -->
 
 <!-- MODAL SIMULADO -->
 <div id="modal-simulado" class="modal-overlay" onclick="closeModalOut(event,'modal-simulado')">
@@ -1059,11 +1292,11 @@ function doLogout(){sessionStorage.removeItem('tjam_ok');location.reload();}
 function toggleTheme(){
   const isLight=document.body.classList.toggle('light');
   localStorage.setItem('tjam_theme',isLight?'light':'dark');
-  document.getElementById('theme-label').textContent=isLight?'☀️':'🌙';
+  document.getElementById('theme-label').textContent=isLight?'☀️ Claro':'🌙 Escuro';
 }
 function loadTheme(){
   const t=localStorage.getItem('tjam_theme');
-  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-label').textContent='☀️';}
+  if(t==='light'){document.body.classList.add('light');const el=document.getElementById('theme-label');if(el)el.textContent='☀️ Claro';}
 }
 loadTheme();
 
@@ -1090,7 +1323,11 @@ async function sbUpsertOne(t,body){
   }
   return r;
 }
-function setSS(e){const el=document.getElementById('sync-status');if(!el)return;const m={ok:'🟢 Sincronizado',erro:'🔴 Erro',sync:'🟡 Salvando...'};el.textContent=m[e]||'';}
+function setSS(e){
+  const el=document.getElementById('sync-status');if(!el)return;
+  const m={ok:'🟢 Sincronizado',erro:'🔴 Erro na conexão',sync:'🟡 Salvando...'};
+  el.textContent=m[e]||'';
+}
 
 // ══ DATA ══
 const MATERIAS={"Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],"Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],"Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],"Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],"Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],"Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],"Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],"Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],"Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],"Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],"Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"]};
@@ -1100,7 +1337,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1122,7 +1359,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,materiais:renderMateriais,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,materiais:renderMateriais,sugestoes:renderSugestoes,planejamento:renderPlanejamento,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
 
 // Leis pré-cadastradas por matéria
 const LEIS_BASE={
@@ -1135,7 +1372,16 @@ const LEIS_BASE={
   'Informática e Processo Digital':['Lei 11.419/2006 — Processo Eletrônico'],
   'Organização Judiciária':['Código de Organização Judiciária do Amazonas'],
 };
-function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');renders[id]?.();}
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',sugestoes:'Sugestões',planejamento:'Planejamento',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
+  const tt=document.getElementById('topbar-title');
+  if(tt)tt.textContent=PAGE_TITLES[id]||id;
+  renders[id]?.();
+}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
 // ══ ZERAR ══
@@ -2594,6 +2840,402 @@ async function deletarLeiCustom(id){
   setSS('ok');toast('Removida.');renderLeiSeca();
 }
 
+// ══ SUGESTÕES ══
+function calcSugestoes(matFilt='',minQ=0){
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const sugs=[];
+  Object.keys(MATERIAS).forEach(mat=>{
+    if(matFilt&&mat!==matFilt)return;
+    MATERIAS[mat].forEach(ass=>{
+      const st=getAssuntoStatus(mat,ass);
+      if(st==='concluido')return;
+      const sessoes=erros.filter(e=>e.materia===mat&&e.assunto===ass);
+      const totF=sessoes.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+      const totE=sessoes.reduce((s,e)=>s+(e.qtd_erradas||0),0);
+      if(totF<minQ)return;
+      if(totF===0)return; // sem questões ainda, não sugere
+      const pEr=totF>0?totE/totF:0;
+      if(pEr<=0.15)return; // só sugere se erro > 15%
+      // Última data
+      let ultimaData=null;
+      sessoes.forEach(e=>{if(!e.data)return;if(!ultimaData||e.data>ultimaData)ultimaData=e.data;});
+      let dias=null;
+      if(ultimaData){const d=new Date(ultimaData+'T12:00');dias=Math.floor((hoje-d)/(1000*60*60*24));}
+      // Nível de urgência
+      const nivel=pEr>=0.5?'critico':pEr>=0.3?'atencao':'leve';
+      // Tipo sugerido
+      let tipoSug='revisao';
+      if(pEr>=0.5)tipoSug='teoria'; // erro muito alto → teoria + questões
+      else if(dias&&dias>30)tipoSug='revisao';
+      else tipoSug='questoes';
+      sugs.push({mat,ass,totF,totE,pEr,pAc:1-pEr,dias,ultimaData,nivel,tipoSug,st});
+    });
+  });
+  return sugs;
+}
+
+function renderSugestoes(){
+  const msel=document.getElementById('sug-materia');
+  if(msel.options.length<=1){Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;msel.appendChild(o);});}
+  const matFilt=document.getElementById('sug-materia').value;
+  const minQ=parseInt(document.getElementById('sug-min-q').value)||0;
+  const ordem=document.getElementById('sug-ordem').value;
+
+  let sugs=calcSugestoes(matFilt,minQ);
+
+  // Ordena
+  if(ordem==='erro')sugs.sort((a,b)=>b.pEr-a.pEr);
+  else if(ordem==='dias')sugs.sort((a,b)=>(b.dias||0)-(a.dias||0));
+  else sugs.sort((a,b)=>b.totE-a.totE);
+
+  const criticos=sugs.filter(s=>s.nivel==='critico').length;
+  const atencao=sugs.filter(s=>s.nivel==='atencao').length;
+  const leve=sugs.filter(s=>s.nivel==='leve').length;
+
+  document.getElementById('sug-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div>
+        <div class="kpi-label">🔴 Crítico (+50% erro)</div>
+        <div class="kpi-value" style="color:var(--danger)">${criticos}</div>
+        <div class="kpi-sub">assuntos para priorizar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div>
+        <div class="kpi-label">🟡 Atenção (30-50% erro)</div>
+        <div class="kpi-value" style="color:var(--warning)">${atencao}</div>
+        <div class="kpi-sub">assuntos para revisar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div>
+        <div class="kpi-label">🔵 Leve (15-30% erro)</div>
+        <div class="kpi-value" style="color:var(--accent2)">${leve}</div>
+        <div class="kpi-sub">assuntos para reforçar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div>
+        <div class="kpi-label">📋 Total de Sugestões</div>
+        <div class="kpi-value" style="color:var(--accent)">${sugs.length}</div>
+        <div class="kpi-sub">assuntos acima de 15% erro</div></div>
+    </div>`;
+
+  const div=document.getElementById('sug-lista');
+  if(!sugs.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">Nenhuma sugestão!</div><div class="empty-sub">Todos os assuntos com questões estão com erro ≤ 15%. Continue assim!</div></div>';
+    return;
+  }
+
+  const TIPO_PLAN_LABEL={teoria:'📖 Revisar Teoria',questoes:'✏️ Fazer Questões',revisao:'🔄 Revisão Geral'};
+
+  div.innerHTML=sugs.map(s=>{
+    const pErPct=(s.pEr*100).toFixed(1);
+    const pAcPct=(s.pAc*100).toFixed(1);
+    const urgColor=s.nivel==='critico'?'var(--danger)':s.nivel==='atencao'?'var(--warning)':'var(--accent2)';
+    const diasLabel=s.dias===null?'Nunca praticado':s.dias===0?'Hoje':s.dias===1?'Ontem':`${s.dias}d atrás`;
+    return`<div class="sug-card ${s.nivel}">
+      <div class="sug-urgencia" style="color:${urgColor}">${pErPct}<span style="font-size:12px">%</span>
+        <div style="font-size:10px;color:var(--text3);font-weight:500">erro</div>
+      </div>
+      <div class="sug-info">
+        <div class="sug-nome">${s.ass}</div>
+        <div class="sug-meta">
+          <span class="badge ${MB[s.mat]||'badge-blue'}" style="font-size:10px">${s.mat}</span>
+          <span style="color:var(--success);font-weight:600">✅ ${pAcPct}% acerto</span>
+          <span style="color:var(--accent3)">${s.totE} erros de ${s.totF} feitas</span>
+          <span style="color:var(--text3)">📅 ${diasLabel}</span>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:${urgColor};background:${urgColor}22;padding:3px 10px;border-radius:20px">
+            ${s.nivel==='critico'?'🔴 CRÍTICO':s.nivel==='atencao'?'🟡 ATENÇÃO':'🔵 LEVE'}
+          </span>
+          <span style="font-size:12px;color:var(--text2)">Sugestão: <strong>${TIPO_PLAN_LABEL[s.tipoSug]}</strong></span>
+        </div>
+        <!-- Mini barra de erro -->
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(s.pEr*100,100)}%;background:${urgColor};border-radius:3px"></div>
+          </div>
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(s.pAc*100,100)}%;background:var(--success);border-radius:3px"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:var(--text3)">Erro</span>
+          <span style="font-size:10px;color:var(--text3)">Acerto</span>
+        </div>
+      </div>
+      <div class="sug-acoes">
+        <button class="btn btn-primary btn-sm" onclick="adicionarSugestaoPlano('${s.mat.replace(/'/g,"\\'")}','${s.ass.replace(/'/g,"\\'")}','${s.tipoSug}')">+ Planejar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateSugInline(){
+  const mat=document.getElementById('tar-materia').value;
+  const div=document.getElementById('sug-inline-modal');
+  if(!mat){div.innerHTML='';return;}
+  const sugs=calcSugestoes(mat,0).slice(0,5);
+  if(!sugs.length){div.innerHTML='';return;}
+  div.innerHTML=`<div class="sug-inline">
+    <div class="sug-inline-title">💡 Sugestões para ${mat}</div>
+    ${sugs.map(s=>{
+      const urgColor=s.nivel==='critico'?'var(--danger)':s.nivel==='atencao'?'var(--warning)':'var(--accent2)';
+      return`<div class="sug-inline-item">
+        <span style="font-weight:600">${s.ass}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:${urgColor};font-family:var(--mono);font-size:11px;font-weight:700">${(s.pEr*100).toFixed(0)}% erro</span>
+          <button class="btn btn-secondary btn-sm" style="font-size:10px;padding:3px 8px"
+            onclick="document.getElementById('tar-assunto').value='${s.ass.replace(/'/g,"\\'")}';document.getElementById('tar-tipo').value='${s.tipoSug}'">
+            Selecionar
+          </button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function adicionarSugestaoPlano(mat,ass,tipo){
+  // Abre modal de tarefa com matéria e assunto pré-preenchidos
+  const sel=document.getElementById('tar-materia');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  sel.value=mat;
+  updateTarAssunto();
+  setTimeout(()=>{
+    document.getElementById('tar-assunto').value=ass;
+    document.getElementById('tar-tipo').value=tipo;
+    document.getElementById('tar-data').value=today();
+    updateSugInline();
+  },100);
+  document.getElementById('modal-tarefa-titulo').textContent=`📅 Planejar — ${ass}`;
+  document.getElementById('modal-tarefa').classList.add('open');
+}
+
+// ══ PLANEJAMENTO ══
+const TIPO_PLAN={
+  teoria:{icon:'📖',label:'Teoria',cls:'tipo-teoria',color:'#38bdf8'},
+  questoes:{icon:'✏️',label:'Questões',cls:'tipo-questoes',color:'#c8f135'},
+  revisao:{icon:'🔄',label:'Revisão',cls:'tipo-revisao',color:'#f59e0b'},
+  simulado:{icon:'🎯',label:'Simulado',cls:'tipo-simulado',color:'#fb7c5b'},
+  lei:{icon:'⚖️',label:'Lei Seca',cls:'tipo-lei',color:'#a78bfa'},
+  outro:{icon:'📌',label:'Outro',cls:'tipo-outro',color:'var(--text3)'},
+};
+const DIAS_SEMANA=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+let planSemanaOffset=0; // 0 = semana atual
+
+function getSemanaAtual(offset=0){
+  const hoje=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
+  hoje.setHours(0,0,0,0);
+  const diaSemana=hoje.getDay(); // 0=dom
+  const seg=new Date(hoje);seg.setDate(hoje.getDate()-diaSemana+1+(offset*7)); // começa na segunda
+  const dias=[];
+  for(let i=0;i<7;i++){const d=new Date(seg);d.setDate(seg.getDate()+i);dias.push(d);}
+  return dias;
+}
+
+function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+function navSemana(dir){planSemanaOffset+=dir;renderPlanejamento();}
+function irParaHoje(){planSemanaOffset=0;renderPlanejamento();}
+function irParaSemana(weekVal){
+  // weekVal = "2026-W24"
+  if(!weekVal)return;
+  const [y,w]=weekVal.split('-W');
+  // Calcula a segunda-feira dessa semana ISO
+  const jan4=new Date(parseInt(y),0,4);
+  const segunda=new Date(jan4);
+  segunda.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(parseInt(w)-1)*7);
+  // Calcula offset em relação à semana atual
+  const hoje=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
+  hoje.setHours(0,0,0,0);
+  const segAtual=new Date(hoje);
+  segAtual.setDate(hoje.getDate()-((hoje.getDay()+6)%7));
+  const diffMs=segunda-segAtual;
+  planSemanaOffset=Math.round(diffMs/(1000*60*60*24*7));
+  renderPlanejamento();
+}
+
+function updateTarAssunto(){
+  const mat=document.getElementById('tar-materia').value;
+  const sel=document.getElementById('tar-assunto');
+  sel.innerHTML='<option value="">Geral</option>';
+  if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+}
+
+function abrirModalTarefa(data){
+  const sel=document.getElementById('tar-materia');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  document.getElementById('tar-assunto').innerHTML='<option value="">Geral</option>';
+  document.getElementById('tar-data').value=data;
+  document.getElementById('tar-obs').value='';
+  document.getElementById('tar-tipo').value='teoria';
+  document.getElementById('modal-tarefa-titulo').textContent=`📅 Nova Tarefa — ${fmtD(data)}`;
+  document.getElementById('modal-tarefa').classList.add('open');
+}
+
+async function salvarTarefa(){
+  const data=document.getElementById('tar-data').value;
+  const tipo=document.getElementById('tar-tipo').value;
+  const materia=document.getElementById('tar-materia').value||null;
+  const assunto=document.getElementById('tar-assunto').value||null;
+  const obs=document.getElementById('tar-obs').value.trim()||null;
+  if(!data||!tipo){alert('Preencha a data e o tipo.');return;}
+  setSS('sync');
+  try{
+    const res=await sbIns('planejamento',{data,tipo,materia,assunto,obs,feito:false});
+    if(res&&res[0])planejamentoList.push(res[0]);
+    closeModal('modal-tarefa');setSS('ok');toast('✓ Tarefa adicionada!');renderPlanejamento();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function toggleTarefa(id){
+  const tar=planejamentoList.find(t=>t.id===id);if(!tar)return;
+  tar.feito=!tar.feito;
+  setSS('sync');
+  try{
+    await fetch(`${SB_URL}/rest/v1/planejamento?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({feito:tar.feito})
+    });
+    setSS('ok');renderPlanejamento();
+  }catch(e){setSS('erro');tar.feito=!tar.feito;renderPlanejamento();}
+}
+
+async function deletarTarefa(id){
+  if(!confirm('Remover tarefa?'))return;
+  setSS('sync');
+  await sbDel('planejamento',id);
+  planejamentoList=planejamentoList.filter(t=>t.id!==id);
+  setSS('ok');toast('Removida.');renderPlanejamento();
+}
+
+function renderPlanejamento(){
+  const dias=getSemanaAtual(planSemanaOffset);
+  const hojeStr=today();
+  const seg=dias[0],sab=dias[6];
+
+  // Label da semana + sync week picker
+  document.getElementById('plan-semana-label').textContent=
+    `${String(seg.getDate()).padStart(2,'0')}/${String(seg.getMonth()+1).padStart(2,'0')} — ${String(sab.getDate()).padStart(2,'0')}/${String(sab.getMonth()+1).padStart(2,'0')}/${sab.getFullYear()}`;
+  // Sync picker
+  const picker=document.getElementById('plan-week-picker');
+  if(picker){
+    // Calcula semana ISO da seg
+    const tmp=new Date(seg);tmp.setHours(0,0,0,0);
+    tmp.setDate(tmp.getDate()+3-(tmp.getDay()+6)%7);
+    const week1=new Date(tmp.getFullYear(),0,4);
+    const wn=1+Math.round(((tmp-week1)/86400000-3+(week1.getDay()+6)%7)/7);
+    picker.value=`${tmp.getFullYear()}-W${String(wn).padStart(2,'0')}`;
+  }
+
+  // ══ GRÁFICO DE BARRAS SEMANAIS ══
+  // Pega últimas 8 semanas
+  const semanas=[];
+  for(let w=-7;w<=0;w++){
+    const ds=getSemanaAtual(planSemanaOffset+w);
+    const from=dateToStr(ds[0]),to=dateToStr(ds[6]);
+    const eS=erros.filter(e=>e.data>=from&&e.data<=to);
+    const st=calcStats(eS);
+    const feitos=planejamentoList.filter(t=>t.data>=from&&t.data<=to&&t.feito).length;
+    const total=planejamentoList.filter(t=>t.data>=from&&t.data<=to).length;
+    const label=`S${String(ds[0].getDate()).padStart(2,'0')}/${String(ds[0].getMonth()+1).padStart(2,'0')}`;
+    semanas.push({from,to,st,feitos,total,label,atual:w===0});
+  }
+  const maxPct=Math.max(...semanas.map(s=>s.st.pct||0),0.1);
+  const barrasHTML=`<div class="week-bar-wrap">
+    ${semanas.map(s=>{
+      const pct=s.st.pct||0;
+      const h=Math.max(4,Math.round((pct/Math.max(maxPct,0.01))*100));
+      const color=s.atual?'#fb7c5b':pct>=0.75?'#34d399':pct>=0.6?'#c8f135':pct>=0.4?'#f59e0b':'#38bdf8';
+      return`<div class="week-bar-col">
+        ${s.st.pct!=null?`<div class="week-bar-pct" style="color:${color}">${(pct*100).toFixed(0)}%</div>`:'<div class="week-bar-pct" style="color:var(--text3)">—</div>'}
+        <div class="week-bar" style="height:${h}%;background:${color};opacity:${s.st.feitas>0?1:0.2}"></div>
+        <div class="week-bar-label">${s.label}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  document.getElementById('plan-barras').innerHTML=barrasHTML;
+
+  // KPIs da semana atual
+  const semAtual=semanas[semanas.length-1];
+  const totPlan=planejamentoList.filter(t=>t.data>=semAtual.from&&t.data<=semAtual.to).length;
+  const feitoPlan=planejamentoList.filter(t=>t.data>=semAtual.from&&t.data<=semAtual.to&&t.feito).length;
+  document.getElementById('plan-kpis-semana').innerHTML=`
+    <div style="text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Questões Feitas</div><div style="font-size:28px;font-weight:800;color:var(--accent2)">${semAtual.st.feitas}</div></div>
+    <div style="text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">% Aproveitamento</div><div style="font-size:28px;font-weight:800;color:${semAtual.st.pct!=null?pC(semAtual.st.pct):'var(--text3)'}">${semAtual.st.pct!=null?(semAtual.st.pct*100).toFixed(1)+'%':'—'}</div></div>
+    <div style="text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Tarefas Concluídas</div><div style="font-size:28px;font-weight:800;color:var(--success)">${feitoPlan}<span style="font-size:16px;color:var(--text3)">/${totPlan}</span></div></div>
+    <div style="text-align:center"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sessões de Estudo</div><div style="font-size:28px;font-weight:800;color:var(--accent)">${new Set(erros.filter(e=>e.data>=semAtual.from&&e.data<=semAtual.to).map(e=>e.data)).size}</div></div>`;
+
+  // ══ CALENDÁRIO ══
+  document.getElementById('plan-calendario').innerHTML=dias.map(d=>{
+    const dStr=dateToStr(d);
+    const eHoje=dStr===hojeStr;
+    const tarefasDia=planejamentoList.filter(t=>t.data===dStr).sort((a,b)=>a.id-b.id);
+    const errosDia=erros.filter(e=>e.data===dStr);
+    const st=calcStats(errosDia);
+    return`<div class="cal-dia ${eHoje?'hoje':''}">
+      <div class="cal-dia-header">${DIAS_SEMANA[d.getDay()]}</div>
+      <div class="cal-dia-num">${d.getDate()}</div>
+      ${st.feitas>0?`<div style="font-size:10px;color:${pC(st.pct)};font-weight:700;margin-bottom:6px;font-family:var(--mono)">${(st.pct*100).toFixed(0)}% acerto · ${st.feitas}Q</div>`:''}
+      ${tarefasDia.map(t=>{
+        const tp=TIPO_PLAN[t.tipo]||TIPO_PLAN.outro;
+        return`<div class="cal-tarefa ${tp.cls} ${t.feito?'feito':''}" onclick="toggleTarefa(${t.id})" title="${t.feito?'Marcar como pendente':'Marcar como feito'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <span>${tp.icon} ${t.materia?t.materia.split(' ').slice(-1)[0]:tp.label}</span>
+            <button onclick="event.stopPropagation();deletarTarefa(${t.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;line-height:1" title="Remover">✕</button>
+          </div>
+          ${t.assunto?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${t.assunto}</div>`:''}
+          ${t.obs?`<div style="font-size:10px;color:var(--text2);margin-top:2px;font-style:italic">${t.obs}</div>`:''}
+          <div style="font-size:10px;color:${t.feito?'var(--success)':'var(--text3)'};margin-top:3px;font-weight:700">${t.feito?'✅ Feito':'⬜ Pendente'}</div>
+        </div>`;
+      }).join('')}
+      <button class="cal-add-btn" onclick="abrirModalTarefa('${dStr}')">+ tarefa</button>
+    </div>`;
+  }).join('');
+
+  renderPlanHistorico();
+}
+
+function renderPlanHistorico(){
+  const dias=getSemanaAtual(planSemanaOffset);
+  const from=dateToStr(dias[0]),to=dateToStr(dias[6]);
+  const filtro=document.getElementById('plan-hist-filtro')?.value||'todos';
+  let tarefas=planejamentoList.filter(t=>t.data>=from&&t.data<=to);
+  if(filtro==='feito')tarefas=tarefas.filter(t=>t.feito);
+  if(filtro==='pendente')tarefas=tarefas.filter(t=>!t.feito);
+  tarefas=[...tarefas].sort((a,b)=>a.data.localeCompare(b.data)||a.id-b.id);
+
+  const div=document.getElementById('plan-historico');
+  if(!tarefas.length){
+    div.innerHTML='<div class="empty"><div class="empty-sub">Nenhuma tarefa nessa semana</div></div>';return;
+  }
+
+  // Agrupa por dia
+  const byDia={};
+  tarefas.forEach(t=>{if(!byDia[t.data])byDia[t.data]=[];byDia[t.data].push(t);});
+
+  div.innerHTML=Object.entries(byDia).map(([data,ts])=>{
+    const d=new Date(data+'T12:00');
+    const feitos=ts.filter(t=>t.feito).length;
+    return`<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px">${DIAS_FULL[d.getDay()]}, ${fmtD(data)}</div>
+        <span style="font-size:12px;color:var(--text3)">${feitos}/${ts.length} concluídas</span>
+      </div>
+      ${ts.map(t=>{
+        const tp=TIPO_PLAN[t.tipo]||TIPO_PLAN.outro;
+        return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${tp.color};border-radius:8px;margin-bottom:6px">
+          <span style="font-size:16px">${tp.icon}</span>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:13px">${tp.label}${t.materia?' — '+t.materia:''}</div>
+            ${t.assunto?`<div style="font-size:12px;color:var(--text2)">${t.assunto}</div>`:''}
+            ${t.obs?`<div style="font-size:12px;color:var(--text2);font-style:italic">${t.obs}</div>`:''}
+          </div>
+          <span style="font-size:12px;font-weight:700;color:${t.feito?'var(--success)':'var(--text3)'}">${t.feito?'✅ Feito':'⬜ Pendente'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
 // ══ MATERIAIS ══
 const TIPO_INFO={
   onenote:{icon:'📓',label:'OneNote',color:'var(--accent2)'},
@@ -2935,7 +3577,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -2944,7 +3586,8 @@ async function carregarDados(){
       sbGet('diarios','select=*'),
       sbGet('leis_seca','select=*'),
       sbGet('leis_progresso','select=*'),
-      sbGet('materiais','select=*')
+      sbGet('materiais','select=*'),
+      sbGet('planejamento','select=*')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -2955,6 +3598,7 @@ async function carregarDados(){
     leisSeca=Array.isArray(lD)?lD:[];
     leisProgresso=Array.isArray(lpD)?lpD:[];
     materiaisList=Array.isArray(mD)?mD:[];
+    planejamentoList=Array.isArray(plD)?plD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
@@ -2965,7 +3609,9 @@ async function carregarDados(){
 async function init(){
   fMS('err-materia',null);
   document.getElementById('page-dashboard').classList.add('active');
-  document.querySelector('.tab')?.classList.add('active');
+  // Ativa primeiro tab do sidebar
+  const firstTab=document.querySelector('#sidebar .tab');
+  if(firstTab)firstTab.classList.add('active');
   try{ await carregarDados(); }catch(e){ setSS('erro'); }
   initComparar();
   renderDashboard();renderRegistro();renderSimulados();renderRanking();
