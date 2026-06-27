@@ -3114,33 +3114,49 @@ async function toggleTarefa(id){
   tar.feito=novoFeito;
   setSS('sync');
   try{
-    await fetch(`${SB_URL}/rest/v1/planejamento?id=eq.${id}`,{
+    // 1. Atualiza planejamento
+    const r=await fetch(`${SB_URL}/rest/v1/planejamento?id=eq.${id}`,{
       method:'PATCH',
       headers:{...H,'Prefer':'return=representation'},
       body:JSON.stringify({feito:novoFeito})
     });
-    // Salva no Diário ao marcar como feito (exceto questões e simulados)
+    if(!r.ok){const e=await r.text();console.error('Erro planejamento:',e);}
+
+    // 2. Salva no Diário se marcou como feito (exceto questões e simulados)
     if(novoFeito&&tar.tipo!=='questoes'&&tar.tipo!=='simulado'){
       const tipoDiario=tar.tipo==='lei'?'lei':'teoria';
-      const min=tar.min_planejado||0;
-      const res=await sbIns('diarios',{
+      const min=parseInt(tar.min_planejado)||0;
+      const payload={
         data:tar.data,
         tipo:tipoDiario,
         materia:tar.materia||null,
         assunto:tar.assunto||null,
         minutos:min,
         obs:`[Planejamento] ${tar.obs||tar.tipo}`
+      };
+      console.log('Salvando no Diário:',payload);
+      const r2=await fetch(`${SB_URL}/rest/v1/diarios`,{
+        method:'POST',
+        headers:{...H,'Prefer':'return=representation'},
+        body:JSON.stringify(payload)
       });
-      if(res&&res[0])diarios.push(res[0]);
-      const msg=min>0?`✅ Feito! ${minToHM(min)} registrado no Diário.`:'✅ Marcado como feito e registrado no Diário!';
-      toast(msg);
+      if(r2.ok){
+        const saved=await r2.json();
+        if(saved&&saved[0])diarios.push(saved[0]);
+        toast(min>0?`✅ Feito! ${minToHM(min)} salvo no Diário!`:'✅ Feito e salvo no Diário!');
+      } else {
+        const err=await r2.text();
+        console.error('Erro ao salvar no Diário:',err);
+        toast('✅ Marcado como feito! (Diário: erro — veja console)');
+      }
     } else {
       toast(novoFeito?'✅ Marcado como feito!':'⬜ Desmarcado.');
     }
     setSS('ok');renderPlanejamento();
   }catch(e){
     setSS('erro');tar.feito=!novoFeito;
-    toast('Erro ao salvar.');console.error(e);
+    console.error('toggleTarefa erro:',e);
+    toast('Erro ao salvar.');
     renderPlanejamento();
   }
 }
