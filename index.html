@@ -312,6 +312,7 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
   <div class="tab" onclick="showPage('materias',this)">📚 Por Matéria</div>
   <div class="tab" onclick="showPage('comparar',this)">⚖️ Comparar</div>
   <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
+  <div class="tab" onclick="showPage('desempenho',this)">🎯 Desempenho</div>
   <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
   <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
   <div class="tab" onclick="showPage('leiseca',this)">📜 Lei Seca</div>
@@ -491,6 +492,91 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     </div>
   </div>
   <div id="cmp-result"></div>
+</div>
+
+<!-- DESEMPENHO -->
+<div id="page-desempenho" class="page">
+  <div class="sec-head">
+    <div class="sec-title">🎯 Desempenho de Questões</div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">⚙️ Configurar Gráfico</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="form-group">
+        <label>📚 Matéria</label>
+        <select id="desp-materia" onchange="updateDesempAssunto()">
+          <option value="">Todas as matérias</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto</label>
+        <select id="desp-assunto">
+          <option value="">Todos os assuntos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📅 Agrupar por</label>
+        <select id="desp-agrup">
+          <option value="semana">Semana</option>
+          <option value="mes">Mês</option>
+          <option value="dia">Dia</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Período A -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📅 Período A</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <div class="form-group"><label>De</label><input type="date" id="desp-a-from"></div>
+          <div class="form-group"><label>Até</label><input type="date" id="desp-a-to"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('a','mes_atual')">Este mês</button>
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('a','mes_ant')">Mês anterior</button>
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('a','30')">Últimos 30d</button>
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('a','tudo')">Tudo</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📅 Período B <span style="color:var(--text3);font-weight:400;font-size:10px">(opcional — para comparar)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <div class="form-group"><label>De</label><input type="date" id="desp-b-from"></div>
+          <div class="form-group"><label>Até</label><input type="date" id="desp-b-to"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('b','mes_atual')">Este mês</button>
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('b','mes_ant')">Mês anterior</button>
+          <button class="btn btn-secondary btn-sm" onclick="setDesempPeriodo('b','30')">Últimos 30d</button>
+          <button class="btn btn-ghost btn-sm" onclick="cF('desp-b-from','desp-b-to');renderDesempenho()">Limpar B</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-primary" onclick="renderDesempenho()">📊 Gerar Gráfico</button>
+    </div>
+  </div>
+
+  <!-- KPIs resumo -->
+  <div id="desp-kpis" style="margin-bottom:18px"></div>
+
+  <!-- Gráfico -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title" id="desp-titulo">📈 Histórico da Taxa de Acerto</div>
+    <div id="desp-grafico" style="min-height:200px;display:flex;align-items:center;justify-content:center">
+      <div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Configure os filtros acima e clique em Gerar Gráfico</div></div>
+    </div>
+  </div>
+
+  <!-- Tabela de dados -->
+  <div class="card">
+    <div class="card-title">📋 Dados por Período</div>
+    <div id="desp-tabela"></div>
+  </div>
 </div>
 
 <!-- GRÁFICOS -->
@@ -948,7 +1034,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
 
 // Leis pré-cadastradas por matéria
 const LEIS_BASE={
@@ -2409,6 +2495,243 @@ async function deletarLeiCustom(id){
   await sbDel('leis_seca',id);
   leisSeca=leisSeca.filter(l=>l.id!==id);
   setSS('ok');toast('Removida.');renderLeiSeca();
+}
+
+// ══ DESEMPENHO ══
+function updateDesempAssunto(){
+  const mat=document.getElementById('desp-materia').value;
+  const sel=document.getElementById('desp-assunto');
+  sel.innerHTML='<option value="">Todos os assuntos</option>';
+  if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+  renderDesempenho();
+}
+
+function setDesempPeriodo(lado,tipo){
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
+  const y=now.getFullYear(),m=now.getMonth();
+  let from='',to='';
+  if(tipo==='mes_atual'){
+    from=`${y}-${String(m+1).padStart(2,'0')}-01`;
+    const ult=new Date(y,m+1,0).getDate();
+    to=`${y}-${String(m+1).padStart(2,'0')}-${String(ult).padStart(2,'0')}`;
+  } else if(tipo==='mes_ant'){
+    const pm=m===0?12:m,py=m===0?y-1:y;
+    from=`${py}-${String(pm).padStart(2,'0')}-01`;
+    const ult=new Date(py,pm,0).getDate();
+    to=`${py}-${String(pm).padStart(2,'0')}-${String(ult).padStart(2,'0')}`;
+  } else if(tipo==='30'){
+    const d=new Date(now);d.setDate(d.getDate()-29);
+    from=d.toISOString().slice(0,10);to=today();
+  } else {from='';to='';}
+  document.getElementById(`desp-${lado}-from`).value=from;
+  document.getElementById(`desp-${lado}-to`).value=to;
+}
+
+function getChaveAgrup(data,agrup){
+  if(!data)return null;
+  const d=new Date(data+'T12:00');
+  if(agrup==='dia')return data;
+  if(agrup==='mes'){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+  // semana ISO
+  const tmp=new Date(d);tmp.setHours(0,0,0,0);
+  tmp.setDate(tmp.getDate()+3-(tmp.getDay()+6)%7);
+  const week1=new Date(tmp.getFullYear(),0,4);
+  const wn=1+Math.round(((tmp-week1)/86400000-3+(week1.getDay()+6)%7)/7);
+  return`${tmp.getFullYear()}-S${String(wn).padStart(2,'0')}`;
+}
+
+function labelAgrup(chave,agrup){
+  if(agrup==='dia')return fmtD(chave);
+  if(agrup==='mes'){const[y,m]=chave.split('-');return`${ML[parseInt(m)-1]}/${y.slice(2)}`;}
+  const[y,sw]=chave.split('-');return`${sw}/${y.slice(2)}`;
+}
+
+function agruparErros(filtrado,agrup){
+  const grupos={};
+  filtrado.forEach(e=>{
+    const k=getChaveAgrup(e.data,agrup);if(!k)return;
+    if(!grupos[k])grupos[k]={feitas:0,erradas:0};
+    grupos[k].feitas+=(e.qtd_feitas||1);
+    grupos[k].erradas+=(e.qtd_erradas||0);
+  });
+  return grupos;
+}
+
+function renderDesempenho(){
+  // Preenche selects de matéria
+  const msel=document.getElementById('desp-materia');
+  if(msel.options.length<=1){
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;msel.appendChild(o);});
+  }
+
+  const mat=document.getElementById('desp-materia').value;
+  const ass=document.getElementById('desp-assunto').value;
+  const agrup=document.getElementById('desp-agrup').value;
+  const aF=document.getElementById('desp-a-from').value;
+  const aT=document.getElementById('desp-a-to').value;
+  const bF=document.getElementById('desp-b-from').value;
+  const bT=document.getElementById('desp-b-to').value;
+  const temB=bF||bT;
+
+  // Filtra erros
+  function filtrar(from,to){
+    let f=erros;
+    if(from||to)f=fD(f,from,to);
+    if(mat)f=f.filter(e=>e.materia===mat);
+    if(ass)f=f.filter(e=>e.assunto===ass);
+    return f;
+  }
+
+  const fA=filtrar(aF,aT);
+  const fB=temB?filtrar(bF,bT):[];
+
+  // Stats gerais para KPIs
+  const stA=calcStats(fA),stB=temB?calcStats(fB):null;
+  const lA=aF||aT?`${fmtD(aF)||'início'} → ${fmtD(aT)||'hoje'}`:'Todo o período';
+  const lB=bF||bT?`${fmtD(bF)||'início'} → ${fmtD(bT)||'hoje'}`:'Período B';
+
+  // KPIs
+  document.getElementById('desp-kpis').innerHTML=`
+    <div style="display:grid;grid-template-columns:${temB?'1fr 1fr':'1fr 1fr 1fr'};gap:14px">
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">${temB?lA:'Resumo do Período'}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Questões</div><div style="font-size:24px;font-weight:800;color:var(--accent2)">${stA.feitas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Erros</div><div style="font-size:24px;font-weight:800;color:var(--accent3)">${stA.erradas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">% Acerto</div><div style="font-size:24px;font-weight:800;color:${stA.pct!=null?pC(stA.pct):'var(--text3)'}">${stA.pct!=null?(stA.pct*100).toFixed(1)+'%':'—'}</div></div>
+        </div>
+      </div>
+      ${temB?`<div class="card" style="border-left:3px solid var(--accent3)">
+        <div style="font-size:11px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">${lB}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Questões</div><div style="font-size:24px;font-weight:800;color:var(--accent2)">${stB.feitas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Erros</div><div style="font-size:24px;font-weight:800;color:var(--accent3)">${stB.erradas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">% Acerto</div><div style="font-size:24px;font-weight:800;color:${stB.pct!=null?pC(stB.pct):'var(--text3)'}">${stB.pct!=null?(stB.pct*100).toFixed(1)+'%':'—'}</div></div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid ${stA.pct!=null&&stB.pct!=null?(stB.pct-stA.pct>=0?'var(--success)':'var(--danger)'):'var(--text3)'}">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Variação A → B</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Δ Questões</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent2)">${stB.feitas-stA.feitas>=0?'+':''  }${stB.feitas-stA.feitas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Δ Erros</div>
+            <div style="font-size:22px;font-weight:800;color:${stB.erradas<=stA.erradas?'var(--success)':'var(--danger)'}">
+              ${stB.erradas-stA.erradas>=0?'+':''}${stB.erradas-stA.erradas}</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">Δ % Acerto</div>
+            ${stA.pct!=null&&stB.pct!=null?`<div style="font-size:22px;font-weight:800;color:${stB.pct>=stA.pct?'var(--success)':'var(--danger)'}">
+              ${stB.pct>=stA.pct?'▲':'▼'} ${Math.abs((stB.pct-stA.pct)*100).toFixed(1)}%</div>`:'<div style="font-size:22px;color:var(--text3)">—</div>'}
+          </div>
+        </div>
+      </div>`:`<div class="card"><div style="font-size:11px;color:var(--text3);margin-bottom:8px">Sessões no período</div><div style="font-size:32px;font-weight:800;color:var(--accent)">${fA.length}</div></div>
+      <div class="card"><div style="font-size:11px;color:var(--text3);margin-bottom:8px">Matéria</div><div style="font-size:14px;font-weight:700">${mat||'Todas'}</div><div style="font-size:12px;color:var(--text2);margin-top:4px">${ass||'Todos os assuntos'}</div></div>`}
+    </div>`;
+
+  // ══ GRÁFICO ══
+  const grpA=agruparErros(fA,agrup);
+  const grpB=temB?agruparErros(fB,agrup):{};
+  const todasChaves=[...new Set([...Object.keys(grpA),...Object.keys(grpB)])].sort();
+
+  if(!todasChaves.length){
+    document.getElementById('desp-grafico').innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Sem dados no período</div><div class="empty-sub">Registre sessões de questões para ver o gráfico</div></div>';
+    document.getElementById('desp-tabela').innerHTML='';
+    return;
+  }
+
+  // Título
+  document.getElementById('desp-titulo').textContent=
+    `📈 Taxa de Acerto${ass?' — '+ass:mat?' — '+mat:''} · ${agrup==='semana'?'por Semana':agrup==='mes'?'por Mês':'por Dia'}`;
+
+  // Dados para plotar
+  const ptsA=todasChaves.map(k=>{const g=grpA[k];return g&&g.feitas>0?(g.feitas-g.erradas)/g.feitas:null;});
+  const ptsB=temB?todasChaves.map(k=>{const g=grpB[k];return g&&g.feitas>0?(g.feitas-g.erradas)/g.feitas:null;}):[];
+
+  // SVG
+  const W=680,H=260,padL=54,padR=24,padT=40,padB=50;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const allVals=[...ptsA,...ptsB].filter(v=>v!=null);
+  const minV=Math.max(0,Math.min(...allVals)-0.05);
+  const maxV=Math.min(1,Math.max(...allVals)+0.05);
+  const range=maxV-minV||0.1;
+  const n=todasChaves.length;
+  const xOf=i=>padL+(n>1?i/(n-1):0.5)*plotW;
+  const yOf=v=>padT+plotH-(v-minV)/range*plotH;
+
+  // Grid lines
+  const gridPcts=[0,25,50,75,100].map(p=>p/100).filter(v=>v>=minV-0.01&&v<=maxV+0.01);
+  const grid=gridPcts.map(v=>{const y=yOf(v);return`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border2)" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="${padL-6}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--text3)">${(v*100).toFixed(0)}%</text>`;}).join('');
+
+  // Labels eixo X
+  const maxLabels=Math.min(n,12);
+  const step=Math.ceil(n/maxLabels);
+  const xlabels=todasChaves.map((k,i)=>{
+    if(i%step!==0&&i!==n-1)return'';
+    return`<text x="${xOf(i)}" y="${H-padB+18}" text-anchor="middle" font-size="9" fill="var(--text3)" transform="rotate(-30,${xOf(i)},${H-padB+18})">${labelAgrup(k,agrup)}</text>`;
+  }).join('');
+
+  function buildLine(pts,color,labelP){
+    const valid=pts.map((v,i)=>v!=null?{x:xOf(i),y:yOf(v),v,i}:null).filter(Boolean);
+    if(!valid.length)return'';
+    // Linha conectando pontos válidos
+    const pathD=valid.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(' ');
+    // Pontos e badges
+    const dots=valid.map(p=>{
+      const pct=(p.v*100).toFixed(1)+'%';
+      const showLabel=valid.length<=15||p.i===0||p.i===pts.length-1;
+      return`<circle cx="${p.x}" cy="${p.y}" r="5" fill="${color}" stroke="var(--bg)" stroke-width="2"/>
+        ${showLabel?`<rect x="${p.x-16}" y="${p.y-22}" width="32" height="16" rx="4" fill="${color}"/>
+        <text x="${p.x}" y="${p.y-11}" text-anchor="middle" font-size="10" font-weight="700" fill="#0c0e13">${pct}</text>`:''}`;
+    }).join('');
+    return`<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+  }
+
+  const lineA=buildLine(ptsA,'#38bdf8','A');
+  const lineB=buildLine(ptsB,'#fb7c5b','B');
+
+  // Legenda
+  const legend=temB?`<g>
+    <rect x="${padL}" y="8" width="12" height="12" rx="3" fill="#38bdf8"/>
+    <text x="${padL+16}" y="19" font-size="11" fill="var(--text2)">${lA}</text>
+    <rect x="${padL+200}" y="8" width="12" height="12" rx="3" fill="#fb7c5b"/>
+    <text x="${padL+216}" y="19" font-size="11" fill="var(--text2)">${lB}</text>
+  </g>`:'';;
+
+  document.getElementById('desp-grafico').innerHTML=
+    `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="overflow:visible">${grid}${xlabels}${lineA}${lineB}${legend}</svg>`;
+
+  // Tabela
+  const rows=todasChaves.map(k=>{
+    const gA=grpA[k],gB=grpB[k];
+    const pA=gA&&gA.feitas>0?(gA.feitas-gA.erradas)/gA.feitas:null;
+    const pB=gB&&gB.feitas>0?(gB.feitas-gB.erradas)/gB.feitas:null;
+    const diff=pA!=null&&pB!=null?pB-pA:null;
+    return`<tr>
+      <td style="font-family:var(--mono);font-weight:600">${labelAgrup(k,agrup)}</td>
+      <td style="font-family:var(--mono)">${gA?gA.feitas:'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent3)">${gA?gA.erradas:'—'}</td>
+      <td>${pBadge(pA)}</td>
+      ${temB?`<td style="font-family:var(--mono)">${gB?gB.feitas:'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent3)">${gB?gB.erradas:'—'}</td>
+      <td>${pBadge(pB)}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:${diff==null?'var(--text3)':diff>=0?'var(--success)':'var(--danger)'}">
+        ${diff==null?'—':diff>=0?`▲ +${(diff*100).toFixed(1)}%`:`▼ ${(diff*100).toFixed(1)}%`}
+      </td>`:''}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('desp-tabela').innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>Período</th>
+      <th colspan="3" style="color:var(--accent2)">Período A${temB?'':''}</th>
+      ${temB?`<th colspan="3" style="color:var(--accent3)">Período B</th><th>Variação</th>`:''}
+    </tr>
+    <tr>
+      <th></th>
+      <th>Feitas</th><th>Erros</th><th>% Acerto</th>
+      ${temB?'<th>Feitas</th><th>Erros</th><th>% Acerto</th><th>Δ Acerto</th>':''}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
 }
 
 async function carregarDados(){
