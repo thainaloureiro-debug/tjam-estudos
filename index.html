@@ -278,6 +278,17 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
 .streak-num{font-size:56px;font-weight:800;line-height:1;color:var(--accent3);}
 .streak-label{font-size:12px;color:var(--text2);margin-top:4px;}
 .streak-fire{font-size:32px;}
+
+/* MATERIAIS */
+.mat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:border-color .2s,transform .15s;text-decoration:none;color:inherit;}
+.mat-card:hover{border-color:var(--accent2);transform:translateY(-1px);}
+.mat-icon{font-size:28px;flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:10px;}
+.mat-info{flex:1;}
+.mat-nome{font-weight:700;font-size:14px;margin-bottom:3px;}
+.mat-meta{font-size:12px;color:var(--text2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.mat-link{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;margin-top:2px;}
+body.light .mat-card{background:#fff;}
+body.light .mat-icon{background:#f0f2f7;}
 </style>
 </head>
 <body>
@@ -313,6 +324,7 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
   <div class="tab" onclick="showPage('comparar',this)">⚖️ Comparar</div>
   <div class="tab" onclick="showPage('graficos',this)">📈 Gráficos</div>
   <div class="tab" onclick="showPage('desempenho',this)">🎯 Desempenho</div>
+  <div class="tab" onclick="showPage('materiais',this)">📁 Materiais</div>
   <div class="tab" onclick="showPage('conteudo',this)">📖 Conteúdo</div>
   <div class="tab" onclick="showPage('revisao',this)">🔁 Revisão</div>
   <div class="tab" onclick="showPage('leiseca',this)">📜 Lei Seca</div>
@@ -492,6 +504,82 @@ body.light .diario-min-input{background:#fff;border-color:#d0d5e0;color:#1a1f2e;
     </div>
   </div>
   <div id="cmp-result"></div>
+</div>
+
+<!-- MATERIAIS -->
+<div id="page-materiais" class="page">
+  <div class="sec-head">
+    <div class="sec-title">📁 Materiais de Estudo</div>
+    <button class="btn btn-primary" onclick="openModal('modal-add-material')">+ Adicionar Material</button>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filtrar</span>
+    <label class="fi">Matéria:</label>
+    <select id="mats-materia" onchange="renderMateriais()" style="min-width:220px;font-weight:600">
+      <option value="">Todas as matérias</option>
+    </select>
+    <label class="fi">Tipo:</label>
+    <select id="mats-tipo" onchange="renderMateriais()" style="min-width:160px">
+      <option value="">Todos os tipos</option>
+      <option value="onenote">📓 OneNote</option>
+      <option value="notebooklm">🤖 NotebookLM</option>
+      <option value="tec">📖 Caderno TEC</option>
+      <option value="pdf">📄 PDF / Apostila</option>
+      <option value="video">🎥 Vídeo / Aula</option>
+      <option value="site">🌐 Site / Artigo</option>
+      <option value="outro">🔗 Outro</option>
+    </select>
+    <input type="text" id="mats-busca" placeholder="🔍 Buscar..." oninput="renderMateriais()" style="min-width:180px">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('mats-materia').value='';document.getElementById('mats-tipo').value='';document.getElementById('mats-busca').value='';renderMateriais()">Limpar</button>
+  </div>
+
+  <div id="mats-lista"></div>
+</div>
+
+<!-- MODAL ADD MATERIAL -->
+<div id="modal-add-material" class="modal-overlay" onclick="closeModalOut(event,'modal-add-material')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">📁 Adicionar Material</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📚 Matéria *</label>
+        <select id="am-materia" onchange="updateAMAssunto()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto (opcional)</label>
+        <select id="am-assunto">
+          <option value="">Geral da matéria</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🏷️ Tipo *</label>
+        <select id="am-tipo">
+          <option value="onenote">📓 OneNote</option>
+          <option value="notebooklm">🤖 NotebookLM</option>
+          <option value="tec">📖 Caderno TEC</option>
+          <option value="pdf">📄 PDF / Apostila</option>
+          <option value="video">🎥 Vídeo / Aula</option>
+          <option value="site">🌐 Site / Artigo</option>
+          <option value="outro">🔗 Outro</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Nome *</label>
+        <input type="text" id="am-nome" placeholder="Ex: OneNote — Direito Constitucional, NotebookLM — Princípios Fundamentais...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link *</label>
+        <input type="url" id="am-link" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-material')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMaterial()">💾 Salvar</button>
+    </div>
+  </div>
 </div>
 
 <!-- DESEMPENHO -->
@@ -1012,7 +1100,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1034,7 +1122,7 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,materiais:renderMateriais,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
 
 // Leis pré-cadastradas por matéria
 const LEIS_BASE={
@@ -1073,6 +1161,15 @@ function openModal(id){
     Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
     document.getElementById('al-nome').value='';
     document.getElementById('al-total').value='';
+  }
+  if(id==='modal-add-material'){
+    const sel=document.getElementById('am-materia');
+    sel.innerHTML='<option value="">Selecione...</option>';
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    document.getElementById('am-assunto').innerHTML='<option value="">Geral da matéria</option>';
+    document.getElementById('am-nome').value='';
+    document.getElementById('am-link').value='';
+    document.getElementById('am-tipo').value='onenote';
   }
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -2497,6 +2594,107 @@ async function deletarLeiCustom(id){
   setSS('ok');toast('Removida.');renderLeiSeca();
 }
 
+// ══ MATERIAIS ══
+const TIPO_INFO={
+  onenote:{icon:'📓',label:'OneNote',color:'var(--accent2)'},
+  notebooklm:{icon:'🤖',label:'NotebookLM',color:'var(--accent)'},
+  tec:{icon:'📖',label:'Caderno TEC',color:'var(--accent3)'},
+  pdf:{icon:'📄',label:'PDF / Apostila',color:'var(--warning)'},
+  video:{icon:'🎥',label:'Vídeo / Aula',color:'var(--danger)'},
+  site:{icon:'🌐',label:'Site / Artigo',color:'var(--success)'},
+  outro:{icon:'🔗',label:'Outro',color:'var(--text2)'},
+};
+
+function updateAMAssunto(){
+  const mat=document.getElementById('am-materia').value;
+  const sel=document.getElementById('am-assunto');
+  sel.innerHTML='<option value="">Geral da matéria</option>';
+  if(mat&&MATERIAS[mat])MATERIAS[mat].forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+}
+
+function renderMateriais(){
+  // Preenche filtro matéria
+  const msel=document.getElementById('mats-materia');
+  if(msel.options.length<=1){Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;msel.appendChild(o);});}
+  // Preenche modal matéria
+  const asel=document.getElementById('am-materia');
+  if(asel.options.length<=1){Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;asel.appendChild(o);});}
+
+  const matFilt=document.getElementById('mats-materia').value;
+  const tipoFilt=document.getElementById('mats-tipo').value;
+  const busca=document.getElementById('mats-busca').value.toLowerCase().trim();
+
+  let filt=[...materiaisList];
+  if(matFilt)filt=filt.filter(m=>m.materia===matFilt);
+  if(tipoFilt)filt=filt.filter(m=>m.tipo===tipoFilt);
+  if(busca)filt=filt.filter(m=>m.nome.toLowerCase().includes(busca)||m.materia.toLowerCase().includes(busca)||(m.assunto||'').toLowerCase().includes(busca));
+
+  const div=document.getElementById('mats-lista');
+  if(!filt.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-title">Nenhum material encontrado</div><div class="empty-sub">Clique em "+ Adicionar Material" para começar</div></div>';
+    return;
+  }
+
+  // Agrupa por matéria
+  const grupos={};
+  filt.forEach(m=>{if(!grupos[m.materia])grupos[m.materia]=[];grupos[m.materia].push(m);});
+
+  div.innerHTML=Object.entries(grupos).map(([mat,items])=>`
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span class="badge ${MB[mat]||'badge-blue'}" style="font-size:12px">${mat}</span>
+        <span style="font-size:12px;color:var(--text3)">${items.length} material${items.length!==1?'is':''}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${items.map(m=>{
+          const ti=TIPO_INFO[m.tipo]||TIPO_INFO.outro;
+          return`<div class="mat-card" style="border-left:3px solid ${ti.color}">
+            <div class="mat-icon" style="border:1px solid ${ti.color}22">${ti.icon}</div>
+            <div class="mat-info">
+              <div class="mat-nome">${m.nome}</div>
+              <div class="mat-meta">
+                <span class="badge badge-gray" style="font-size:10px">${ti.label}</span>
+                ${m.assunto?`<span style="font-size:12px;color:var(--text2)">📌 ${m.assunto}</span>`:''}
+              </div>
+              <div class="mat-link">${m.link}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <a href="${m.link}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">🔗 Abrir</a>
+              <button class="btn btn-ghost" onclick="deletarMaterial(${m.id})" title="Remover">🗑</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function salvarMaterial(){
+  const materia=document.getElementById('am-materia').value;
+  const nome=document.getElementById('am-nome').value.trim();
+  const link=document.getElementById('am-link').value.trim();
+  const tipo=document.getElementById('am-tipo').value;
+  if(!materia||!nome||!link){alert('Preencha Matéria, Nome e Link.');return;}
+  if(!link.startsWith('http')){alert('O link deve começar com http:// ou https://');return;}
+  const assunto=document.getElementById('am-assunto').value||null;
+  setSS('sync');
+  try{
+    const res=await sbIns('materiais',{materia,assunto,tipo,nome,link});
+    if(res&&res[0])materiaisList.push(res[0]);
+    closeModal('modal-add-material');
+    // Limpa campos
+    ['am-materia','am-assunto','am-nome','am-link'].forEach(id=>document.getElementById(id).value='');
+    setSS('ok');toast('✓ Material salvo!');renderMateriais();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function deletarMaterial(id){
+  if(!confirm('Remover este material?'))return;
+  setSS('sync');
+  await sbDel('materiais',id);
+  materiaisList=materiaisList.filter(m=>m.id!==id);
+  setSS('ok');toast('Removido.');renderMateriais();
+}
+
 // ══ DESEMPENHO ══
 function updateDesempAssunto(){
   const mat=document.getElementById('desp-materia').value;
@@ -2737,7 +2935,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -2745,7 +2943,8 @@ async function carregarDados(){
       sbGet('notas','select=*'),
       sbGet('diarios','select=*'),
       sbGet('leis_seca','select=*'),
-      sbGet('leis_progresso','select=*')
+      sbGet('leis_progresso','select=*'),
+      sbGet('materiais','select=*')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -2755,6 +2954,7 @@ async function carregarDados(){
     diarios=Array.isArray(dD)?dD:[];
     leisSeca=Array.isArray(lD)?lD:[];
     leisProgresso=Array.isArray(lpD)?lpD:[];
+    materiaisList=Array.isArray(mD)?mD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
