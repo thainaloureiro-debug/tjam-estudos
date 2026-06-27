@@ -3119,23 +3119,21 @@ async function toggleTarefa(id){
       headers:{...H,'Prefer':'return=representation'},
       body:JSON.stringify({feito:novoFeito})
     });
-    // Se marcou como feito E tem tempo planejado → salva no Diário automaticamente
-    if(novoFeito&&tar.min_planejado&&tar.min_planejado>0){
-      const tipoDiario=tar.tipo==='lei'?'lei':'teoria'; // questões não vão pro diário (vêm do registro)
-      if(tar.tipo!=='questoes'&&tar.tipo!=='simulado'){
-        const res=await sbIns('diarios',{
-          data:tar.data,
-          tipo:tipoDiario,
-          materia:tar.materia||null,
-          assunto:tar.assunto||null,
-          minutos:tar.min_planejado,
-          obs:`[Planejamento] ${tar.obs||tar.tipo}`
-        });
-        if(res&&res[0])diarios.push(res[0]);
-        toast(`✅ Feito! ${minToHM(tar.min_planejado)} registrado no Diário.`);
-      } else {
-        toast('✅ Marcado como feito!');
-      }
+    // Salva no Diário ao marcar como feito (exceto questões e simulados)
+    if(novoFeito&&tar.tipo!=='questoes'&&tar.tipo!=='simulado'){
+      const tipoDiario=tar.tipo==='lei'?'lei':'teoria';
+      const min=tar.min_planejado||0;
+      const res=await sbIns('diarios',{
+        data:tar.data,
+        tipo:tipoDiario,
+        materia:tar.materia||null,
+        assunto:tar.assunto||null,
+        minutos:min,
+        obs:`[Planejamento] ${tar.obs||tar.tipo}`
+      });
+      if(res&&res[0])diarios.push(res[0]);
+      const msg=min>0?`✅ Feito! ${minToHM(min)} registrado no Diário.`:'✅ Marcado como feito e registrado no Diário!';
+      toast(msg);
     } else {
       toast(novoFeito?'✅ Marcado como feito!':'⬜ Desmarcado.');
     }
