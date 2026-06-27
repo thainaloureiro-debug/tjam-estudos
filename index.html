@@ -18,30 +18,48 @@
   --sidebar:240px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;display:flex;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
 /* SIDEBAR */
-#sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;overflow-x:hidden;}
+#sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:none;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;overflow-x:hidden;}
+body.logged #sidebar{display:flex;}
 .sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
 .sidebar-logo-icon{font-size:24px;margin-bottom:6px;}
 .sidebar-logo-title{font-size:15px;font-weight:800;line-height:1.2;}
 .sidebar-logo-sub{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
 .sidebar-nav{flex:1;padding:12px 8px;}
 .sidebar-section{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:12px 10px 6px;}
-.tab{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;user-select:none;white-space:nowrap;border:none;background:transparent;width:100%;}
-.tab:hover{background:var(--surface2);color:var(--text);}
+.tab{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:#c9d1d9;transition:all .15s;user-select:none;white-space:nowrap;border:none;background:transparent;width:100%;}
+.tab:hover{background:var(--surface2);color:#ffffff;}
 .tab.active{background:rgba(249,115,22,.12);color:var(--accent);font-weight:700;}
 .tab .tab-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.sidebar-section{font-size:9px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1.5px;padding:12px 10px 6px;}
+
+/* Tema claro — letras escuras no menu */
+body.light .tab{color:#2d3748;}
+body.light .tab:hover{color:#1a202c;background:#f0f2f7;}
+body.light .tab.active{color:var(--accent);background:rgba(249,115,22,.08);}
+body.light .sidebar-section{color:#718096;}
+body.light .sidebar-logo-title{color:#1a202c;}
+body.light .sidebar-logo-sub{color:#718096;}
+body.light .sync-row{color:#4a5568;}
+
+/* Tema cinza escuro — letras claras */
+body.gray .tab{color:#e0e0e0;}
+body.gray .tab:hover{color:#ffffff;background:#3d3d3d;}
+body.gray .tab.active{color:var(--accent);}
+body.gray .sidebar-section{color:#9e9e9e;}
 .sidebar-footer{padding:12px 8px;border-top:1px solid var(--border);}
 .sync-row{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:var(--text2);}
 .theme-row{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;}
 
 /* MAIN AREA */
-#app-body{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
-#topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
+#app-body{margin-left:var(--sidebar);display:none;flex-direction:column;min-height:100vh;}
+body.logged #app-body{display:flex;}
+#topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;flex-shrink:0;}
 .topbar-title{font-size:15px;font-weight:700;color:var(--text);}
-main{padding:24px 28px;flex:1;}
+main{padding:20px 24px;flex:1;}
 .page{display:none;}.page.active{display:block;animation:fadeIn .18s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
@@ -51,13 +69,13 @@ main{padding:24px 28px;flex:1;}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;}
 .kpi:hover{border-color:var(--border2);transform:translateY(-1px);}
 .kpi-accent{position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;}
+.kpi-label{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;}
 .kpi-value{font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1.5px;}
-.kpi-sub{font-size:12px;color:var(--text3);margin-top:6px;}
+.kpi-sub{font-size:12px;color:#8b949e;margin-top:6px;}
 
 /* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;}
-.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.3px;margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:16px;}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
 .filter-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;flex-wrap:wrap;}
@@ -148,6 +166,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .status-pendente{background:rgba(251,124,91,.15);color:var(--accent3);border:1px solid rgba(251,124,91,.3);}
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
 #login-screen.hidden{display:none;}
+
 .login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center;}
 .login-logo{font-size:40px;margin-bottom:12px;}.login-title{font-size:22px;font-weight:800;margin-bottom:4px;}.login-sub{font-size:13px;color:var(--text2);margin-bottom:28px;}
 .login-input{width:100%;padding:12px 16px;font-size:15px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--font);outline:none;text-align:center;letter-spacing:2px;margin-bottom:14px;}
@@ -244,15 +263,20 @@ body.light .cal-tarefa{background:#f0f2f7;}
 body.light .mat-card{background:#fff;}
 body.light .mat-icon{background:#f0f2f7;}
 
-/* TOGGLE DARK/LIGHT */
-.theme-toggle{width:44px;height:24px;border-radius:12px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
-.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text2);transition:transform .2s,background .2s;}
-body.light .theme-toggle{background:#c8f135;}
-body.light .theme-toggle::after{transform:translateX(20px);background:#0c0e13;}
+/* TEMA CINZA ESCURO */
+body.gray{
+  --bg:#1e1e1e;--surface:#2a2a2a;--surface2:#333333;--surface3:#3d3d3d;
+  --border:#3a3a3a;--border2:#4a4a4a;
+  --text:#e0e0e0;--text2:#9e9e9e;--text3:#5a5a5a;
+}
 
-body.light .pct-ok{background:rgba(16,185,129,.12);color:#065f46;}
-body.light .pct-warn{background:rgba(217,119,6,.12);color:#92400e;}
-body.light .pct-bad{background:rgba(220,38,38,.12);color:#991b1b;}
+body.light .kpi-label{color:#4a5568;}
+body.light .kpi-sub{color:#4a5568;}
+body.light .card-title{color:#4a5568;}
+body.light .filter-label{color:#4a5568;}
+body.gray .kpi-label{color:#bdbdbd;}
+body.gray .kpi-sub{color:#bdbdbd;}
+body.gray .card-title{color:#bdbdbd;}
 body.light .badge-blue{background:rgba(37,99,235,.1);color:#1d4ed8;}
 body.light .badge-orange{background:rgba(234,88,12,.1);color:#c2410c;}
 body.light .badge-yellow{background:rgba(101,163,13,.1);color:#3f6212;}
@@ -423,8 +447,12 @@ body.light .cal-tarefa{background:#f0f2f7;}
   <div class="sidebar-footer">
     <div class="sync-row" id="sync-status">⚪ Conectando...</div>
     <div class="theme-row">
-      <span style="font-size:11px;color:var(--text2)" id="theme-label">🌙 Escuro</span>
-      <button class="theme-toggle no-print" onclick="toggleTheme()"></button>
+      <span style="font-size:11px;color:var(--text2)">Tema</span>
+      <div style="display:flex;gap:4px">
+        <button onclick="setTheme('dark')" id="theme-btn-dark" title="Escuro" style="width:28px;height:28px;border-radius:8px;border:2px solid transparent;background:#0d1117;cursor:pointer;font-size:14px;transition:border-color .15s">🌙</button>
+        <button onclick="setTheme('gray')" id="theme-btn-gray" title="Cinza escuro" style="width:28px;height:28px;border-radius:8px;border:2px solid transparent;background:#2a2a2a;cursor:pointer;font-size:14px;transition:border-color .15s">🌫️</button>
+        <button onclick="setTheme('light')" id="theme-btn-light" title="Claro" style="width:28px;height:28px;border-radius:8px;border:2px solid transparent;background:#f4f6fb;cursor:pointer;font-size:14px;transition:border-color .15s">☀️</button>
+      </div>
     </div>
     <div style="padding:6px 12px">
       <button class="btn btn-secondary btn-sm no-print" onclick="doLogout()" style="width:100%">Sair</button>
@@ -805,6 +833,12 @@ body.light .cal-tarefa{background:#f0f2f7;}
       <div class="form-group" style="grid-column:span 2">
         <label>💬 Observação</label>
         <input type="text" id="tar-obs" placeholder="Ex: Fazer 20 questões de Ortografia...">
+      </div>
+      <div class="form-group">
+        <label>⏱ Tempo planejado (minutos)</label>
+        <input type="number" id="tar-min" min="0" placeholder="Ex: 60"
+          oninput="document.getElementById('tar-min-hm').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tar-min-hm"></div>
       </div>
     </div>
     <div class="modal-actions">
@@ -1280,6 +1314,7 @@ function doLogin(){
     sessionStorage.setItem('tjam_ok','1');
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('login-loading').textContent='';
+    document.body.classList.add('logged');
     init();
   } else {
     document.getElementById('login-error').textContent='Senha incorreta.';
@@ -1289,14 +1324,20 @@ function doLogin(){
 }
 function doLogout(){sessionStorage.removeItem('tjam_ok');location.reload();}
 
-function toggleTheme(){
-  const isLight=document.body.classList.toggle('light');
-  localStorage.setItem('tjam_theme',isLight?'light':'dark');
-  document.getElementById('theme-label').textContent=isLight?'☀️ Claro':'🌙 Escuro';
+function setTheme(t){
+  document.body.classList.remove('light','gray');
+  if(t==='light')document.body.classList.add('light');
+  if(t==='gray')document.body.classList.add('gray');
+  localStorage.setItem('tjam_theme',t);
+  // Highlight botão ativo
+  ['dark','gray','light'].forEach(n=>{
+    const btn=document.getElementById('theme-btn-'+n);
+    if(btn)btn.style.borderColor=t===n?'var(--accent)':'transparent';
+  });
 }
 function loadTheme(){
-  const t=localStorage.getItem('tjam_theme');
-  if(t==='light'){document.body.classList.add('light');const el=document.getElementById('theme-label');if(el)el.textContent='☀️ Claro';}
+  const t=localStorage.getItem('tjam_theme')||'dark';
+  setTheme(t);
 }
 loadTheme();
 
@@ -3065,6 +3106,8 @@ function abrirModalTarefa(data){
   document.getElementById('tar-assunto').innerHTML='<option value="">Geral</option>';
   document.getElementById('tar-data').value=data;
   document.getElementById('tar-obs').value='';
+  document.getElementById('tar-min').value='';
+  document.getElementById('tar-min-hm').textContent='';
   document.getElementById('tar-tipo').value='teoria';
   document.getElementById('modal-tarefa-titulo').textContent=`📅 Nova Tarefa — ${fmtD(data)}`;
   document.getElementById('modal-tarefa').classList.add('open');
@@ -3076,10 +3119,11 @@ async function salvarTarefa(){
   const materia=document.getElementById('tar-materia').value||null;
   const assunto=document.getElementById('tar-assunto').value||null;
   const obs=document.getElementById('tar-obs').value.trim()||null;
+  const min=parseInt(document.getElementById('tar-min').value)||null;
   if(!data||!tipo){alert('Preencha a data e o tipo.');return;}
   setSS('sync');
   try{
-    const res=await sbIns('planejamento',{data,tipo,materia,assunto,obs,feito:false});
+    const res=await sbIns('planejamento',{data,tipo,materia,assunto,obs,min_planejado:min,feito:false});
     if(res&&res[0])planejamentoList.push(res[0]);
     closeModal('modal-tarefa');setSS('ok');toast('✓ Tarefa adicionada!');renderPlanejamento();
   }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
@@ -3087,16 +3131,41 @@ async function salvarTarefa(){
 
 async function toggleTarefa(id){
   const tar=planejamentoList.find(t=>t.id===id);if(!tar)return;
-  tar.feito=!tar.feito;
+  const novoFeito=!tar.feito;
+  tar.feito=novoFeito;
   setSS('sync');
   try{
     await fetch(`${SB_URL}/rest/v1/planejamento?id=eq.${id}`,{
       method:'PATCH',
       headers:{...H,'Prefer':'return=representation'},
-      body:JSON.stringify({feito:tar.feito})
+      body:JSON.stringify({feito:novoFeito})
     });
+    // Se marcou como feito E tem tempo planejado → salva no Diário automaticamente
+    if(novoFeito&&tar.min_planejado&&tar.min_planejado>0){
+      const tipoDiario=tar.tipo==='lei'?'lei':'teoria'; // questões não vão pro diário (vêm do registro)
+      if(tar.tipo!=='questoes'&&tar.tipo!=='simulado'){
+        const res=await sbIns('diarios',{
+          data:tar.data,
+          tipo:tipoDiario,
+          materia:tar.materia||null,
+          assunto:tar.assunto||null,
+          minutos:tar.min_planejado,
+          obs:`[Planejamento] ${tar.obs||tar.tipo}`
+        });
+        if(res&&res[0])diarios.push(res[0]);
+        toast(`✅ Feito! ${minToHM(tar.min_planejado)} registrado no Diário.`);
+      } else {
+        toast('✅ Marcado como feito!');
+      }
+    } else {
+      toast(novoFeito?'✅ Marcado como feito!':'⬜ Desmarcado.');
+    }
     setSS('ok');renderPlanejamento();
-  }catch(e){setSS('erro');tar.feito=!tar.feito;renderPlanejamento();}
+  }catch(e){
+    setSS('erro');tar.feito=!novoFeito;
+    toast('Erro ao salvar.');console.error(e);
+    renderPlanejamento();
+  }
 }
 
 async function deletarTarefa(id){
@@ -3177,12 +3246,13 @@ function renderPlanejamento(){
       ${st.feitas>0?`<div style="font-size:10px;color:${pC(st.pct)};font-weight:700;margin-bottom:6px;font-family:var(--mono)">${(st.pct*100).toFixed(0)}% acerto · ${st.feitas}Q</div>`:''}
       ${tarefasDia.map(t=>{
         const tp=TIPO_PLAN[t.tipo]||TIPO_PLAN.outro;
-        return`<div class="cal-tarefa ${tp.cls} ${t.feito?'feito':''}" onclick="toggleTarefa(${t.id})" title="${t.feito?'Marcar como pendente':'Marcar como feito'}">
+        return`<div class="cal-tarefa ${tp.cls} ${t.feito?'feito':''}" onclick="toggleTarefa(${t.id})" title="${t.feito?'Desmarcar':'Marcar como feito'}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <span>${tp.icon} ${t.materia?t.materia.split(' ').slice(-1)[0]:tp.label}</span>
-            <button onclick="event.stopPropagation();deletarTarefa(${t.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;line-height:1" title="Remover">✕</button>
+            <button onclick="event.stopPropagation();deletarTarefa(${t.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button>
           </div>
           ${t.assunto?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${t.assunto}</div>`:''}
+          ${t.min_planejado?`<div style="font-size:10px;color:var(--accent2);margin-top:2px;font-weight:600">⏱ ${minToHM(t.min_planejado)}</div>`:''}
           ${t.obs?`<div style="font-size:10px;color:var(--text2);margin-top:2px;font-style:italic">${t.obs}</div>`:''}
           <div style="font-size:10px;color:${t.feito?'var(--success)':'var(--text3)'};margin-top:3px;font-weight:700">${t.feito?'✅ Feito':'⬜ Pendente'}</div>
         </div>`;
@@ -3228,6 +3298,7 @@ function renderPlanHistorico(){
             <div style="font-weight:600;font-size:13px">${tp.label}${t.materia?' — '+t.materia:''}</div>
             ${t.assunto?`<div style="font-size:12px;color:var(--text2)">${t.assunto}</div>`:''}
             ${t.obs?`<div style="font-size:12px;color:var(--text2);font-style:italic">${t.obs}</div>`:''}
+            ${t.min_planejado?`<div style="font-size:12px;color:var(--accent2);font-weight:600">⏱ ${minToHM(t.min_planejado)} planejado</div>`:''}
           </div>
           <span style="font-size:12px;font-weight:700;color:${t.feito?'var(--success)':'var(--text3)'}">${t.feito?'✅ Feito':'⬜ Pendente'}</span>
         </div>`;
@@ -3916,6 +3987,7 @@ function closePopupOut(e){if(e.target.id==='popup-assunto')closePopup();}
 // ══ ARRANQUE — deve ficar após todas as funções ══
 if(checkLogin()){
   document.getElementById('login-screen').classList.add('hidden');
+  document.body.classList.add('logged');
   init();
 } else {
   setTimeout(()=>document.getElementById('login-input').focus(),100);
