@@ -360,8 +360,11 @@ body.light .mat-icon{background:#f0f2f7;}
 .cal-dia-header{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
 .cal-dia-num{font-size:22px;font-weight:800;margin-bottom:10px;line-height:1;}
 .cal-dia.hoje .cal-dia-num{color:var(--accent);}
-.cal-tarefa{background:var(--surface2);border-radius:7px;padding:7px 9px;margin-bottom:6px;font-size:12px;border-left:3px solid var(--accent2);cursor:pointer;transition:opacity .15s;}
+.cal-tarefa{background:var(--surface2);border-radius:7px;padding:7px 9px;margin-bottom:6px;font-size:12px;border-left:3px solid var(--accent2);cursor:grab;transition:opacity .15s,transform .15s;}
+.cal-tarefa:active{cursor:grabbing;}
 .cal-tarefa.feito{opacity:.5;text-decoration:line-through;}
+.cal-tarefa.dragging{opacity:.3;transform:scale(.95);}
+.cal-dia.drag-over{border-color:var(--accent);background:rgba(249,115,22,.08);}
 .cal-tarefa.tipo-teoria{border-left-color:#38bdf8;}
 .cal-tarefa.tipo-questoes{border-left-color:#c8f135;}
 .cal-tarefa.tipo-revisao{border-left-color:#f59e0b;}
@@ -3253,13 +3256,20 @@ function renderPlanejamento(){
     const tarefasDia=planejamentoList.filter(t=>t.data===dStr).sort((a,b)=>a.id-b.id);
     const errosDia=erros.filter(e=>e.data===dStr);
     const st=calcStats(errosDia);
-    return`<div class="cal-dia ${eHoje?'hoje':''}">
+    return`<div class="cal-dia ${eHoje?'hoje':''}"
+      ondragover="dragOver(event)"
+      ondragleave="dragLeave(event)"
+      ondrop="dropTarefa(event,'${dStr}')">
       <div class="cal-dia-header">${DIAS_SEMANA[d.getDay()]}</div>
       <div class="cal-dia-num">${d.getDate()}</div>
       ${st.feitas>0?`<div style="font-size:10px;color:${pC(st.pct)};font-weight:700;margin-bottom:6px;font-family:var(--mono)">${(st.pct*100).toFixed(0)}% acerto · ${st.feitas}Q</div>`:''}
       ${tarefasDia.map(t=>{
         const tp=TIPO_PLAN[t.tipo]||TIPO_PLAN.outro;
-        return`<div class="cal-tarefa ${tp.cls} ${t.feito?'feito':''}" onclick="toggleTarefa(${t.id})" title="${t.feito?'Desmarcar':'Marcar como feito'}">
+        return`<div class="cal-tarefa ${tp.cls} ${t.feito?'feito':''}"
+          draggable="true"
+          ondragstart="dragStart(event,${t.id})"
+          ondragend="dragEnd(event)"
+          onclick="toggleTarefa(${t.id})" title="${t.feito?'Desmarcar':'Marcar como feito'}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <span>${tp.icon} ${t.materia?t.materia.split(' ').slice(-1)[0]:tp.label}</span>
             <button onclick="event.stopPropagation();deletarTarefa(${t.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button>
@@ -3318,6 +3328,64 @@ function renderPlanHistorico(){
       }).join('')}
     </div>`;
   }).join('');
+}
+
+// ══ DRAG AND DROP PLANEJAMENTO ══
+let dragTarefaId=null;
+
+function dragStart(event,id){
+  dragTarefaId=id;
+  event.dataTransfer.effectAllowed='move';
+  event.target.classList.add('dragging');
+}
+
+function dragEnd(event){
+  event.target.classList.remove('dragging');
+  document.querySelectorAll('.cal-dia.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+
+function dragOver(event){
+  event.preventDefault();
+  event.dataTransfer.dropEffect='move';
+  const dia=event.currentTarget;
+  if(dia.classList.contains('cal-dia'))dia.classList.add('drag-over');
+}
+
+function dragLeave(event){
+  event.currentTarget.classList.remove('drag-over');
+}
+
+async function dropTarefa(event,novaData){
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  if(!dragTarefaId)return;
+  const tar=planejamentoList.find(t=>t.id===dragTarefaId);
+  if(!tar||tar.data===novaData){dragTarefaId=null;return;}
+  const dataAntiga=tar.data;
+  tar.data=novaData;
+  setSS('sync');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/planejamento?id=eq.${dragTarefaId}`,{
+      method:'PATCH',
+      headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({data:novaData})
+    });
+    if(r.ok){
+      setSS('ok');
+      toast(`📅 Tarefa movida para ${fmtD(novaData)}`);
+      renderPlanejamento();
+    } else {
+      tar.data=dataAntiga;
+      setSS('erro');toast('Erro ao mover tarefa.');
+      renderPlanejamento();
+    }
+  }catch(e){
+    tar.data=dataAntiga;
+    setSS('erro');console.error(e);
+    toast('Erro ao mover tarefa.');
+    renderPlanejamento();
+  }
+  dragTarefaId=null;
 }
 
 // ══ MATERIAIS ══
