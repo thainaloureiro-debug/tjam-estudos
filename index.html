@@ -756,13 +756,15 @@ body.light .cal-tarefa{background:#f0f2f7;}
 
   <!-- Histórico semanal -->
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div class="card-title" style="margin-bottom:0">📅 Histórico Semanal</div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="navCicloSemana(-1)">← Anterior</button>
         <span id="ciclo-semana-label" style="font-size:13px;font-weight:700;min-width:160px;text-align:center"></span>
         <button class="btn btn-secondary btn-sm" onclick="navCicloSemana(1)">Próxima →</button>
         <button class="btn btn-secondary btn-sm" onclick="cicloSemanaOffset=0;renderCiclo()">Hoje</button>
+        <span style="color:var(--text3);font-size:12px">ou</span>
+        <input type="week" id="ciclo-week-picker" onchange="irParaCicloSemana(this.value)" style="font-size:12px;padding:5px 10px" title="Selecionar semana">
       </div>
     </div>
     <div id="ciclo-historico"></div>
@@ -3493,18 +3495,37 @@ function updateACAssunto(){
 
 function navCicloSemana(dir){cicloSemanaOffset+=dir;renderCiclo();}
 
-function getCicloAtivo(){return cicloList.filter(c=>c.ativo!==false).sort((a,b)=>a.ordem-b.ordem);}
-
-function getItemHoje(){
-  const ativo=getCicloAtivo();
-  if(!ativo.length)return null;
-  // Calcula qual item do ciclo é hoje baseado nos dias desde uma data de referência
-  const ref=new Date('2024-01-01');
+function irParaCicloSemana(weekVal){
+  if(!weekVal)return;
+  const[y,w]=weekVal.split('-W');
+  const jan4=new Date(parseInt(y),0,4);
+  const segunda=new Date(jan4);
+  segunda.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(parseInt(w)-1)*7);
   const hoje=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
   hoje.setHours(0,0,0,0);
-  const diffDias=Math.floor((hoje-ref)/(1000*60*60*24));
-  const idx=diffDias%ativo.length;
+  const segAtual=new Date(hoje);
+  segAtual.setDate(hoje.getDate()-((hoje.getDay()+6)%7));
+  const diffMs=segunda-segAtual;
+  cicloSemanaOffset=Math.round(diffMs/(1000*60*60*24*7));
+  renderCiclo();
+}
+
+function getCicloAtivo(){return cicloList.filter(c=>c.ativo!==false).sort((a,b)=>a.ordem-b.ordem);}
+
+function getItemParaDia(dataStr){
+  const ativo=getCicloAtivo();
+  if(!ativo.length)return null;
+  // Usa a data de criação do primeiro item do ciclo como referência
+  const refStr=ativo[0].criado_em?ativo[0].criado_em.slice(0,10):'2024-01-01';
+  const ref=new Date(refStr+'T12:00');
+  const d=new Date(dataStr+'T12:00');
+  const diffDias=Math.floor((d-ref)/(1000*60*60*24));
+  const idx=((diffDias%ativo.length)+ativo.length)%ativo.length;
   return{item:ativo[idx],idx,total:ativo.length};
+}
+
+function getItemHoje(){
+  return getItemParaDia(today());
 }
 
 function calcVoltasCompletas(){
@@ -3713,6 +3734,16 @@ function renderCiclo(){
   document.getElementById('ciclo-semana-label').textContent=
     `${String(seg.getDate()).padStart(2,'0')}/${String(seg.getMonth()+1).padStart(2,'0')} — ${String(sab.getDate()).padStart(2,'0')}/${String(sab.getMonth()+1).padStart(2,'0')}/${sab.getFullYear()}`;
 
+  // Sync week picker
+  const picker=document.getElementById('ciclo-week-picker');
+  if(picker){
+    const tmp=new Date(seg);tmp.setHours(0,0,0,0);
+    tmp.setDate(tmp.getDate()+3-(tmp.getDay()+6)%7);
+    const week1=new Date(tmp.getFullYear(),0,4);
+    const wn=1+Math.round(((tmp-week1)/86400000-3+(week1.getDay()+6)%7)/7);
+    picker.value=`${tmp.getFullYear()}-W${String(wn).padStart(2,'0')}`;
+  }
+
   const divHist=document.getElementById('ciclo-historico');
   if(!ativoCiclo.length){divHist.innerHTML='';return;}
 
@@ -3722,12 +3753,9 @@ function renderCiclo(){
     </tr></thead>
     <tbody>${dias.map(d=>{
       const dStr=dateToStr(d);
-      // Calcula qual item do ciclo era nesse dia
-      const ref=new Date('2024-01-01');
-      const dd=new Date(dStr+'T12:00');
-      const diffD=Math.floor((dd-ref)/(1000*60*60*24));
-      const idx=((diffD%ativoCiclo.length)+ativoCiclo.length)%ativoCiclo.length;
-      const item=ativoCiclo[idx];
+      const cicloInfo=getItemParaDia(dStr);
+      if(!cicloInfo)return'';
+      const {item,idx}=cicloInfo;
       const col=COLORS[idx%COLORS.length];
       const sess=erros.filter(e=>e.data===dStr&&e.materia===item.materia&&(!item.assunto||e.assunto===item.assunto));
       const st=calcStats(sess);
