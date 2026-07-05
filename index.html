@@ -382,7 +382,20 @@ body.light .mat-icon{background:#f0f2f7;}
 body.light .cal-dia{background:#fff;}
 body.light .cal-tarefa{background:#f0f2f7;}
 
-/* SUGESTÕES */
+/* LEMBRETES */
+.lembrete-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;transition:border-color .2s;}
+.lembrete-card.alta{border-left:4px solid var(--danger);}
+.lembrete-card.media{border-left:4px solid var(--warning);}
+.lembrete-card.baixa{border-left:4px solid var(--success);}
+.lembrete-card.estudado{opacity:.55;}
+.lembrete-titulo{font-size:15px;font-weight:700;margin-bottom:4px;}
+.lembrete-desc{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;}
+.lembrete-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--text2);}
+.pri-badge{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.pri-alta{background:rgba(240,100,100,.15);color:var(--danger);}
+.pri-media{background:rgba(245,158,11,.15);color:var(--warning);}
+.pri-baixa{background:rgba(52,211,153,.15);color:var(--success);}
+body.light .lembrete-card{background:#fff;}
 .sug-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:border-color .2s;}
 .sug-card.critico{border-left:3px solid var(--danger);}
 .sug-card.atencao{border-left:3px solid var(--warning);}
@@ -441,6 +454,7 @@ body.light .cal-tarefa{background:#f0f2f7;}
     <button class="tab" onclick="showPage('diario',this)"><span class="tab-icon">📅</span>Diário</button>
 
     <div class="sidebar-section">Organização</div>
+    <button class="tab" onclick="showPage('lembretes',this)"><span class="tab-icon">🔔</span>Lembretes</button>
     <button class="tab" onclick="showPage('ciclo',this)"><span class="tab-icon">🔄</span>Ciclo de Questões</button>
     <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
     <button class="tab" onclick="showPage('planejamento',this)"><span class="tab-icon">🗓️</span>Planejamento</button>
@@ -714,6 +728,87 @@ body.light .cal-tarefa{background:#f0f2f7;}
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-material')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarMaterial()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEMBRETES -->
+<div id="page-lembretes" class="page">
+
+  <div class="sec-head">
+    <button class="btn btn-primary" onclick="openModal('modal-add-lembrete')">+ Novo Lembrete</button>
+  </div>
+
+  <!-- KPIs -->
+  <div id="lem-kpis" style="margin-bottom:16px"></div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <span class="filter-label">Filtrar</span>
+    <label class="fi">Matéria:</label>
+    <select id="lem-materia" onchange="renderLembretes()" style="min-width:200px">
+      <option value="">Todas</option>
+    </select>
+    <label class="fi">Prioridade:</label>
+    <select id="lem-prioridade" onchange="renderLembretes()" style="min-width:130px">
+      <option value="">Todas</option>
+      <option value="alta">🔴 Alta</option>
+      <option value="media">🟡 Média</option>
+      <option value="baixa">🟢 Baixa</option>
+    </select>
+    <label class="fi">Mostrar:</label>
+    <select id="lem-status" onchange="renderLembretes()" style="min-width:150px">
+      <option value="pendentes">⏳ Pendentes</option>
+      <option value="todos">Todos</option>
+      <option value="estudados">✅ Estudados</option>
+    </select>
+    <label class="fi">De:</label>
+    <input type="date" id="lem-from" onchange="renderLembretes()" style="width:148px">
+    <span class="filter-sep">→</span>
+    <label class="fi">Até:</label>
+    <input type="date" id="lem-to" onchange="renderLembretes()" style="width:148px">
+    <button class="btn btn-secondary btn-sm" onclick="cF('lem-from','lem-to');document.getElementById('lem-materia').value='';document.getElementById('lem-prioridade').value='';document.getElementById('lem-status').value='pendentes';renderLembretes()">Limpar</button>
+  </div>
+
+  <!-- Lista -->
+  <div id="lem-lista"></div>
+</div>
+
+<!-- MODAL ADD LEMBRETE -->
+<div id="modal-add-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lembrete')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">🔔 Novo Lembrete</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:span 2">
+        <label>📌 Título *</label>
+        <input type="text" id="lem-titulo" placeholder="Ex: Atualização Lei de Improbidade — STJ 2026">
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria relacionada</label>
+        <select id="lem-mat-modal">
+          <option value="">Nenhuma</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🔴 Prioridade</label>
+        <select id="lem-pri-modal">
+          <option value="alta">🔴 Alta</option>
+          <option value="media" selected>🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📅 Data do lembrete</label>
+        <input type="date" id="lem-data-modal">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Descrição</label>
+        <textarea id="lem-desc-modal" placeholder="Descreva o que mudou, o julgado, a súmula, o que precisa estudar..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-lembrete')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLembrete()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -1447,7 +1542,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1469,7 +1564,15 @@ function calcStats(arr){
 }
 
 // ══ NAV ══
-const renders={dashboard:renderDashboard,registro:renderRegistro,simulados:renderSimulados,ranking:renderRanking,materias:renderMaterias,comparar:()=>{},graficos:renderGraficos,conteudo:renderConteudo,revisao:renderRevisao,leiseca:renderLeiSeca,desempenho:renderDesempenho,materiais:renderMateriais,ciclo:renderCiclo,sugestoes:renderSugestoes,planejamento:renderPlanejamento,pdfs:renderPDFs,relatorio:renderRelatorio,diario:renderDiario};
+const renders={
+  dashboard:()=>renderDashboard(),registro:()=>renderRegistro(),simulados:()=>renderSimulados(),
+  ranking:()=>renderRanking(),materias:()=>renderMaterias(),comparar:()=>{},
+  graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
+  leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
+  lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),sugestoes:()=>renderSugestoes(),
+  planejamento:()=>renderPlanejamento(),pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),
+  diario:()=>renderDiario()
+};
 
 // Leis pré-cadastradas por matéria
 const LEIS_BASE={
@@ -1487,7 +1590,7 @@ function showPage(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
+  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
   const tt=document.getElementById('topbar-title');
   if(tt)tt.textContent=PAGE_TITLES[id]||id;
   renders[id]?.();
@@ -1517,6 +1620,15 @@ function openModal(id){
     Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
     document.getElementById('al-nome').value='';
     document.getElementById('al-total').value='';
+  }
+  if(id==='modal-add-lembrete'){
+    const sel=document.getElementById('lem-mat-modal');
+    sel.innerHTML='<option value="">Nenhuma</option>';
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    document.getElementById('lem-titulo').value='';
+    document.getElementById('lem-pri-modal').value='media';
+    document.getElementById('lem-data-modal').value='';
+    document.getElementById('lem-desc-modal').value='';
   }
   if(id==='modal-add-ciclo'){
     const sel=document.getElementById('ac-materia');
@@ -3483,6 +3595,138 @@ async function dropTarefa(event,novaData){
   dragTarefaId=null;
 }
 
+// ══ LEMBRETES ══
+function renderLembretes(){
+  // Preenche filtro matéria
+  const msel=document.getElementById('lem-materia');
+  if(msel&&msel.options.length<=1){
+    Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;msel.appendChild(o);});
+  }
+  const matFilt=document.getElementById('lem-materia').value;
+  const priFilt=document.getElementById('lem-prioridade').value;
+  const statusFilt=document.getElementById('lem-status').value;
+  const from=document.getElementById('lem-from').value;
+  const to=document.getElementById('lem-to').value;
+
+  let filt=[...lembretesData];
+  if(matFilt)filt=filt.filter(l=>l.materia===matFilt);
+  if(priFilt)filt=filt.filter(l=>l.prioridade===priFilt);
+  if(statusFilt==='pendentes')filt=filt.filter(l=>!l.estudado);
+  if(statusFilt==='estudados')filt=filt.filter(l=>l.estudado);
+  if(from)filt=filt.filter(l=>l.data_lembrete&&l.data_lembrete>=from);
+  if(to)filt=filt.filter(l=>l.data_lembrete&&l.data_lembrete<=to);
+
+  // Ordena: prioridade alta primeiro, depois por data
+  const priOrd={alta:0,media:1,baixa:2};
+  filt.sort((a,b)=>{
+    if(!a.estudado&&b.estudado)return-1;
+    if(a.estudado&&!b.estudado)return 1;
+    const pDiff=(priOrd[a.prioridade]||1)-(priOrd[b.prioridade]||1);
+    if(pDiff!==0)return pDiff;
+    return(a.data_lembrete||'').localeCompare(b.data_lembrete||'');
+  });
+
+  // KPIs
+  const total=lembretesData.length;
+  const pendentes=lembretesData.filter(l=>!l.estudado).length;
+  const altas=lembretesData.filter(l=>!l.estudado&&l.prioridade==='alta').length;
+  const vencidos=lembretesData.filter(l=>!l.estudado&&l.data_lembrete&&l.data_lembrete<today()).length;
+
+  document.getElementById('lem-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div>
+        <div class="kpi-label">🔴 Alta Prioridade</div>
+        <div class="kpi-value" style="color:var(--danger)">${altas}</div>
+        <div class="kpi-sub">pendentes</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div>
+        <div class="kpi-label">⏳ Pendentes</div>
+        <div class="kpi-value" style="color:var(--warning)">${pendentes}</div>
+        <div class="kpi-sub">a estudar</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent3)"></div>
+        <div class="kpi-label">⚠️ Vencidos</div>
+        <div class="kpi-value" style="color:var(--accent3)">${vencidos}</div>
+        <div class="kpi-sub">data já passou</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div>
+        <div class="kpi-label">✅ Estudados</div>
+        <div class="kpi-value" style="color:var(--success)">${total-pendentes}</div>
+        <div class="kpi-sub">de ${total} total</div></div>
+    </div>`;
+
+  const div=document.getElementById('lem-lista');
+  if(!filt.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">Nenhum lembrete</div><div class="empty-sub">Clique em "+ Novo Lembrete" para adicionar</div></div>';
+    return;
+  }
+
+  const hoje=today();
+  div.innerHTML=filt.map(l=>{
+    const vencido=!l.estudado&&l.data_lembrete&&l.data_lembrete<hoje;
+    const priLabel={alta:'🔴 Alta',media:'🟡 Média',baixa:'🟢 Baixa'};
+    const priClass={alta:'pri-alta',media:'pri-media',baixa:'pri-baixa'};
+    return`<div class="lembrete-card ${l.prioridade} ${l.estudado?'estudado':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="flex:1">
+          <div class="lembrete-titulo" style="${l.estudado?'text-decoration:line-through':''}">${l.titulo}</div>
+          <div class="lembrete-meta" style="margin-top:6px">
+            <span class="pri-badge ${priClass[l.prioridade]||'pri-media'}">${priLabel[l.prioridade]||'🟡 Média'}</span>
+            ${l.materia?`<span class="badge ${MB[l.materia]||'badge-blue'}" style="font-size:10px">${l.materia}</span>`:''}
+            ${l.data_lembrete?`<span style="font-size:12px;color:${vencido?'var(--danger)':l.data_lembrete===hoje?'var(--warning)':'var(--text2)'}">
+              📅 ${fmtD(l.data_lembrete)}${vencido?' ⚠️ Vencido':l.data_lembrete===hoje?' (Hoje)':''}</span>`:''}
+            ${l.estudado?'<span style="color:var(--success);font-weight:700;font-size:12px">✅ Estudado</span>':''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
+          <button class="btn btn-secondary btn-sm" onclick="toggleLembrete(${l.id})" style="font-size:11px">
+            ${l.estudado?'↩️ Reabrir':'✅ Estudado'}
+          </button>
+          <button class="btn btn-ghost" onclick="deletarLembrete(${l.id})">🗑</button>
+        </div>
+      </div>
+      ${l.descricao?`<div class="lembrete-desc">${l.descricao}</div>`:''}
+      <div style="font-size:11px;color:var(--text3)">Criado em ${fmtD(l.criado_em?.slice(0,10)||'')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function salvarLembrete(){
+  const titulo=document.getElementById('lem-titulo').value.trim();
+  if(!titulo){alert('Preencha o título.');return;}
+  const materia=document.getElementById('lem-mat-modal').value||null;
+  const prioridade=document.getElementById('lem-pri-modal').value||'media';
+  const data_lembrete=document.getElementById('lem-data-modal').value||null;
+  const descricao=document.getElementById('lem-desc-modal').value.trim()||null;
+  setSS('sync');
+  try{
+    const res=await sbIns('lembretes',{titulo,materia,prioridade,data_lembrete,descricao,estudado:false});
+    if(res&&res[0])lembretesData.unshift(res[0]);
+    closeModal('modal-add-lembrete');
+    setSS('ok');toast('✓ Lembrete salvo!');renderLembretes();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function toggleLembrete(id){
+  const lem=lembretesData.find(l=>l.id===id);if(!lem)return;
+  lem.estudado=!lem.estudado;
+  setSS('sync');
+  try{
+    await fetch(`${SB_URL}/rest/v1/lembretes?id=eq.${id}`,{
+      method:'PATCH',headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({estudado:lem.estudado})
+    });
+    setSS('ok');
+    toast(lem.estudado?'✅ Marcado como estudado!':'↩️ Reaberto.');
+    renderLembretes();
+  }catch(e){lem.estudado=!lem.estudado;setSS('erro');toast('Erro.');console.error(e);}
+}
+
+async function deletarLembrete(id){
+  if(!confirm('Remover lembrete?'))return;
+  setSS('sync');
+  await sbDel('lembretes',id);
+  lembretesData=lembretesData.filter(l=>l.id!==id);
+  setSS('ok');toast('Removido.');renderLembretes();
+}
+
 // ══ CICLO DE QUESTÕES ══
 let cicloSemanaOffset=0;
 
@@ -4124,7 +4368,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -4135,7 +4379,8 @@ async function carregarDados(){
       sbGet('leis_progresso','select=*'),
       sbGet('materiais','select=*'),
       sbGet('planejamento','select=*'),
-      sbGet('ciclo','select=*&order=ordem.asc')
+      sbGet('ciclo','select=*&order=ordem.asc'),
+      sbGet('lembretes','select=*&order=criado_em.desc')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -4148,6 +4393,7 @@ async function carregarDados(){
     materiaisList=Array.isArray(mD)?mD:[];
     planejamentoList=Array.isArray(plD)?plD:[];
     cicloList=Array.isArray(cD)?cD:[];
+    lembretesData=Array.isArray(lbD)?lbD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
