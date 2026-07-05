@@ -781,10 +781,20 @@ body.light .lembrete-card{background:#fff;}
     <div class="form-grid">
       <div class="form-group" style="grid-column:span 2">
         <label>📌 Título *</label>
-        <input type="text" id="lem-titulo" placeholder="Ex: Atualização Lei de Improbidade — STJ 2026">
+        <input type="text" id="lem-titulo" placeholder="Ex: Adicionar Direito Civil após concluir Direito Const...">
       </div>
       <div class="form-group">
-        <label>📚 Matéria relacionada</label>
+        <label>🏷️ Categoria</label>
+        <select id="lem-cat-modal">
+          <option value="estudo">📚 Estudo</option>
+          <option value="lembrete">🔔 Lembrete geral</option>
+          <option value="atualizacao">📰 Atualização legal</option>
+          <option value="tarefa">✅ Tarefa</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria relacionada (opcional)</label>
         <select id="lem-mat-modal">
           <option value="">Nenhuma</option>
         </select>
@@ -798,12 +808,12 @@ body.light .lembrete-card{background:#fff;}
         </select>
       </div>
       <div class="form-group">
-        <label>📅 Data do lembrete</label>
+        <label>📅 Data do lembrete (opcional)</label>
         <input type="date" id="lem-data-modal">
       </div>
       <div class="form-group" style="grid-column:span 2">
-        <label>📝 Descrição</label>
-        <textarea id="lem-desc-modal" placeholder="Descreva o que mudou, o julgado, a súmula, o que precisa estudar..."></textarea>
+        <label>📝 Descrição (opcional)</label>
+        <textarea id="lem-desc-modal" placeholder="Detalhes, observações, o que precisa fazer..."></textarea>
       </div>
     </div>
     <div class="modal-actions">
@@ -1627,6 +1637,7 @@ function openModal(id){
     Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
     document.getElementById('lem-titulo').value='';
     document.getElementById('lem-pri-modal').value='media';
+    document.getElementById('lem-cat-modal').value='lembrete';
     document.getElementById('lem-data-modal').value='';
     document.getElementById('lem-desc-modal').value='';
   }
@@ -3658,26 +3669,34 @@ function renderLembretes(){
     return;
   }
 
+  const CAT_ICON={estudo:'📚',lembrete:'🔔',atualizacao:'📰',tarefa:'✅',outro:'📌'};
+  const CAT_LABEL={estudo:'Estudo',lembrete:'Lembrete',atualizacao:'Atualização',tarefa:'Tarefa',outro:'Outro'};
   const hoje=today();
   div.innerHTML=filt.map(l=>{
     const vencido=!l.estudado&&l.data_lembrete&&l.data_lembrete<hoje;
     const priLabel={alta:'🔴 Alta',media:'🟡 Média',baixa:'🟢 Baixa'};
     const priClass={alta:'pri-alta',media:'pri-media',baixa:'pri-baixa'};
+    const catIcon=CAT_ICON[l.categoria]||'📌';
+    const catLabel=CAT_LABEL[l.categoria]||'Lembrete';
     return`<div class="lembrete-card ${l.prioridade} ${l.estudado?'estudado':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="flex:1">
-          <div class="lembrete-titulo" style="${l.estudado?'text-decoration:line-through':''}">${l.titulo}</div>
-          <div class="lembrete-meta" style="margin-top:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:18px">${catIcon}</span>
+            <div class="lembrete-titulo" style="${l.estudado?'text-decoration:line-through':''}">${l.titulo}</div>
+          </div>
+          <div class="lembrete-meta">
             <span class="pri-badge ${priClass[l.prioridade]||'pri-media'}">${priLabel[l.prioridade]||'🟡 Média'}</span>
+            <span style="font-size:11px;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:20px">${catLabel}</span>
             ${l.materia?`<span class="badge ${MB[l.materia]||'badge-blue'}" style="font-size:10px">${l.materia}</span>`:''}
             ${l.data_lembrete?`<span style="font-size:12px;color:${vencido?'var(--danger)':l.data_lembrete===hoje?'var(--warning)':'var(--text2)'}">
               📅 ${fmtD(l.data_lembrete)}${vencido?' ⚠️ Vencido':l.data_lembrete===hoje?' (Hoje)':''}</span>`:''}
-            ${l.estudado?'<span style="color:var(--success);font-weight:700;font-size:12px">✅ Estudado</span>':''}
+            ${l.estudado?'<span style="color:var(--success);font-weight:700;font-size:12px">✅ Concluído</span>':''}
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px">
           <button class="btn btn-secondary btn-sm" onclick="toggleLembrete(${l.id})" style="font-size:11px">
-            ${l.estudado?'↩️ Reabrir':'✅ Estudado'}
+            ${l.estudado?'↩️ Desfazer':'✅ Concluir'}
           </button>
           <button class="btn btn-ghost" onclick="deletarLembrete(${l.id})">🗑</button>
         </div>
@@ -3695,9 +3714,10 @@ async function salvarLembrete(){
   const prioridade=document.getElementById('lem-pri-modal').value||'media';
   const data_lembrete=document.getElementById('lem-data-modal').value||null;
   const descricao=document.getElementById('lem-desc-modal').value.trim()||null;
+  const categoria=document.getElementById('lem-cat-modal').value||'lembrete';
   setSS('sync');
   try{
-    const res=await sbIns('lembretes',{titulo,materia,prioridade,data_lembrete,descricao,estudado:false});
+    const res=await sbIns('lembretes',{titulo,materia,prioridade,data_lembrete,descricao,estudado:false,categoria});
     if(res&&res[0])lembretesData.unshift(res[0]);
     closeModal('modal-add-lembrete');
     setSS('ok');toast('✓ Lembrete salvo!');renderLembretes();
