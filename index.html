@@ -459,6 +459,7 @@ body.light .lembrete-card{background:#fff;}
     <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
     <button class="tab" onclick="showPage('planejamento',this)"><span class="tab-icon">🗓️</span>Planejamento</button>
     <button class="tab" onclick="showPage('materiais',this)"><span class="tab-icon">📁</span>Materiais</button>
+    <button class="tab" onclick="showPage('previsao',this)"><span class="tab-icon">🗓️</span>Previsão de Conclusão</button>
     <button class="tab" onclick="showPage('pdfs',this)"><span class="tab-icon">📋</span>PDFs / Aulas</button>
     <button class="tab" onclick="showPage('relatorio',this)"><span class="tab-icon">📄</span>Relatório</button>
   </nav>
@@ -1330,6 +1331,45 @@ body.light .lembrete-card{background:#fff;}
   </div>
 </div>
 
+<!-- PREVISÃO DE CONCLUSÃO -->
+<div id="page-previsao" class="page">
+
+  <!-- Config global -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">⚙️ Configuração</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div class="form-group" style="margin:0">
+        <label>🎯 Aulas por dia</label>
+        <input type="number" id="prev-aulas-dia" min="1" max="30" value="5"
+          onchange="renderPrevisao()" style="width:80px">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>📅 Data de início</label>
+        <input type="date" id="prev-inicio" onchange="renderPrevisao()" style="width:160px">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>🗓️ Dias de estudo por semana</label>
+        <select id="prev-dias-semana" onchange="renderPrevisao()" style="width:140px">
+          <option value="7">7 dias (todos)</option>
+          <option value="6">6 dias</option>
+          <option value="5" selected>5 dias (seg-sex)</option>
+          <option value="4">4 dias</option>
+        </select>
+      </div>
+      <div style="margin-top:18px">
+        <button class="btn btn-primary" onclick="renderPrevisao()">📊 Calcular</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div id="prev-kpis" style="margin-bottom:18px"></div>
+
+  <!-- Timeline -->
+  <div id="prev-timeline"></div>
+
+</div>
+
 <!-- PDFs -->
 <div id="page-pdfs" class="page">
   <div class="sec-head"><div class="sec-title">📋 Painel de PDFs / Aulas</div><button class="btn btn-primary" onclick="openModal('modal-pdf')">✏️ Editar</button></div>
@@ -1552,7 +1592,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[],previsaoProgresso=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1580,8 +1620,8 @@ const renders={
   graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
   lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),sugestoes:()=>renderSugestoes(),
-  planejamento:()=>renderPlanejamento(),pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),
-  diario:()=>renderDiario()
+  planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
+  pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),diario:()=>renderDiario()
 };
 
 // Leis pré-cadastradas por matéria
@@ -1600,7 +1640,7 @@ function showPage(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
+  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',previsao:'Previsão de Conclusão',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
   const tt=document.getElementById('topbar-title');
   if(tt)tt.textContent=PAGE_TITLES[id]||id;
   renders[id]?.();
@@ -3606,6 +3646,198 @@ async function dropTarefa(event,novaData){
   dragTarefaId=null;
 }
 
+// ══ PREVISÃO DE CONCLUSÃO ══
+const PLANO_AULAS=[
+  {
+    materia:'Direito Constitucional',
+    modulos:[
+      {nome:'Módulo I',total:22}
+    ]
+  },
+  {
+    materia:'Direito Administrativo',
+    modulos:[
+      {nome:'Módulo I',total:43}
+    ]
+  },
+  {
+    materia:'Direito Processual Civil',
+    modulos:[
+      {nome:'Módulo I',total:27},
+      {nome:'Módulo II',total:17}
+    ]
+  },
+  {
+    materia:'Direito Processual Penal',
+    modulos:[
+      {nome:'Módulo I',total:44},
+      {nome:'Módulo II',total:9}
+    ]
+  },
+  {
+    materia:'Administração Geral e Pública',
+    modulos:[
+      {nome:'Administração Geral',total:40},
+      {nome:'Administração Pública',total:11},
+      {nome:'Gestão de Pessoas',total:24}
+    ]
+  }
+];
+
+// Chave para progresso no Supabase
+function getPrevConcluidas(mat,mod){
+  const reg=previsaoProgresso.find(p=>p.materia===mat&&p.modulo===mod);
+  return reg?reg.concluidas:0;
+}
+
+async function setPrevConcluidas(mat,mod,val){
+  const reg=previsaoProgresso.find(p=>p.materia===mat&&p.modulo===mod);
+  if(reg){
+    // Update existing
+    reg.concluidas=val;
+    await fetch(`${SB_URL}/rest/v1/previsao_progresso?id=eq.${reg.id}`,{
+      method:'PATCH',
+      headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({concluidas:val,atualizado_em:new Date().toISOString()})
+    });
+  } else {
+    // Insert new
+    const res=await fetch(`${SB_URL}/rest/v1/previsao_progresso`,{
+      method:'POST',
+      headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({materia:mat,modulo:mod,concluidas:val})
+    });
+    const saved=await res.json();
+    if(saved&&saved[0])previsaoProgresso.push(saved[0]);
+  }
+  renderPrevisao();
+}
+
+function addDiasUteis(data,dias,diasSemana){
+  const d=new Date(data);
+  let adicionados=0;
+  while(adicionados<dias){
+    d.setDate(d.getDate()+1);
+    const dow=d.getDay(); // 0=dom, 6=sab
+    if(diasSemana>=7)adicionados++;
+    else if(diasSemana>=6&&dow!==0)adicionados++;
+    else if(diasSemana>=5&&dow!==0&&dow!==6)adicionados++;
+    else if(diasSemana>=4&&dow!==0&&dow!==6&&dow!==5)adicionados++;
+  }
+  return d;
+}
+
+function renderPrevisao(){
+  const aulasdia=parseInt(document.getElementById('prev-aulas-dia')?.value)||5;
+  const diasSem=parseInt(document.getElementById('prev-dias-semana')?.value)||5;
+  const inicioStr=document.getElementById('prev-inicio')?.value||today();
+  if(!document.getElementById('prev-inicio')?.value){
+    document.getElementById('prev-inicio').value=today();
+  }
+  const inicio=new Date(inicioStr+'T12:00');
+
+  // Calcula total geral
+  const totalAulas=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>ss+mod.total,0),0);
+  const totalConcluidas=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>ss+getPrevConcluidas(m.materia,mod.nome),0),0);
+  const totalRestantes=totalAulas-totalConcluidas;
+  const diasRestantes=Math.ceil(totalRestantes/aulasdia);
+
+  // Data de conclusão estimada
+  const dataConclusao=addDiasUteis(inicio,diasRestantes,diasSem);
+
+  // KPIs
+  document.getElementById('prev-kpis').innerHTML=`
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div>
+        <div class="kpi-label">Total de Aulas</div>
+        <div class="kpi-value" style="color:var(--accent2)">${totalAulas}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div>
+        <div class="kpi-label">✅ Concluídas</div>
+        <div class="kpi-value" style="color:var(--success)">${totalConcluidas}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div>
+        <div class="kpi-label">Restantes</div>
+        <div class="kpi-value" style="color:var(--warning)">${totalRestantes}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div>
+        <div class="kpi-label">Dias Restantes</div>
+        <div class="kpi-value" style="color:var(--accent)">${diasRestantes}</div>
+        <div class="kpi-sub">a ${aulasdia} aulas/dia</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div>
+        <div class="kpi-label">📅 Conclusão Prevista</div>
+        <div class="kpi-value" style="font-size:20px;color:var(--danger)">${dataConclusao.toLocaleDateString('pt-BR')}</div></div>
+    </div>`;
+
+  // Timeline por matéria
+  let dataAtual=new Date(inicio);
+  const timeline=document.getElementById('prev-timeline');
+  timeline.innerHTML=PLANO_AULAS.map(mat=>{
+    const totalMat=mat.modulos.reduce((s,m)=>s+m.total,0);
+    const concluidasMat=mat.modulos.reduce((s,m)=>s+Math.min(getPrevConcluidas(mat.materia,m.nome),m.total),0);
+    const pct=totalMat>0?concluidasMat/totalMat:0;
+    const restMat=totalMat-concluidasMat;
+    const diasMat=Math.ceil(restMat/aulasdia);
+    const inicioMat=new Date(dataAtual);
+    const fimMat=addDiasUteis(dataAtual,diasMat,diasSem);
+
+    // Módulos em sequência
+    let dataModAtual=new Date(dataAtual);
+    const modulosHTML=mat.modulos.map(mod=>{
+      const conc=Math.min(getPrevConcluidas(mat.materia,mod.nome),mod.total);
+      const rest=mod.total-conc;
+      const dias=Math.ceil(rest/aulasdia);
+      const fimMod=addDiasUteis(dataModAtual,dias,diasSem);
+      const pctMod=mod.total>0?conc/mod.total:0;
+      const concluido=conc>=mod.total;
+      const html=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:700;font-size:13px">${mod.nome}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">
+              ${concluido?'✅ Concluído':'📅 '+fimMod.toLocaleDateString('pt-BR')} · 
+              ${conc}/${mod.total} aulas · ${dias} dias restantes
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" min="0" max="${mod.total}" value="${conc}"
+              style="width:65px;text-align:center;font-weight:700"
+              onchange="setPrevConcluidas('${mat.materia.replace(/'/g,"\\'")}','${mod.nome.replace(/'/g,"\\'")}',Math.min(parseInt(this.value)||0,${mod.total}))"
+              title="Aulas concluídas">
+            <span style="font-size:12px;color:var(--text2)">/ ${mod.total}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="prog" style="flex:1;height:10px">
+            <div class="prog-fill ${concluido?'prog-green':'prog-accent'}" style="width:${(pctMod*100).toFixed(0)}%"></div>
+          </div>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${concluido?'var(--success)':'var(--accent)'};min-width:36px">${(pctMod*100).toFixed(0)}%</span>
+        </div>
+      </div>`;
+      // Avança data para próximo módulo
+      dataModAtual=new Date(fimMod);
+      return html;
+    }).join('');
+
+    // Avança data para próxima matéria
+    dataAtual=new Date(fimMat);
+
+    return`<div class="card" style="margin-bottom:14px;border-left:4px solid ${pct>=1?'var(--success)':'var(--accent)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:16px;font-weight:800">${pct>=1?'✅ ':''  }${mat.materia}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">
+            ${concluidasMat}/${totalMat} aulas · 
+            ${pct>=1?'Concluído!':'Previsão: '+inicioMat.toLocaleDateString('pt-BR')+' → '+fimMat.toLocaleDateString('pt-BR')}
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:22px;font-weight:800;color:${pct>=1?'var(--success)':'var(--accent)'}">${(pct*100).toFixed(0)}%</div>
+      </div>
+      <div class="prog" style="height:8px;margin-bottom:16px">
+        <div class="prog-fill ${pct>=1?'prog-green':'prog-accent'}" style="width:${(pct*100).toFixed(0)}%"></div>
+      </div>
+      ${modulosHTML}
+    </div>`;
+  }).join('');
+}
+
 // ══ LEMBRETES ══
 function renderLembretes(){
   // Preenche filtro matéria
@@ -4388,7 +4620,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD,ppD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -4400,7 +4632,8 @@ async function carregarDados(){
       sbGet('materiais','select=*'),
       sbGet('planejamento','select=*'),
       sbGet('ciclo','select=*&order=ordem.asc'),
-      sbGet('lembretes','select=*&order=criado_em.desc')
+      sbGet('lembretes','select=*&order=criado_em.desc'),
+      sbGet('previsao_progresso','select=*')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -4414,6 +4647,7 @@ async function carregarDados(){
     planejamentoList=Array.isArray(plD)?plD:[];
     cicloList=Array.isArray(cD)?cD:[];
     lembretesData=Array.isArray(lbD)?lbD:[];
+    previsaoProgresso=Array.isArray(ppD)?ppD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
