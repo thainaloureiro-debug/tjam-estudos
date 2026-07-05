@@ -758,8 +758,8 @@ body.light .lembrete-card{background:#fff;}
     </select>
     <label class="fi">Mostrar:</label>
     <select id="lem-status" onchange="renderLembretes()" style="min-width:150px">
-      <option value="pendentes">⏳ Pendentes</option>
       <option value="todos">Todos</option>
+      <option value="pendentes">⏳ Pendentes</option>
       <option value="estudados">✅ Estudados</option>
     </select>
     <label class="fi">De:</label>
@@ -767,7 +767,7 @@ body.light .lembrete-card{background:#fff;}
     <span class="filter-sep">→</span>
     <label class="fi">Até:</label>
     <input type="date" id="lem-to" onchange="renderLembretes()" style="width:148px">
-    <button class="btn btn-secondary btn-sm" onclick="cF('lem-from','lem-to');document.getElementById('lem-materia').value='';document.getElementById('lem-prioridade').value='';document.getElementById('lem-status').value='pendentes';renderLembretes()">Limpar</button>
+    <button class="btn btn-secondary btn-sm" onclick="cF('lem-from','lem-to');document.getElementById('lem-materia').value='';document.getElementById('lem-prioridade').value='';document.getElementById('lem-status').value='todos';renderLembretes()">Limpar</button>
   </div>
 
   <!-- Lista -->
