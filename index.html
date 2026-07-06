@@ -813,6 +813,10 @@ body.light .lembrete-card{background:#fff;}
         <input type="date" id="lem-data-modal">
       </div>
       <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link (opcional)</label>
+        <input type="url" id="lem-link-modal" placeholder="https://...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
         <label>📝 Descrição (opcional)</label>
         <textarea id="lem-desc-modal" placeholder="Detalhes, observações, o que precisa fazer..."></textarea>
       </div>
@@ -820,6 +824,60 @@ body.light .lembrete-card{background:#fff;}
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-add-lembrete')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarLembrete()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT LEMBRETE -->
+<div id="modal-edit-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-edit-lembrete')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">✏️ Editar Lembrete</div>
+    <input type="hidden" id="lem-edit-id">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:span 2">
+        <label>📌 Título *</label>
+        <input type="text" id="lem-edit-titulo" placeholder="Título do lembrete">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Categoria</label>
+        <select id="lem-edit-cat">
+          <option value="estudo">📚 Estudo</option>
+          <option value="lembrete">🔔 Lembrete geral</option>
+          <option value="atualizacao">📰 Atualização legal</option>
+          <option value="tarefa">✅ Tarefa</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria relacionada</label>
+        <select id="lem-edit-mat">
+          <option value="">Nenhuma</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🔴 Prioridade</label>
+        <select id="lem-edit-pri">
+          <option value="alta">🔴 Alta</option>
+          <option value="media">🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📅 Data do lembrete</label>
+        <input type="date" id="lem-edit-data">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link (opcional)</label>
+        <input type="url" id="lem-edit-link" placeholder="https://...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Descrição</label>
+        <textarea id="lem-edit-desc" placeholder="Detalhes, observações..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-lembrete')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoLembrete()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -1679,6 +1737,7 @@ function openModal(id){
     document.getElementById('lem-pri-modal').value='media';
     document.getElementById('lem-cat-modal').value='lembrete';
     document.getElementById('lem-data-modal').value='';
+    document.getElementById('lem-link-modal').value='';
     document.getElementById('lem-desc-modal').value='';
   }
   if(id==='modal-add-ciclo'){
@@ -3930,11 +3989,15 @@ function renderLembretes(){
           <button class="btn btn-secondary btn-sm" onclick="toggleLembrete(${l.id})" style="font-size:11px">
             ${l.estudado?'↩️ Desfazer':'✅ Concluir'}
           </button>
+          <button class="btn btn-secondary btn-sm" onclick="abrirEditLembrete(${l.id})" title="Editar" style="font-size:11px">✏️</button>
           <button class="btn btn-ghost" onclick="deletarLembrete(${l.id})">🗑</button>
         </div>
       </div>
       ${l.descricao?`<div class="lembrete-desc">${l.descricao}</div>`:''}
-      <div style="font-size:11px;color:var(--text3)">Criado em ${fmtD(l.criado_em?.slice(0,10)||'')}</div>
+      ${l.link?`<div style="margin-top:8px">
+        <a href="${l.link}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="font-size:12px">🔗 Abrir link</a>
+      </div>`:''}
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Criado em ${fmtD(l.criado_em?.slice(0,10)||'')}</div>
     </div>`;
   }).join('');
 }
@@ -3947,9 +4010,10 @@ async function salvarLembrete(){
   const data_lembrete=document.getElementById('lem-data-modal').value||null;
   const descricao=document.getElementById('lem-desc-modal').value.trim()||null;
   const categoria=document.getElementById('lem-cat-modal').value||'lembrete';
+  const link=document.getElementById('lem-link-modal').value.trim()||null;
   setSS('sync');
   try{
-    const res=await sbIns('lembretes',{titulo,materia,prioridade,data_lembrete,descricao,estudado:false,categoria});
+    const res=await sbIns('lembretes',{titulo,materia,prioridade,data_lembrete,descricao,estudado:false,categoria,link});
     if(res&&res[0])lembretesData.unshift(res[0]);
     closeModal('modal-add-lembrete');
     setSS('ok');toast('✓ Lembrete salvo!');renderLembretes();
@@ -3977,6 +4041,50 @@ async function deletarLembrete(id){
   await sbDel('lembretes',id);
   lembretesData=lembretesData.filter(l=>l.id!==id);
   setSS('ok');toast('Removido.');renderLembretes();
+}
+
+function abrirEditLembrete(id){
+  const l=lembretesData.find(x=>x.id===id);if(!l)return;
+  // Preenche modal de edição
+  document.getElementById('lem-edit-id').value=id;
+  document.getElementById('lem-edit-titulo').value=l.titulo||'';
+  document.getElementById('lem-edit-cat').value=l.categoria||'lembrete';
+  document.getElementById('lem-edit-pri').value=l.prioridade||'media';
+  document.getElementById('lem-edit-data').value=l.data_lembrete||'';
+  document.getElementById('lem-edit-link').value=l.link||'';
+  document.getElementById('lem-edit-desc').value=l.descricao||'';
+  // Preenche matérias
+  const sel=document.getElementById('lem-edit-mat');
+  sel.innerHTML='<option value="">Nenhuma</option>';
+  Object.keys(MATERIAS).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  sel.value=l.materia||'';
+  document.getElementById('modal-edit-lembrete').classList.add('open');
+}
+
+async function salvarEdicaoLembrete(){
+  const id=parseInt(document.getElementById('lem-edit-id').value);
+  const titulo=document.getElementById('lem-edit-titulo').value.trim();
+  if(!titulo){alert('Preencha o título.');return;}
+  const materia=document.getElementById('lem-edit-mat').value||null;
+  const prioridade=document.getElementById('lem-edit-pri').value||'media';
+  const data_lembrete=document.getElementById('lem-edit-data').value||null;
+  const descricao=document.getElementById('lem-edit-desc').value.trim()||null;
+  const categoria=document.getElementById('lem-edit-cat').value||'lembrete';
+  const link=document.getElementById('lem-edit-link').value.trim()||null;
+  setSS('sync');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/lembretes?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{...H,'Prefer':'return=representation'},
+      body:JSON.stringify({titulo,materia,prioridade,data_lembrete,descricao,categoria,link})
+    });
+    if(r.ok){
+      const lem=lembretesData.find(l=>l.id===id);
+      if(lem)Object.assign(lem,{titulo,materia,prioridade,data_lembrete,descricao,categoria,link});
+    }
+    closeModal('modal-edit-lembrete');
+    setSS('ok');toast('✓ Lembrete atualizado!');renderLembretes();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
 }
 
 // ══ CICLO DE QUESTÕES ══
