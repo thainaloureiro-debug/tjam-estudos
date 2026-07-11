@@ -1412,6 +1412,8 @@ body.light .lembrete-card{background:#fff;}
           <option value="6">6 dias</option>
           <option value="5" selected>5 dias (seg-sex)</option>
           <option value="4">4 dias</option>
+          <option value="3">3 dias</option>
+          <option value="2">2 dias</option>
         </select>
       </div>
       <div style="margin-top:18px">
@@ -3710,7 +3712,7 @@ const PLANO_AULAS=[
   {
     materia:'Direito Constitucional',
     modulos:[
-      {nome:'Módulo I',total:22}
+      {nome:'Módulo I',total:31}
     ]
   },
   {
@@ -3773,15 +3775,21 @@ async function setPrevConcluidas(mat,mod,val){
 }
 
 function addDiasUteis(data,dias,diasSemana){
+  if(dias<=0)return new Date(data);
   const d=new Date(data);
   let adicionados=0;
   while(adicionados<dias){
     d.setDate(d.getDate()+1);
     const dow=d.getDay(); // 0=dom, 6=sab
-    if(diasSemana>=7)adicionados++;
-    else if(diasSemana>=6&&dow!==0)adicionados++;
-    else if(diasSemana>=5&&dow!==0&&dow!==6)adicionados++;
-    else if(diasSemana>=4&&dow!==0&&dow!==6&&dow!==5)adicionados++;
+    // Define quais dias são de estudo baseado na quantidade
+    let estuda=false;
+    if(diasSemana>=7)estuda=true;
+    else if(diasSemana===6)estuda=dow!==0; // seg-sab
+    else if(diasSemana===5)estuda=dow>=1&&dow<=5; // seg-sex
+    else if(diasSemana===4)estuda=dow>=1&&dow<=4; // seg-qui
+    else if(diasSemana===3)estuda=dow===1||dow===3||dow===5; // seg,qua,sex
+    else if(diasSemana===2)estuda=dow===2||dow===5; // ter,sex
+    if(estuda)adicionados++;
   }
   return d;
 }
