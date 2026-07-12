@@ -18,13 +18,13 @@
   --sidebar:240px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
 /* SIDEBAR */
 #sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);flex-direction:column;position:fixed;top:0;left:0;height:100%;overflow-y:auto;overflow-x:hidden;z-index:100;display:none;}
 body.logged #sidebar{display:flex;}
-body.logged{padding-left:240px;box-sizing:border-box;}
+
 .sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
 .sidebar-logo-icon{font-size:24px;margin-bottom:6px;}
 .sidebar-logo-title{font-size:15px;font-weight:800;line-height:1.2;}
@@ -56,7 +56,7 @@ body.gray .sidebar-section{color:#9e9e9e;}
 .theme-row{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;}
 
 /* MAIN AREA */
-#app-body{display:none;flex-direction:column;min-height:100vh;}
+#app-body{margin-left:240px;display:none;flex-direction:column;min-height:100vh;}
 body.logged #app-body{display:flex;}
 #topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
 .topbar-title{font-size:15px;font-weight:700;color:var(--text);}
@@ -149,7 +149,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .add-erro-panel.open .add-erro-form{display:block;}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-top:16px;}
 .form-group{display:flex;flex-direction:column;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:700px;max-height:calc(100vh - 40px);overflow-y:auto;margin:auto;}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:20px;}
@@ -176,7 +176,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .login-btn:hover{background:#b8e020;}
 .login-error{color:var(--danger);font-size:13px;margin-top:10px;height:18px;}
 .login-loading{color:var(--text2);font-size:12px;margin-top:12px;}
-#confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;}
+#confirm-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;}
 #confirm-modal.open{display:flex;}
 .confirm-box{background:var(--surface);border:1px solid var(--danger);border-radius:18px;padding:32px;max-width:400px;width:100%;text-align:center;}
 .confirm-title{font-size:18px;font-weight:800;color:var(--danger);margin-bottom:10px;}
@@ -216,7 +216,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 
 /* Popup assunto */
-.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.popup-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
 .popup-overlay.open{display:flex;}
 .popup-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:600px;max-height:calc(100vh - 40px);overflow-y:auto;margin:auto;}
 .popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;}
@@ -688,50 +688,7 @@ body.light .lembrete-card{background:#fff;}
   <div id="mats-lista"></div>
 </div>
 
-<!-- MODAL ADD MATERIAL -->
-<div id="modal-add-material" class="modal-overlay" onclick="closeModalOut(event,'modal-add-material')">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-title">📁 Adicionar Material</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>📚 Matéria *</label>
-        <select id="am-materia" onchange="updateAMAssunto()">
-          <option value="">Selecione...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📌 Assunto (opcional)</label>
-        <select id="am-assunto">
-          <option value="">Geral da matéria</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>🏷️ Tipo *</label>
-        <select id="am-tipo">
-          <option value="onenote">📓 OneNote</option>
-          <option value="notebooklm">🤖 NotebookLM</option>
-          <option value="tec">📖 Caderno TEC</option>
-          <option value="pdf">📄 PDF / Apostila</option>
-          <option value="video">🎥 Vídeo / Aula</option>
-          <option value="site">🌐 Site / Artigo</option>
-          <option value="outro">🔗 Outro</option>
-        </select>
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>📝 Nome *</label>
-        <input type="text" id="am-nome" placeholder="Ex: OneNote — Direito Constitucional, NotebookLM — Princípios Fundamentais...">
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>🔗 Link *</label>
-        <input type="url" id="am-link" placeholder="https://...">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-material')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarMaterial()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- LEMBRETES -->
 <div id="page-lembretes" class="page">
@@ -775,112 +732,9 @@ body.light .lembrete-card{background:#fff;}
   <div id="lem-lista"></div>
 </div>
 
-<!-- MODAL ADD LEMBRETE -->
-<div id="modal-add-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lembrete')">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-title">🔔 Novo Lembrete</div>
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:span 2">
-        <label>📌 Título *</label>
-        <input type="text" id="lem-titulo" placeholder="Ex: Adicionar Direito Civil após concluir Direito Const...">
-      </div>
-      <div class="form-group">
-        <label>🏷️ Categoria</label>
-        <select id="lem-cat-modal">
-          <option value="estudo">📚 Estudo</option>
-          <option value="lembrete">🔔 Lembrete geral</option>
-          <option value="atualizacao">📰 Atualização legal</option>
-          <option value="tarefa">✅ Tarefa</option>
-          <option value="outro">📌 Outro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📚 Matéria relacionada (opcional)</label>
-        <select id="lem-mat-modal">
-          <option value="">Nenhuma</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>🔴 Prioridade</label>
-        <select id="lem-pri-modal">
-          <option value="alta">🔴 Alta</option>
-          <option value="media" selected>🟡 Média</option>
-          <option value="baixa">🟢 Baixa</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📅 Data do lembrete (opcional)</label>
-        <input type="date" id="lem-data-modal">
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>🔗 Link (opcional)</label>
-        <input type="url" id="lem-link-modal" placeholder="https://...">
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>📝 Descrição (opcional)</label>
-        <textarea id="lem-desc-modal" placeholder="Detalhes, observações, o que precisa fazer..."></textarea>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-lembrete')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarLembrete()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL EDIT LEMBRETE -->
-<div id="modal-edit-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-edit-lembrete')">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-title">✏️ Editar Lembrete</div>
-    <input type="hidden" id="lem-edit-id">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:span 2">
-        <label>📌 Título *</label>
-        <input type="text" id="lem-edit-titulo" placeholder="Título do lembrete">
-      </div>
-      <div class="form-group">
-        <label>🏷️ Categoria</label>
-        <select id="lem-edit-cat">
-          <option value="estudo">📚 Estudo</option>
-          <option value="lembrete">🔔 Lembrete geral</option>
-          <option value="atualizacao">📰 Atualização legal</option>
-          <option value="tarefa">✅ Tarefa</option>
-          <option value="outro">📌 Outro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📚 Matéria relacionada</label>
-        <select id="lem-edit-mat">
-          <option value="">Nenhuma</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>🔴 Prioridade</label>
-        <select id="lem-edit-pri">
-          <option value="alta">🔴 Alta</option>
-          <option value="media">🟡 Média</option>
-          <option value="baixa">🟢 Baixa</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📅 Data do lembrete</label>
-        <input type="date" id="lem-edit-data">
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>🔗 Link (opcional)</label>
-        <input type="url" id="lem-edit-link" placeholder="https://...">
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>📝 Descrição</label>
-        <textarea id="lem-edit-desc" placeholder="Detalhes, observações..."></textarea>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-edit-lembrete')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEdicaoLembrete()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
+
+
 
 <!-- CICLO -->
 <div id="page-ciclo" class="page">
@@ -935,38 +789,7 @@ body.light .lembrete-card{background:#fff;}
   </div>
 </div>
 
-<!-- MODAL ADD CICLO -->
-<div id="modal-add-ciclo" class="modal-overlay" onclick="closeModalOut(event,'modal-add-ciclo')">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-title">🔄 Adicionar ao Ciclo</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>📚 Matéria *</label>
-        <select id="ac-materia" onchange="updateACAssunto()">
-          <option value="">Selecione...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📌 Assunto (opcional)</label>
-        <select id="ac-assunto">
-          <option value="">Geral da matéria</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>🎯 Meta de questões/dia</label>
-        <input type="number" id="ac-meta" min="1" value="10" placeholder="Ex: 10">
-      </div>
-      <div class="form-group">
-        <label>📋 Ordem no ciclo</label>
-        <input type="number" id="ac-ordem" min="1" value="1" placeholder="Ex: 1">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-ciclo')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarCicloItem()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- SUGESTÕES -->
 <div id="page-sugestoes" class="page">
@@ -1042,57 +865,7 @@ body.light .lembrete-card{background:#fff;}
   </div>
 </div>
 
-<!-- MODAL NOVA TAREFA -->
-<div id="modal-tarefa" class="modal-overlay" onclick="closeModalOut(event,'modal-tarefa')">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-title" id="modal-tarefa-titulo">📅 Nova Tarefa</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>📅 Data *</label>
-        <input type="date" id="tar-data">
-      </div>
-      <div class="form-group">
-        <label>🏷️ Tipo *</label>
-        <select id="tar-tipo">
-          <option value="teoria">📖 Teoria</option>
-          <option value="questoes">✏️ Questões</option>
-          <option value="revisao">🔄 Revisão</option>
-          <option value="simulado">🎯 Simulado</option>
-          <option value="lei">⚖️ Lei Seca</option>
-          <option value="outro">📌 Outro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📚 Matéria</label>
-        <select id="tar-materia" onchange="updateTarAssunto();updateSugInline()">
-          <option value="">Selecione...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📌 Assunto</label>
-        <select id="tar-assunto">
-          <option value="">Geral</option>
-        </select>
-      </div>
-      <div class="form-group" style="grid-column:span 2">
-        <label>💬 Observação</label>
-        <input type="text" id="tar-obs" placeholder="Ex: Fazer 20 questões de Ortografia...">
-      </div>
-      <div class="form-group">
-        <label>⏱ Tempo planejado (minutos)</label>
-        <input type="number" id="tar-min" min="0" placeholder="Ex: 60"
-          oninput="document.getElementById('tar-min-hm').textContent=minToHM(parseInt(this.value)||0)">
-        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tar-min-hm"></div>
-      </div>
-    </div>
-    <!-- Sugestões inline -->
-    <div id="sug-inline-modal" style="margin-top:8px"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-tarefa')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarTarefa()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- DESEMPENHO -->
 <div id="page-desempenho" class="page">
@@ -1216,36 +989,7 @@ body.light .lembrete-card{background:#fff;}
   <div id="cont-lista"></div>
 </div>
 
-<!-- POPUP ASSUNTO -->
-<div id="popup-assunto" class="popup-overlay" onclick="closePopupOut(event)">
-  <div class="popup-box">
-    <div class="popup-header">
-      <div>
-        <div class="popup-title" id="popup-assunto-nome"></div>
-        <div class="popup-materia-lbl" id="popup-assunto-materia-lbl"></div>
-      </div>
-      <button class="popup-close" onclick="closePopup()">✕</button>
-    </div>
 
-    <div class="popup-stats" id="popup-stats"></div>
-
-    <!-- STATUS -->
-    <div class="popup-section-title">📊 Status do Assunto</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px" id="popup-status-btns">
-      <button onclick="setAssuntoStatus('nao_iniciado')" class="btn btn-secondary btn-sm" id="stbtn-nao_iniciado">⬜ Não iniciado</button>
-      <button onclick="setAssuntoStatus('estudando')" class="btn btn-secondary btn-sm" id="stbtn-estudando">📖 Estudando</button>
-      <button onclick="setAssuntoStatus('revisando')" class="btn btn-secondary btn-sm" id="stbtn-revisando">🔄 Revisando</button>
-      <button onclick="setAssuntoStatus('concluido')" class="btn btn-secondary btn-sm" id="stbtn-concluido">✅ Concluído</button>
-    </div>
-
-    <!-- NOTA -->
-    <div class="popup-section-title">📝 Anotações / Resumo</div>
-    <textarea class="popup-textarea" id="popup-nota" placeholder="Anote aqui o que estudou, pontos importantes, dúvidas, dicas para não esquecer..."></textarea>
-    <button class="popup-save-btn" onclick="salvarNota()">💾 Salvar Anotação</button>
-
-    <div id="popup-historico" style="margin-top:16px"></div>
-  </div>
-</div>
 
 <!-- REVISÃO -->
 <div id="page-revisao" class="page">
@@ -1291,59 +1035,7 @@ body.light .lembrete-card{background:#fff;}
   </div>
 </div>
 
-<!-- POPUP REGISTRAR REVISÃO -->
-<div id="popup-revisao" class="popup-overlay" onclick="if(event.target.id==='popup-revisao')closePopupRevisao()">
-  <div class="popup-box">
-    <div class="popup-header">
-      <div>
-        <div class="popup-title" id="prev-assunto-nome"></div>
-        <div class="popup-materia-lbl" id="prev-assunto-materia"></div>
-      </div>
-      <button class="popup-close" onclick="closePopupRevisao()">✕</button>
-    </div>
 
-    <!-- Stats rápidas -->
-    <div class="popup-stats" id="prev-stats"></div>
-
-    <!-- Formulário de registro -->
-    <div class="popup-section-title">➕ Registrar sessão de revisão</div>
-    <div class="form-grid" style="margin-bottom:14px">
-      <div class="form-group">
-        <label>📅 Data</label>
-        <input type="date" id="prev-data">
-      </div>
-      <div class="form-group">
-        <label>📚 Tipo de revisão</label>
-        <select id="prev-tipo">
-          <option value="teoria">📖 Teoria</option>
-          <option value="questoes">✏️ Questões</option>
-          <option value="ambos">📖+✏️ Teoria + Questões</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>⏱ Tempo gasto (minutos)</label>
-        <input type="number" id="prev-min" min="0" placeholder="Ex: 30" oninput="document.getElementById('prev-min-hm').textContent=minToHM(parseInt(this.value)||0)">
-        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="prev-min-hm"></div>
-      </div>
-      <div class="form-group">
-        <label>✏️ Questões feitas</label>
-        <input type="number" id="prev-qfeitas" min="0" placeholder="Ex: 10">
-      </div>
-      <div class="form-group">
-        <label>❌ Questões erradas</label>
-        <input type="number" id="prev-qerradas" min="0" placeholder="Ex: 3">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:14px">
-      <label>💬 Observação</label>
-      <textarea id="prev-obs" placeholder="O que revisou? O que ainda precisa fixar?" style="min-height:60px"></textarea>
-    </div>
-    <button class="popup-save-btn" onclick="salvarRevisaoRegistro()">💾 Salvar Revisão</button>
-
-    <!-- Histórico do assunto -->
-    <div id="prev-historico" style="margin-top:18px"></div>
-  </div>
-</div>
 
 <!-- LEI SECA -->
 <div id="page-leiseca" class="page">
@@ -1362,32 +1054,7 @@ body.light .lembrete-card{background:#fff;}
   <div id="ls-lista"></div>
 </div>
 
-<!-- MODAL ADD LEI -->
-<div id="modal-add-lei" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lei')">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-title">📜 Nova Lei / Normativo</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Matéria *</label>
-        <select id="al-materia">
-          <option value="">Selecione...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Nome da Lei *</label>
-        <input type="text" id="al-nome" placeholder="Ex: Constituição Federal">
-      </div>
-      <div class="form-group">
-        <label>Total de Artigos (opcional)</label>
-        <input type="number" id="al-total" min="1" placeholder="Ex: 250">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-lei')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarNovaLei()">Salvar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- PREVISÃO DE CONCLUSÃO -->
 <div id="page-previsao" class="page">
@@ -1519,6 +1186,355 @@ body.light .lembrete-card{background:#fff;}
 
 </div><!-- end pages-container -->
 </div><!-- end app-body -->
+
+<!-- MODAL ADD MATERIAL -->
+<div id="modal-add-material" class="modal-overlay" onclick="closeModalOut(event,'modal-add-material')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">📁 Adicionar Material</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📚 Matéria *</label>
+        <select id="am-materia" onchange="updateAMAssunto()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto (opcional)</label>
+        <select id="am-assunto">
+          <option value="">Geral da matéria</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🏷️ Tipo *</label>
+        <select id="am-tipo">
+          <option value="onenote">📓 OneNote</option>
+          <option value="notebooklm">🤖 NotebookLM</option>
+          <option value="tec">📖 Caderno TEC</option>
+          <option value="pdf">📄 PDF / Apostila</option>
+          <option value="video">🎥 Vídeo / Aula</option>
+          <option value="site">🌐 Site / Artigo</option>
+          <option value="outro">🔗 Outro</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Nome *</label>
+        <input type="text" id="am-nome" placeholder="Ex: OneNote — Direito Constitucional, NotebookLM — Princípios Fundamentais...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link *</label>
+        <input type="url" id="am-link" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-material')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMaterial()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD LEMBRETE -->
+<div id="modal-add-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lembrete')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">🔔 Novo Lembrete</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:span 2">
+        <label>📌 Título *</label>
+        <input type="text" id="lem-titulo" placeholder="Ex: Adicionar Direito Civil após concluir Direito Const...">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Categoria</label>
+        <select id="lem-cat-modal">
+          <option value="estudo">📚 Estudo</option>
+          <option value="lembrete">🔔 Lembrete geral</option>
+          <option value="atualizacao">📰 Atualização legal</option>
+          <option value="tarefa">✅ Tarefa</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria relacionada (opcional)</label>
+        <select id="lem-mat-modal">
+          <option value="">Nenhuma</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🔴 Prioridade</label>
+        <select id="lem-pri-modal">
+          <option value="alta">🔴 Alta</option>
+          <option value="media" selected>🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📅 Data do lembrete (opcional)</label>
+        <input type="date" id="lem-data-modal">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link (opcional)</label>
+        <input type="url" id="lem-link-modal" placeholder="https://...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Descrição (opcional)</label>
+        <textarea id="lem-desc-modal" placeholder="Detalhes, observações, o que precisa fazer..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-lembrete')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLembrete()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT LEMBRETE -->
+<div id="modal-edit-lembrete" class="modal-overlay" onclick="closeModalOut(event,'modal-edit-lembrete')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">✏️ Editar Lembrete</div>
+    <input type="hidden" id="lem-edit-id">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:span 2">
+        <label>📌 Título *</label>
+        <input type="text" id="lem-edit-titulo" placeholder="Título do lembrete">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Categoria</label>
+        <select id="lem-edit-cat">
+          <option value="estudo">📚 Estudo</option>
+          <option value="lembrete">🔔 Lembrete geral</option>
+          <option value="atualizacao">📰 Atualização legal</option>
+          <option value="tarefa">✅ Tarefa</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria relacionada</label>
+        <select id="lem-edit-mat">
+          <option value="">Nenhuma</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🔴 Prioridade</label>
+        <select id="lem-edit-pri">
+          <option value="alta">🔴 Alta</option>
+          <option value="media">🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📅 Data do lembrete</label>
+        <input type="date" id="lem-edit-data">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>🔗 Link (opcional)</label>
+        <input type="url" id="lem-edit-link" placeholder="https://...">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>📝 Descrição</label>
+        <textarea id="lem-edit-desc" placeholder="Detalhes, observações..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-lembrete')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoLembrete()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD CICLO -->
+<div id="modal-add-ciclo" class="modal-overlay" onclick="closeModalOut(event,'modal-add-ciclo')">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">🔄 Adicionar ao Ciclo</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📚 Matéria *</label>
+        <select id="ac-materia" onchange="updateACAssunto()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto (opcional)</label>
+        <select id="ac-assunto">
+          <option value="">Geral da matéria</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🎯 Meta de questões/dia</label>
+        <input type="number" id="ac-meta" min="1" value="10" placeholder="Ex: 10">
+      </div>
+      <div class="form-group">
+        <label>📋 Ordem no ciclo</label>
+        <input type="number" id="ac-ordem" min="1" value="1" placeholder="Ex: 1">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-ciclo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCicloItem()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA TAREFA -->
+<div id="modal-tarefa" class="modal-overlay" onclick="closeModalOut(event,'modal-tarefa')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="modal-tarefa-titulo">📅 Nova Tarefa</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📅 Data *</label>
+        <input type="date" id="tar-data">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Tipo *</label>
+        <select id="tar-tipo">
+          <option value="teoria">📖 Teoria</option>
+          <option value="questoes">✏️ Questões</option>
+          <option value="revisao">🔄 Revisão</option>
+          <option value="simulado">🎯 Simulado</option>
+          <option value="lei">⚖️ Lei Seca</option>
+          <option value="outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📚 Matéria</label>
+        <select id="tar-materia" onchange="updateTarAssunto();updateSugInline()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📌 Assunto</label>
+        <select id="tar-assunto">
+          <option value="">Geral</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>💬 Observação</label>
+        <input type="text" id="tar-obs" placeholder="Ex: Fazer 20 questões de Ortografia...">
+      </div>
+      <div class="form-group">
+        <label>⏱ Tempo planejado (minutos)</label>
+        <input type="number" id="tar-min" min="0" placeholder="Ex: 60"
+          oninput="document.getElementById('tar-min-hm').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="tar-min-hm"></div>
+      </div>
+    </div>
+    <!-- Sugestões inline -->
+    <div id="sug-inline-modal" style="margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-tarefa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTarefa()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP ASSUNTO -->
+<div id="popup-assunto" class="popup-overlay" onclick="closePopupOut(event)">
+  <div class="popup-box">
+    <div class="popup-header">
+      <div>
+        <div class="popup-title" id="popup-assunto-nome"></div>
+        <div class="popup-materia-lbl" id="popup-assunto-materia-lbl"></div>
+      </div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+
+    <div class="popup-stats" id="popup-stats"></div>
+
+    <!-- STATUS -->
+    <div class="popup-section-title">📊 Status do Assunto</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px" id="popup-status-btns">
+      <button onclick="setAssuntoStatus('nao_iniciado')" class="btn btn-secondary btn-sm" id="stbtn-nao_iniciado">⬜ Não iniciado</button>
+      <button onclick="setAssuntoStatus('estudando')" class="btn btn-secondary btn-sm" id="stbtn-estudando">📖 Estudando</button>
+      <button onclick="setAssuntoStatus('revisando')" class="btn btn-secondary btn-sm" id="stbtn-revisando">🔄 Revisando</button>
+      <button onclick="setAssuntoStatus('concluido')" class="btn btn-secondary btn-sm" id="stbtn-concluido">✅ Concluído</button>
+    </div>
+
+    <!-- NOTA -->
+    <div class="popup-section-title">📝 Anotações / Resumo</div>
+    <textarea class="popup-textarea" id="popup-nota" placeholder="Anote aqui o que estudou, pontos importantes, dúvidas, dicas para não esquecer..."></textarea>
+    <button class="popup-save-btn" onclick="salvarNota()">💾 Salvar Anotação</button>
+
+    <div id="popup-historico" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- POPUP REGISTRAR REVISÃO -->
+<div id="popup-revisao" class="popup-overlay" onclick="if(event.target.id==='popup-revisao')closePopupRevisao()">
+  <div class="popup-box">
+    <div class="popup-header">
+      <div>
+        <div class="popup-title" id="prev-assunto-nome"></div>
+        <div class="popup-materia-lbl" id="prev-assunto-materia"></div>
+      </div>
+      <button class="popup-close" onclick="closePopupRevisao()">✕</button>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div class="popup-stats" id="prev-stats"></div>
+
+    <!-- Formulário de registro -->
+    <div class="popup-section-title">➕ Registrar sessão de revisão</div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <label>📅 Data</label>
+        <input type="date" id="prev-data">
+      </div>
+      <div class="form-group">
+        <label>📚 Tipo de revisão</label>
+        <select id="prev-tipo">
+          <option value="teoria">📖 Teoria</option>
+          <option value="questoes">✏️ Questões</option>
+          <option value="ambos">📖+✏️ Teoria + Questões</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>⏱ Tempo gasto (minutos)</label>
+        <input type="number" id="prev-min" min="0" placeholder="Ex: 30" oninput="document.getElementById('prev-min-hm').textContent=minToHM(parseInt(this.value)||0)">
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="prev-min-hm"></div>
+      </div>
+      <div class="form-group">
+        <label>✏️ Questões feitas</label>
+        <input type="number" id="prev-qfeitas" min="0" placeholder="Ex: 10">
+      </div>
+      <div class="form-group">
+        <label>❌ Questões erradas</label>
+        <input type="number" id="prev-qerradas" min="0" placeholder="Ex: 3">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>💬 Observação</label>
+      <textarea id="prev-obs" placeholder="O que revisou? O que ainda precisa fixar?" style="min-height:60px"></textarea>
+    </div>
+    <button class="popup-save-btn" onclick="salvarRevisaoRegistro()">💾 Salvar Revisão</button>
+
+    <!-- Histórico do assunto -->
+    <div id="prev-historico" style="margin-top:18px"></div>
+  </div>
+</div>
+
+<!-- MODAL ADD LEI -->
+<div id="modal-add-lei" class="modal-overlay" onclick="closeModalOut(event,'modal-add-lei')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">📜 Nova Lei / Normativo</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Matéria *</label>
+        <select id="al-materia">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nome da Lei *</label>
+        <input type="text" id="al-nome" placeholder="Ex: Constituição Federal">
+      </div>
+      <div class="form-group">
+        <label>Total de Artigos (opcional)</label>
+        <input type="number" id="al-total" min="1" placeholder="Ex: 250">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-lei')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovaLei()">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL SIMULADO -->
 <div id="modal-simulado" class="modal-overlay" onclick="closeModalOut(event,'modal-simulado')">
