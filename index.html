@@ -22,7 +22,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
 /* SIDEBAR */
-#sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);flex-direction:column;position:fixed;top:0;left:0;height:100%;overflow-y:auto;overflow-x:hidden;z-index:200;display:none;}
+#sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);flex-direction:column;position:fixed;top:0;left:0;height:100%;overflow-y:auto;overflow-x:hidden;z-index:100;display:none;}
 body.logged #sidebar{display:flex;}
 body.logged{padding-left:240px;box-sizing:border-box;}
 .sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
@@ -149,9 +149,9 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .add-erro-panel.open .add-erro-form{display:block;}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-top:16px;}
 .form-group{display:flex;flex-direction:column;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:28px;width:100%;max-width:700px;max-height:85vh;overflow-y:auto;margin:auto;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:700px;max-height:calc(100vh - 40px);overflow-y:auto;margin:auto;}
 .modal-title{font-size:17px;font-weight:700;margin-bottom:20px;}
 .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
 .modal-tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:20px;}
@@ -176,7 +176,7 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .login-btn:hover{background:#b8e020;}
 .login-error{color:var(--danger);font-size:13px;margin-top:10px;height:18px;}
 .login-loading{color:var(--text2);font-size:12px;margin-top:12px;}
-#confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;display:none;align-items:center;justify-content:center;}
+#confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;}
 #confirm-modal.open{display:flex;}
 .confirm-box{background:var(--surface);border:1px solid var(--danger);border-radius:18px;padding:32px;max-width:400px;width:100%;text-align:center;}
 .confirm-title{font-size:18px;font-weight:800;color:var(--danger);margin-bottom:10px;}
@@ -216,9 +216,9 @@ tr:last-child td{border-bottom:none;}tbody tr:hover td{background:var(--surface2
 .donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 
 /* Popup assunto */
-.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:250;display:none;align-items:center;justify-content:center;padding:20px;}
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
 .popup-overlay.open{display:flex;}
-.popup-box{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:28px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;}
+.popup-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:600px;max-height:calc(100vh - 40px);overflow-y:auto;margin:auto;}
 .popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;}
 .popup-title{font-size:18px;font-weight:700;}
 .popup-materia-lbl{font-size:12px;color:var(--text2);margin-top:3px;}
