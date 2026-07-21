@@ -385,7 +385,26 @@ body.light .mat-icon{background:#f0f2f7;}
 body.light .cal-dia{background:#fff;}
 body.light .cal-tarefa{background:#f0f2f7;}
 
-/* LEMBRETES */
+/* ANOTAÇÕES */
+.anot-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;transition:border-color .15s,box-shadow .15s;cursor:pointer;}
+.anot-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.anot-card.fixada{border-left:4px solid var(--accent);}
+.anot-titulo{font-size:15px;font-weight:700;margin-bottom:6px;}
+.anot-preview{font-size:13px;color:var(--text2);line-height:1.5;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.anot-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.anot-tag{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text2);}
+.cat-concurso{border-left:4px solid #38bdf8;}
+.cat-materia{border-left:4px solid #34d399;}
+.cat-ideia{border-left:4px solid #f59e0b;}
+.cat-organizacao{border-left:4px solid #a78bfa;}
+/* Editor */
+.anot-editor{width:100%;min-height:260px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:14px;color:var(--text);line-height:1.7;resize:vertical;font-family:var(--font);}
+.anot-editor:focus{outline:none;border-color:var(--accent);}
+.editor-toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.editor-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text2);transition:background .15s;}
+.editor-btn:hover{background:var(--surface3);color:var(--text);}
+body.light .anot-card{background:#fff;}
+body.light .anot-editor{background:#f0f2f7;}
 .lembrete-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;transition:border-color .2s;}
 .lembrete-card.alta{border-left:4px solid var(--danger);}
 .lembrete-card.media{border-left:4px solid var(--warning);}
@@ -457,6 +476,7 @@ body.light .lembrete-card{background:#fff;}
     <button class="tab" onclick="showPage('diario',this)"><span class="tab-icon">📅</span>Diário</button>
 
     <div class="sidebar-section">Organização</div>
+    <button class="tab" onclick="showPage('anotacoes',this)"><span class="tab-icon">📝</span>Anotações</button>
     <button class="tab" onclick="showPage('lembretes',this)"><span class="tab-icon">🔔</span>Lembretes</button>
     <button class="tab" onclick="showPage('ciclo',this)"><span class="tab-icon">🔄</span>Ciclo de Questões</button>
     <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
@@ -693,6 +713,86 @@ body.light .lembrete-card{background:#fff;}
 </div>
 
 
+
+<!-- ANOTAÇÕES -->
+<div id="page-anotacoes" class="page">
+
+  <div class="sec-head">
+    <button class="btn btn-primary" onclick="abrirNovaAnotacao()">+ Nova Anotação</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar" style="margin-bottom:16px">
+    <span class="filter-label">Filtrar</span>
+    <select id="anot-cat-filt" onchange="renderAnotacoes()" style="min-width:160px">
+      <option value="">Todas as categorias</option>
+      <option value="concurso">🏛️ Concurso</option>
+      <option value="materia">📚 Matéria</option>
+      <option value="ideia">💡 Ideia</option>
+      <option value="organizacao">🗂️ Organização</option>
+    </select>
+    <select id="anot-mes-filt" onchange="renderAnotacoes()" style="min-width:140px">
+      <option value="">Todos os meses</option>
+    </select>
+    <input type="text" id="anot-busca" placeholder="🔍 Buscar..." oninput="renderAnotacoes()" style="min-width:200px">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('anot-cat-filt').value='';document.getElementById('anot-mes-filt').value='';document.getElementById('anot-busca').value='';renderAnotacoes()">Limpar</button>
+  </div>
+
+  <!-- Grid de notas -->
+  <div id="anot-lista"></div>
+
+</div>
+
+<!-- MODAL ANOTAÇÃO (criar/editar) -->
+<div id="modal-anotacao" class="modal-overlay" onclick="closeModalOut(event,'modal-anotacao')">
+  <div class="modal" style="max-width:680px">
+    <input type="hidden" id="anot-edit-id">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" id="anot-edit-titulo" placeholder="Título da anotação..."
+        style="flex:1;font-size:17px;font-weight:700;background:transparent;border:none;border-bottom:2px solid var(--border);padding:6px 0;color:var(--text);outline:none;min-width:200px">
+      <select id="anot-edit-cat" style="min-width:160px">
+        <option value="concurso">🏛️ Concurso</option>
+        <option value="materia">📚 Matéria</option>
+        <option value="ideia">💡 Ideia</option>
+        <option value="organizacao">🗂️ Organização</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="anot-edit-fixada"> 📌 Fixar
+      </label>
+    </div>
+    <!-- Tags -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">🏷️ Tags (separe por vírgula)</div>
+      <input type="text" id="anot-edit-tags" placeholder="Ex: TJ-AM, edital, prioridade alta"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px">
+    </div>
+    <!-- Toolbar de formatação -->
+    <div class="editor-toolbar">
+      <button class="editor-btn" onclick="insertFmt('**','**')" title="Negrito"><b>N</b></button>
+      <button class="editor-btn" onclick="insertFmt('*','*')" title="Itálico"><i>I</i></button>
+      <button class="editor-btn" onclick="insertFmt('\n## ','')" title="Título">H2</button>
+      <button class="editor-btn" onclick="insertFmt('\n### ','')" title="Subtítulo">H3</button>
+      <button class="editor-btn" onclick="insertFmt('\n- ','')" title="Lista">• Lista</button>
+      <button class="editor-btn" onclick="insertFmt('\n1. ','')" title="Lista numerada">1. Lista</button>
+      <button class="editor-btn" onclick="insertFmt('\n> ','')" title="Citação">❝ Citar</button>
+      <button class="editor-btn" onclick="insertFmt('\n---\n','')" title="Separador">— Sep</button>
+      <button class="editor-btn" onclick="insertFmt('`','`')" title="Código">{ }</button>
+    </div>
+    <!-- Editor -->
+    <textarea class="anot-editor" id="anot-edit-conteudo"
+      placeholder="Escreva sua anotação aqui...&#10;&#10;Dicas de formatação:&#10;**negrito**  *itálico*&#10;## Título  ### Subtítulo&#10;- item de lista&#10;> citação"></textarea>
+    <!-- Preview -->
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="togglePreview()">👁️ Preview</button>
+      <span style="font-size:11px;color:var(--text3);margin-top:6px">Suporta Markdown básico</span>
+    </div>
+    <div id="anot-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:8px;font-size:14px;line-height:1.7;min-height:100px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-anotacao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAnotacao()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
 
 <!-- LEMBRETES -->
 <div id="page-lembretes" class="page">
@@ -1672,7 +1772,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[],previsaoProgresso=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[],previsaoProgresso=[],anotacoesData=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1699,8 +1799,8 @@ const renders={
   ranking:()=>renderRanking(),materias:()=>renderMaterias(),comparar:()=>{},
   graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
-  lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),sugestoes:()=>renderSugestoes(),
-  planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
+  anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),
+  sugestoes:()=>renderSugestoes(),planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
   pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),diario:()=>renderDiario()
 };
 
@@ -1720,7 +1820,7 @@ function showPage(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',previsao:'Previsão de Conclusão',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
+  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',anotacoes:'Anotações',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',previsao:'Previsão de Conclusão',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
   const tt=document.getElementById('topbar-title');
   if(tt)tt.textContent=PAGE_TITLES[id]||id;
   renders[id]?.();
@@ -3727,6 +3827,207 @@ async function dropTarefa(event,novaData){
   dragTarefaId=null;
 }
 
+// ══ ANOTAÇÕES ══
+const CAT_ANOT={
+  concurso:{icon:'🏛️',label:'Concurso',cls:'cat-concurso',color:'#38bdf8'},
+  materia:{icon:'📚',label:'Matéria',cls:'cat-materia',color:'#34d399'},
+  ideia:{icon:'💡',label:'Ideia',cls:'cat-ideia',color:'#f59e0b'},
+  organizacao:{icon:'🗂️',label:'Organização',cls:'cat-organizacao',color:'#a78bfa'}
+};
+
+function mdToHtml(md){
+  if(!md)return'';
+  return md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h4 style="margin:12px 0 4px;font-size:14px;font-weight:700">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3 style="margin:14px 0 6px;font-size:16px;font-weight:800">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--surface3);padding:1px 6px;border-radius:4px;font-size:12px">$1</code>')
+    .replace(/^> (.+)$/gm,'<blockquote style="border-left:3px solid var(--accent);margin:8px 0;padding:4px 12px;color:var(--text2)">$1</blockquote>')
+    .replace(/^---$/gm,'<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">')
+    .replace(/^- (.+)$/gm,'<li style="margin:2px 0;padding-left:4px">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li style="margin:2px 0;padding-left:4px">$2</li>')
+    .replace(/(<li.*<\/li>\n?)+/g,m=>`<ul style="padding-left:18px;margin:6px 0">${m}</ul>`)
+    .replace(/\n/g,'<br>');
+}
+
+function togglePreview(){
+  const prev=document.getElementById('anot-preview');
+  const editor=document.getElementById('anot-edit-conteudo');
+  if(prev.style.display==='none'){
+    prev.innerHTML=mdToHtml(editor.value)||'<span style="color:var(--text3)">Nada para pré-visualizar</span>';
+    prev.style.display='block';
+  } else {
+    prev.style.display='none';
+  }
+}
+
+function insertFmt(before,after){
+  const ta=document.getElementById('anot-edit-conteudo');
+  const start=ta.selectionStart,end=ta.selectionEnd;
+  const sel=ta.value.substring(start,end);
+  const novo=ta.value.substring(0,start)+before+sel+after+ta.value.substring(end);
+  ta.value=novo;
+  ta.focus();
+  ta.setSelectionRange(start+before.length,start+before.length+sel.length);
+}
+
+function abrirNovaAnotacao(){
+  document.getElementById('anot-edit-id').value='';
+  document.getElementById('anot-edit-titulo').value='';
+  document.getElementById('anot-edit-cat').value='ideia';
+  document.getElementById('anot-edit-tags').value='';
+  document.getElementById('anot-edit-conteudo').value='';
+  document.getElementById('anot-edit-fixada').checked=false;
+  document.getElementById('anot-preview').style.display='none';
+  document.getElementById('modal-anotacao').classList.add('open');
+  setTimeout(()=>document.getElementById('anot-edit-titulo').focus(),100);
+}
+
+function abrirEditAnotacao(id){
+  const a=anotacoesData.find(x=>x.id===id);if(!a)return;
+  document.getElementById('anot-edit-id').value=id;
+  document.getElementById('anot-edit-titulo').value=a.titulo||'';
+  document.getElementById('anot-edit-cat').value=a.categoria||'ideia';
+  document.getElementById('anot-edit-tags').value=(a.tags||[]).join(', ');
+  document.getElementById('anot-edit-conteudo').value=a.conteudo||'';
+  document.getElementById('anot-edit-fixada').checked=!!a.fixada;
+  document.getElementById('anot-preview').style.display='none';
+  document.getElementById('modal-anotacao').classList.add('open');
+}
+
+async function salvarAnotacao(){
+  const titulo=document.getElementById('anot-edit-titulo').value.trim();
+  if(!titulo){alert('Preencha o título.');return;}
+  const id=document.getElementById('anot-edit-id').value;
+  const categoria=document.getElementById('anot-edit-cat').value||'ideia';
+  const conteudo=document.getElementById('anot-edit-conteudo').value.trim()||null;
+  const fixada=document.getElementById('anot-edit-fixada').checked;
+  const tagsRaw=document.getElementById('anot-edit-tags').value;
+  const tags=tagsRaw?tagsRaw.split(',').map(t=>t.trim()).filter(Boolean):[];
+  const agora=new Date().toISOString();
+  setSS('sync');
+  try{
+    if(id){
+      // Editar
+      const r=await fetch(`${SB_URL}/rest/v1/anotacoes?id=eq.${id}`,{
+        method:'PATCH',headers:{...H,'Prefer':'return=representation'},
+        body:JSON.stringify({titulo,categoria,conteudo,fixada,tags,atualizado_em:agora})
+      });
+      if(r.ok){
+        const a=anotacoesData.find(x=>x.id===parseInt(id));
+        if(a)Object.assign(a,{titulo,categoria,conteudo,fixada,tags,atualizado_em:agora});
+      }
+      toast('✓ Anotação atualizada!');
+    } else {
+      // Nova
+      const res=await sbIns('anotacoes',{titulo,categoria,conteudo,fixada,tags});
+      if(res&&res[0])anotacoesData.unshift(res[0]);
+      toast('✓ Anotação salva!');
+    }
+    closeModal('modal-anotacao');
+    setSS('ok');
+    // Reordena: fixadas primeiro, depois por data
+    anotacoesData.sort((a,b)=>{
+      if(a.fixada&&!b.fixada)return-1;
+      if(!a.fixada&&b.fixada)return 1;
+      return(b.atualizado_em||'').localeCompare(a.atualizado_em||'');
+    });
+    renderAnotacoes();
+  }catch(e){setSS('erro');toast('Erro ao salvar.');console.error(e);}
+}
+
+async function toggleFixarAnotacao(id,e){
+  e.stopPropagation();
+  const a=anotacoesData.find(x=>x.id===id);if(!a)return;
+  a.fixada=!a.fixada;
+  await fetch(`${SB_URL}/rest/v1/anotacoes?id=eq.${id}`,{
+    method:'PATCH',headers:H,body:JSON.stringify({fixada:a.fixada})
+  });
+  toast(a.fixada?'📌 Fixada!':'Desfixada.');
+  anotacoesData.sort((a,b)=>{
+    if(a.fixada&&!b.fixada)return-1;
+    if(!a.fixada&&b.fixada)return 1;
+    return(b.atualizado_em||'').localeCompare(a.atualizado_em||'');
+  });
+  renderAnotacoes();
+}
+
+async function deletarAnotacao(id,e){
+  e.stopPropagation();
+  if(!confirm('Remover anotação?'))return;
+  setSS('sync');
+  await sbDel('anotacoes',id);
+  anotacoesData=anotacoesData.filter(a=>a.id!==id);
+  setSS('ok');toast('Removida.');renderAnotacoes();
+}
+
+function renderAnotacoes(){
+  const catFilt=document.getElementById('anot-cat-filt')?.value||'';
+  const mesFilt=document.getElementById('anot-mes-filt')?.value||'';
+  const busca=(document.getElementById('anot-busca')?.value||'').toLowerCase();
+
+  // Preenche filtro de meses
+  const mesSel=document.getElementById('anot-mes-filt');
+  if(mesSel){
+    const meses=[...new Set(anotacoesData.map(a=>a.criado_em?.slice(0,7)).filter(Boolean))].sort().reverse();
+    const cur=mesSel.value;
+    mesSel.innerHTML='<option value="">Todos os meses</option>';
+    meses.forEach(m=>{
+      const[y,mo]=m.split('-');
+      const label=new Date(parseInt(y),parseInt(mo)-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      mesSel.innerHTML+=`<option value="${m}" ${cur===m?'selected':''}>${label}</option>`;
+    });
+  }
+
+  let filt=[...anotacoesData];
+  if(catFilt)filt=filt.filter(a=>a.categoria===catFilt);
+  if(mesFilt)filt=filt.filter(a=>a.criado_em?.startsWith(mesFilt));
+  if(busca)filt=filt.filter(a=>
+    (a.titulo||'').toLowerCase().includes(busca)||
+    (a.conteudo||'').toLowerCase().includes(busca)||
+    (a.tags||[]).some(t=>t.toLowerCase().includes(busca))
+  );
+
+  const div=document.getElementById('anot-lista');
+  if(!filt.length){
+    div.innerHTML='<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">Nenhuma anotação</div><div class="empty-sub">Clique em "+ Nova Anotação" para começar</div></div>';
+    return;
+  }
+
+  div.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+    ${filt.map(a=>{
+      const cat=CAT_ANOT[a.categoria]||CAT_ANOT.ideia;
+      const preview=(a.conteudo||'').replace(/[#*`>-]/g,'').trim().slice(0,180);
+      const tags=(a.tags||[]);
+      const dataAtual=a.atualizado_em?.slice(0,10);
+      return`<div class="anot-card ${cat.cls} ${a.fixada?'fixada':''}" onclick="abrirEditAnotacao(${a.id})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <span style="font-size:16px;flex-shrink:0">${cat.icon}</span>
+            <div class="anot-titulo" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.titulo}</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">
+            <button onclick="toggleFixarAnotacao(${a.id},event)" title="${a.fixada?'Desafixar':'Fixar'}"
+              style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px;color:${a.fixada?'var(--accent)':'var(--text3)'}">📌</button>
+            <button onclick="deletarAnotacao(${a.id},event)" title="Remover"
+              style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px;color:var(--text3)">🗑</button>
+          </div>
+        </div>
+        ${preview?`<div class="anot-preview">${preview}${(a.conteudo||'').length>180?'…':''}</div>`:''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px">
+          <div class="anot-tags">
+            <span style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">${cat.label}</span>
+            ${tags.map(t=>`<span class="anot-tag">${t}</span>`).join('')}
+          </div>
+          <span style="font-size:11px;color:var(--text3)">${dataAtual?fmtD(dataAtual):''}</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 // ══ PREVISÃO DE CONCLUSÃO ══
 const PLANO_AULAS=[
   {
@@ -4756,7 +5057,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD,ppD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD,ppD,atD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -4769,7 +5070,8 @@ async function carregarDados(){
       sbGet('planejamento','select=*'),
       sbGet('ciclo','select=*&order=ordem.asc'),
       sbGet('lembretes','select=*&order=criado_em.desc'),
-      sbGet('previsao_progresso','select=*')
+      sbGet('previsao_progresso','select=*'),
+      sbGet('anotacoes','select=*&order=fixada.desc,atualizado_em.desc')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -4784,6 +5086,7 @@ async function carregarDados(){
     cicloList=Array.isArray(cD)?cD:[];
     lembretesData=Array.isArray(lbD)?lbD:[];
     previsaoProgresso=Array.isArray(ppD)?ppD:[];
+    anotacoesData=Array.isArray(atD)?atD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
