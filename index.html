@@ -1826,7 +1826,7 @@ const renders={
   graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
   anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),
-  sugestoes:()=>renderSugestoes(),planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
+  sugestoes:()=>renderSugestoes(),planejamento:()=>{renderMantras();renderPlanejamento();},previsao:()=>renderPrevisao(),
   pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),diario:()=>renderDiario()
 };
 
@@ -3741,7 +3741,6 @@ async function deletarTarefa(id){
 }
 
 function renderPlanejamento(){
-  renderMantras();
   const dias=getSemanaAtual(planSemanaOffset);
   const hojeStr=today();
   const seg=dias[0],sab=dias[6];
