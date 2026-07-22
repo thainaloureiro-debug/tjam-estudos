@@ -3525,6 +3525,8 @@ function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 // ══ MANTRAS ══
 let mantrasExpandido=false;
 
+function escHtml(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 function toggleMantras(){
   mantrasExpandido=!mantrasExpandido;
   document.getElementById('mantras-expandido').style.display=mantrasExpandido?'block':'none';
@@ -5182,7 +5184,7 @@ async function carregarDados(){
       sbGet('lembretes','select=*&order=criado_em.desc'),
       sbGet('previsao_progresso','select=*'),
       sbGet('anotacoes','select=*&order=fixada.desc,atualizado_em.desc'),
-      sbGet('mantras','select=*&order=ordem.asc,criado_em.asc')
+      sbGet('mantras','select=*&order=criado_em.asc')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
