@@ -477,6 +477,7 @@ body.light .lembrete-card{background:#fff;}
 
     <div class="sidebar-section">Organização</div>
     <button class="tab" onclick="showPage('anotacoes',this)"><span class="tab-icon">📝</span>Anotações</button>
+    <button class="tab" onclick="showPage('mantras',this)"><span class="tab-icon">🔥</span>Regras & Mantras</button>
     <button class="tab" onclick="showPage('lembretes',this)"><span class="tab-icon">🔔</span>Lembretes</button>
     <button class="tab" onclick="showPage('ciclo',this)"><span class="tab-icon">🔄</span>Ciclo de Questões</button>
     <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
@@ -794,6 +795,24 @@ body.light .lembrete-card{background:#fff;}
   </div>
 </div>
 
+<!-- MANTRAS -->
+<div id="page-mantras" class="page">
+  <div class="sec-head">
+    <div class="sec-title">🔥 Regras & Mantras</div>
+    <button class="btn btn-primary" onclick="abrirAddMantra()">+ Adicionar</button>
+  </div>
+  <div id="mantras-lista"></div>
+  <div id="mantras-input-box" style="display:none;margin-top:16px">
+    <textarea id="mantras-input-texto" rows="3"
+      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;resize:vertical;font-family:var(--font)"
+      placeholder="Digite o mantra ou regra..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="fecharAddMantra()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMantra()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- LEMBRETES -->
 <div id="page-lembretes" class="page">
 
@@ -929,31 +948,6 @@ body.light .lembrete-card{background:#fff;}
 
 <!-- PLANEJAMENTO -->
 <div id="page-planejamento" class="page">
-
-  <!-- MANTRAS (recolhível) -->
-  <div id="mantras-section" style="margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;">
-    <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleMantras()">
-      <span style="font-size:15px">🔥</span>
-      <span style="font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text2);text-transform:uppercase">Regras & Mantras</span>
-      <div id="mantras-preview" style="flex:1;font-size:13px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-      <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();abrirAddMantra()" style="font-size:11px;padding:3px 10px">+ Adicionar</button>
-      <span id="mantras-toggle-icon" style="color:var(--text3);font-size:12px">▼</span>
-    </div>
-    <div id="mantras-expandido" style="display:none">
-      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
-        <div id="mantras-lista"></div>
-      </div>
-      <div id="mantras-input-box" style="display:none;margin-top:10px">
-        <textarea id="mantras-input-texto" rows="2"
-          style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;resize:none;font-family:var(--font)"
-          placeholder="Digite o mantra ou regra..."></textarea>
-        <div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end">
-          <button class="btn btn-secondary btn-sm" onclick="fecharAddMantra()">Cancelar</button>
-          <button class="btn btn-primary btn-sm" onclick="salvarMantra()">Salvar</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div class="sec-head">
     <div class="sec-title">📅 Planejamento Semanal</div>
@@ -1826,7 +1820,7 @@ const renders={
   graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
   anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),
-  sugestoes:()=>renderSugestoes(),planejamento:()=>{renderMantras();renderPlanejamento();},previsao:()=>renderPrevisao(),
+  mantras:()=>renderMantras(),sugestoes:()=>renderSugestoes(),planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
   pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),diario:()=>renderDiario()
 };
 
@@ -1846,7 +1840,7 @@ function showPage(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',anotacoes:'Anotações',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',previsao:'Previsão de Conclusão',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
+  const PAGE_TITLES={dashboard:'Dashboard',registro:'Registro de Erros',simulados:'Simulados',ranking:'Ranking',materias:'Por Matéria',comparar:'Comparar',graficos:'Gráficos',desempenho:'Desempenho',conteudo:'Conteúdo',revisao:'Revisão',leiseca:'Lei Seca',diario:'Diário',anotacoes:'Anotações',mantras:'Regras & Mantras',lembretes:'Lembretes',ciclo:'Ciclo de Questões',sugestoes:'Sugestões',planejamento:'Planejamento',previsao:'Previsão de Conclusão',materiais:'Materiais',pdfs:'PDFs / Aulas',relatorio:'Relatório'};
   const tt=document.getElementById('topbar-title');
   if(tt)tt.textContent=PAGE_TITLES[id]||id;
   renders[id]?.();
@@ -3523,41 +3517,25 @@ function getSemanaAtual(offset=0){
 function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 // ══ MANTRAS ══
-let mantrasExpandido=false;
-
 function escHtml(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function toggleMantras(){
-  mantrasExpandido=!mantrasExpandido;
-  document.getElementById('mantras-expandido').style.display=mantrasExpandido?'block':'none';
-  document.getElementById('mantras-toggle-icon').textContent=mantrasExpandido?'▲':'▼';
-  if(!mantrasExpandido)fecharAddMantra();
-}
-
 function renderMantras(){
-  // Preview (sempre visível)
-  const prev=document.getElementById('mantras-preview');
-  if(prev){
-    prev.textContent=mantrasData.length
-      ? mantrasData.map(m=>m.texto).join('  •  ')
-      : 'Nenhum mantra ainda...';
-  }
-
   const div=document.getElementById('mantras-lista');
   if(!div)return;
   if(!mantrasData.length){
-    div.innerHTML='<div style="color:var(--text3);font-size:13px;font-style:italic">Nenhum mantra ainda. Clique em "+ Adicionar" para começar.</div>';
+    div.innerHTML='<div class="empty"><div class="empty-icon">🔥</div><div class="empty-title">Nenhum mantra ainda</div><div class="empty-sub">Adicione suas regras e frases motivacionais</div></div>';
     return;
   }
-  div.innerHTML=mantrasData.map((m,i)=>`
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);${i===mantrasData.length-1?'border-bottom:none':''}">
-      <span style="font-size:15px;margin-top:1px;flex-shrink:0">${getMantraIcon(i)}</span>
-      <div style="flex:1;font-size:13px;line-height:1.6;color:var(--text)">${escHtml(m.texto)}</div>
-      <button onclick="deletarMantra(${m.id})" title="Remover"
-        style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;flex-shrink:0;padding:2px 4px;opacity:.4;transition:opacity .15s"
-        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>
-    </div>
-  `).join('');
+  div.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">
+    ${mantrasData.map((m,i)=>`
+      <div style="display:flex;align-items:flex-start;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+        <span style="font-size:22px;flex-shrink:0;margin-top:2px">${getMantraIcon(i)}</span>
+        <div style="flex:1;font-size:15px;line-height:1.7;color:var(--text);font-weight:${i===0?'700':'400'}">${escHtml(m.texto)}</div>
+        <button onclick="deletarMantra(${m.id})" title="Remover"
+          style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;flex-shrink:0;padding:4px;opacity:.4;transition:opacity .15s"
+          onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">🗑</button>
+      </div>
+    `).join('')}
+  </div>`;
 }
 
 function getMantraIcon(i){
