@@ -3543,10 +3543,8 @@ function getMantraIcon(i){
 }
 
 function abrirAddMantra(){
-  if(!mantrasExpandido)toggleMantras();
   const box=document.getElementById('mantras-input-box');
-  box.style.display='block';
-  setTimeout(()=>document.getElementById('mantras-input-texto').focus(),50);
+  if(box){box.style.display='block';setTimeout(()=>document.getElementById('mantras-input-texto').focus(),50);}
 }
 
 function fecharAddMantra(){
