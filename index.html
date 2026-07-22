@@ -3556,18 +3556,25 @@ function fecharAddMantra(){
 
 async function salvarMantra(){
   const texto=document.getElementById('mantras-input-texto').value.trim();
-  if(!texto)return;
+  if(!texto){toast('Digite o mantra primeiro.');return;}
   setSS('sync');
-  const ordem=mantrasData.length;
-  const res=await sbIns('mantras',{texto,ordem});
-  if(res&&res[0]){
-    mantrasData.push(res[0]);
-    renderMantras();
-    fecharAddMantra();
-    toast('✓ Mantra adicionado!');
-    setSS('ok');
-  } else {
-    toast('Erro ao salvar.');setSS('erro');
+  try{
+    const res=await sbIns('mantras',{texto});
+    if(res&&res[0]){
+      mantrasData.push(res[0]);
+      renderMantras();
+      fecharAddMantra();
+      toast('✓ Mantra adicionado!');
+      setSS('ok');
+    } else {
+      console.error('Erro mantra:',res);
+      toast('Erro ao salvar: '+(res?.message||res?.msg||JSON.stringify(res)));
+      setSS('erro');
+    }
+  }catch(e){
+    console.error(e);
+    toast('Erro: '+e.message);
+    setSS('erro');
   }
 }
 
