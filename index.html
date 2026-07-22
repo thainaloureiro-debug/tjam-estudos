@@ -929,6 +929,29 @@ body.light .lembrete-card{background:#fff;}
 
 <!-- PLANEJAMENTO -->
 <div id="page-planejamento" class="page">
+
+  <!-- MANTRAS -->
+  <div id="mantras-section" style="margin-bottom:20px;background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border2);border-radius:16px;padding:20px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">🔥</span>
+        <span style="font-size:14px;font-weight:800;letter-spacing:.5px;color:var(--text)">REGRAS & MANTRAS</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="abrirAddMantra()">+ Adicionar</button>
+    </div>
+    <div id="mantras-lista"></div>
+    <!-- Input inline (oculto por padrão) -->
+    <div id="mantras-input-box" style="display:none;margin-top:12px;display:none">
+      <textarea id="mantras-input-texto" rows="2"
+        style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;resize:none;font-family:var(--font)"
+        placeholder="Digite o mantra ou regra..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="fecharAddMantra()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="salvarMantra()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sec-head">
     <div class="sec-title">📅 Planejamento Semanal</div>
     <div style="display:flex;gap:10px;align-items:center">
@@ -1772,7 +1795,7 @@ const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Re
 const SC={pendente:'status-pendente',concluido:'status-concluido',revisao:'status-revisao',caderno:'status-caderno'};
 const MB={'Língua Portuguesa':'badge-orange','Direito Constitucional':'badge-blue','Direito Administrativo':'badge-blue','Administração Geral':'badge-yellow','Direito Processual Civil':'badge-green','Direito Processual Penal':'badge-green','Estatuto dos Servidores':'badge-red','Organização Judiciária':'badge-red','Informática e Processo Digital':'badge-yellow','Acessibilidade':'badge-blue','Geografia do Amazonas':'badge-green'};
 
-let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[],previsaoProgresso=[],anotacoesData=[];
+let erros=[],simulados=[],pdfs=JSON.parse(JSON.stringify(PDF_DEF)),revisoes={},notas={},diarios=[],leisProgresso=[],materiaisList=[],planejamentoList=[],cicloList=[],lembretesData=[],previsaoProgresso=[],anotacoesData=[],mantrasData=[];
 
 // ══ UTILS ══
 const today=()=>{const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -3496,7 +3519,68 @@ function getSemanaAtual(offset=0){
 
 function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
-function navSemana(dir){planSemanaOffset+=dir;renderPlanejamento();}
+// ══ MANTRAS ══
+function renderMantras(){
+  const div=document.getElementById('mantras-lista');
+  if(!div)return;
+  if(!mantrasData.length){
+    div.innerHTML='<div style="color:var(--text3);font-size:13px;font-style:italic">Nenhum mantra ainda. Adicione suas regras e frases motivacionais!</div>';
+    return;
+  }
+  div.innerHTML=mantrasData.map((m,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);${i===mantrasData.length-1?'border-bottom:none':''}">
+      <span style="font-size:16px;margin-top:2px;flex-shrink:0">${getMantraIcon(i)}</span>
+      <div style="flex:1;font-size:14px;line-height:1.6;color:var(--text);font-weight:${i===0?'700':'400'}">${escHtml(m.texto)}</div>
+      <button onclick="deletarMantra(${m.id})" title="Remover"
+        style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;flex-shrink:0;padding:2px 4px;opacity:.5;transition:opacity .15s"
+        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">✕</button>
+    </div>
+  `).join('');
+}
+
+function getMantraIcon(i){
+  const icons=['🔥','💪','⚡','🎯','✅','📌','💡','🏆','⭐','🚀'];
+  return icons[i%icons.length];
+}
+
+function abrirAddMantra(){
+  const box=document.getElementById('mantras-input-box');
+  box.style.display='block';
+  document.getElementById('mantras-input-texto').focus();
+}
+
+function fecharAddMantra(){
+  document.getElementById('mantras-input-box').style.display='none';
+  document.getElementById('mantras-input-texto').value='';
+}
+
+async function salvarMantra(){
+  const texto=document.getElementById('mantras-input-texto').value.trim();
+  if(!texto)return;
+  setSS('sync');
+  const ordem=mantrasData.length;
+  const res=await sbIns('mantras',{texto,ordem});
+  if(res&&res[0]){
+    mantrasData.push(res[0]);
+    renderMantras();
+    fecharAddMantra();
+    toast('✓ Mantra adicionado!');
+    setSS('ok');
+  } else {
+    toast('Erro ao salvar.');setSS('erro');
+  }
+}
+
+async function deletarMantra(id){
+  if(!confirm('Remover este mantra?'))return;
+  setSS('sync');
+  await sbDel('mantras',id);
+  mantrasData=mantrasData.filter(m=>m.id!==id);
+  renderMantras();
+  setSS('ok');toast('Removido.');
+}
+
+
 function irParaHoje(){planSemanaOffset=0;renderPlanejamento();}
 function irParaSemana(weekVal){
   // weekVal = "2026-W24"
@@ -3631,6 +3715,7 @@ async function deletarTarefa(id){
 }
 
 function renderPlanejamento(){
+  renderMantras();
   const dias=getSemanaAtual(planSemanaOffset);
   const hojeStr=today();
   const seg=dias[0],sab=dias[6];
@@ -5057,7 +5142,7 @@ function renderDesempenho(){
 async function carregarDados(){
   setSS('sync');
   try{
-    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD,ppD,atD]=await Promise.all([
+    const[eD,sD,pD,rD,nD,dD,lD,lpD,mD,plD,cD,lbD,ppD,atD,mtD]=await Promise.all([
       sbGet('erros','select=*'),
       sbGet('simulados','select=*'),
       sbGet('pdfs','select=*'),
@@ -5071,7 +5156,8 @@ async function carregarDados(){
       sbGet('ciclo','select=*&order=ordem.asc'),
       sbGet('lembretes','select=*&order=criado_em.desc'),
       sbGet('previsao_progresso','select=*'),
-      sbGet('anotacoes','select=*&order=fixada.desc,atualizado_em.desc')
+      sbGet('anotacoes','select=*&order=fixada.desc,atualizado_em.desc'),
+      sbGet('mantras','select=*&order=ordem.asc,criado_em.asc')
     ]);
     erros=Array.isArray(eD)?eD:[];
     simulados=Array.isArray(sD)?sD.map(s=>({...s,porMateria:s.por_materia||{}})):[];
@@ -5087,6 +5173,7 @@ async function carregarDados(){
     lembretesData=Array.isArray(lbD)?lbD:[];
     previsaoProgresso=Array.isArray(ppD)?ppD:[];
     anotacoesData=Array.isArray(atD)?atD:[];
+    mantrasData=Array.isArray(mtD)?mtD:[];
     setSS('ok');
   }catch(e){
     setSS('erro');
