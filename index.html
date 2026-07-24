@@ -530,6 +530,23 @@ body.light .lembrete-card{background:#fff;}
     <div class="card"><div class="card-title">🎯 Últimos Simulados</div><div id="ult-sims"></div></div>
   </div>
   <div class="card" style="margin-top:16px"><div class="card-title">📊 Ranking de Matérias por Erros</div><div id="rank-mes"></div></div>
+  <div class="card" style="margin-top:16px" id="heatmap-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="navHeatmap(-1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 12px;cursor:pointer;color:var(--text);font-size:16px">‹</button>
+        <div id="heatmap-mes-label" style="font-size:16px;font-weight:700;min-width:140px;text-align:center"></div>
+        <button onclick="navHeatmap(1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 12px;cursor:pointer;color:var(--text);font-size:16px">›</button>
+      </div>
+    </div>
+    <div id="heatmap-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px"></div>
+    <div id="heatmap-grid"></div>
+    <div style="display:flex;gap:20px;margin-top:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:var(--surface2);border:1px solid var(--border)"></div><span style="font-size:12px;color:var(--text2)">Sem registro</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#1a4a1a"></div><span style="font-size:12px;color:var(--text2)">Estudo leve (&lt;2h)</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#2d7a2d"></div><span style="font-size:12px;color:var(--text2)">Estudo forte (2-6h)</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#7fff00"></div><span style="font-size:12px;color:var(--text2)">Estudo extremo (&gt;6h)</span></div>
+    </div>
+  </div>
 </div>
 
 <!-- REGISTRO -->
@@ -2040,8 +2057,106 @@ async function deletarSim(id){if(!confirm('Remover?'))return;setSS('sync');await
 function toggleSimMat(id){const el=document.getElementById('simmat-'+id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 // ══ DASHBOARD ══
+// ══ HEATMAP ══
+let heatmapOffset=0;
+
+function navHeatmap(dir){heatmapOffset+=dir;renderHeatmap();}
+
+function getHeatmapColor(minutos){
+  if(!minutos||minutos===0)return null;
+  const h=minutos/60;
+  if(h<2)return'#1a4a1a';
+  if(h<6)return'#2d7a2d';
+  return'#7fff00';
+}
+
+function renderHeatmap(){
+  const agora=new Date();
+  const alvo=new Date(agora.getFullYear(),agora.getMonth()+heatmapOffset,1);
+  const ano=alvo.getFullYear(),mes=alvo.getMonth();
+  const label=alvo.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const el=document.getElementById('heatmap-mes-label');
+  if(el)el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+
+  // Agregar minutos por dia a partir de erros (usa min_estudo se existir, senão conta registros)
+  const minPorDia={};
+  erros.forEach(e=>{
+    const d=e.data?.slice(0,10);
+    if(!d)return;
+    const [y,m]=d.split('-').map(Number);
+    if(y===ano&&m-1===mes){
+      const min=e.min_estudo||e.minutos||e.min||0;
+      minPorDia[d]=(minPorDia[d]||0)+(Number(min)||30); // fallback 30min por registro
+    }
+  });
+
+  // Stats
+  const diasComEstudo=Object.keys(minPorDia).length;
+  const totalMin=Object.values(minPorDia).reduce((a,b)=>a+b,0);
+  const totalAtv=erros.filter(e=>{
+    const d=e.data?.slice(0,10);if(!d)return false;
+    const[y,m]=d.split('-').map(Number);return y===ano&&m-1===mes;
+  }).length;
+
+  // Sequência máxima
+  let seq=0,maxSeq=0,tmpSeq=0;
+  const diasMes=new Date(ano,mes+1,0).getDate();
+  for(let d=1;d<=diasMes;d++){
+    const key=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(minPorDia[key]){tmpSeq++;maxSeq=Math.max(maxSeq,tmpSeq);}else tmpSeq=0;
+  }
+
+  const statsEl=document.getElementById('heatmap-stats');
+  if(statsEl)statsEl.innerHTML=`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">📅 Dias de estudo</div>
+      <div style="font-size:18px;font-weight:800">${diasComEstudo} dias no mês</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">🔥 Melhor sequência</div>
+      <div style="font-size:18px;font-weight:800">${maxSeq} dias seguidos</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">📋 Média atv. por dia</div>
+      <div style="font-size:18px;font-weight:800">${diasComEstudo?((totalAtv/diasComEstudo).toFixed(2)):0} atividades</div>
+    </div>`;
+
+  // Grid calendário
+  const primeiroDia=new Date(ano,mes,1).getDay(); // 0=Dom
+  const ultimoDia=new Date(ano,mes+1,0).getDate();
+  const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const hoje=today();
+
+  let html=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">`;
+  // Cabeçalho
+  dias.forEach(d=>html+=`<div style="font-size:12px;font-weight:700;color:var(--text2);padding:6px 0">${d}</div>`);
+  // Células vazias antes do dia 1
+  for(let i=0;i<primeiroDia;i++)html+=`<div></div>`;
+  // Dias
+  for(let d=1;d<=ultimoDia;d++){
+    const key=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const min=minPorDia[key]||0;
+    const cor=getHeatmapColor(min);
+    const isHoje=key===hoje;
+    const h=min/60;
+    const tooltip=min?`${h.toFixed(1)}h de estudo`:'Sem registro';
+    html+=`<div title="${tooltip}" style="
+      aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+      border-radius:6px;font-size:13px;font-weight:700;cursor:default;
+      background:${cor||'var(--surface2)'};
+      color:${cor?(cor==='#7fff00'?'#0c1a00':'#e0ffe0'):'var(--text3)'};
+      border:${isHoje?'2px solid var(--accent)':'1px solid transparent'};
+      ${!cor?'opacity:.5':''}
+    ">${d}</div>`;
+  }
+  html+='</div>';
+  const gridEl=document.getElementById('heatmap-grid');
+  if(gridEl)gridEl.innerHTML=html;
+}
+
 function renderDashboard(){
   renderDashboardExtra();
+  renderHeatmap();
   const from=document.getElementById('dash-from').value,to=document.getElementById('dash-to').value;
   const fE=fD(erros,from,to),fS=fD(simulados,from,to);
   const cnt={};fE.forEach(e=>{const k=e.assunto+'|||'+e.materia;cnt[k]=(cnt[k]||0)+(e.qtd_erradas||1);});
