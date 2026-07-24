@@ -2078,15 +2078,38 @@ function renderHeatmap(){
   const el=document.getElementById('heatmap-mes-label');
   if(el)el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
 
-  // Agregar minutos por dia a partir de erros (usa min_estudo se existir, senão conta registros)
+  // Agregar minutos por dia — erros + diário
   const minPorDia={};
+
+  // Do registro de erros
   erros.forEach(e=>{
     const d=e.data?.slice(0,10);
     if(!d)return;
     const [y,m]=d.split('-').map(Number);
     if(y===ano&&m-1===mes){
-      const min=e.min_estudo||e.minutos||e.min||0;
-      minPorDia[d]=(minPorDia[d]||0)+(Number(min)||30); // fallback 30min por registro
+      const min=e.min_questoes||0;
+      minPorDia[d]=(minPorDia[d]||0)+Number(min);
+    }
+  });
+
+  // Do diário (teoria + lei seca)
+  diarios.forEach(e=>{
+    const d=e.data?.slice(0,10);
+    if(!d)return;
+    const [y,m]=d.split('-').map(Number);
+    if(y===ano&&m-1===mes){
+      const min=e.minutos||0;
+      minPorDia[d]=(minPorDia[d]||0)+Number(min);
+    }
+  });
+
+  // Se o dia tem registros mas sem minutos, usa 30min como fallback
+  erros.forEach(e=>{
+    const d=e.data?.slice(0,10);
+    if(!d)return;
+    const [y,m]=d.split('-').map(Number);
+    if(y===ano&&m-1===mes&&!minPorDia[d]){
+      minPorDia[d]=30;
     }
   });
 
