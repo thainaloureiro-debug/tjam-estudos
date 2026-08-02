@@ -1268,22 +1268,78 @@ body.light .lembrete-card{background:#fff;}
 <!-- RELATÓRIO -->
 <div id="page-relatorio" class="page">
   <div class="sec-head"><div class="sec-title">📄 Relatório</div><button class="btn btn-primary no-print" onclick="window.print()">🖨️ Imprimir</button></div>
-  <div class="filter-bar no-print">
-    <span class="filter-label">Período</span>
-    <input type="date" id="rel-from" onchange="renderRelatorio()" style="width:148px">
-    <span class="filter-sep">→</span>
-    <input type="date" id="rel-to" onchange="renderRelatorio()" style="width:148px">
-    <label class="fi">Tipo:</label>
-    <select id="rel-tipo" onchange="renderRelatorio()" style="min-width:160px">
-      <option value="geral">Relatório Geral</option>
-      <option value="erros">Só Erros</option>
-      <option value="simulados">Só Simulados</option>
-      <option value="ranking">Só Ranking</option>
-      <option value="comparacao">Incluir Comparação</option>
-    </select>
-    <button class="btn btn-secondary btn-sm" onclick="cF('rel-from','rel-to');document.getElementById('rel-tipo').value='geral';renderRelatorio()">Limpar</button>
+
+  <!-- Abas internas -->
+  <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap" class="no-print">
+    <button id="rel-tab-mensal" class="btn btn-primary btn-sm" onclick="setRelTab('mensal')">📅 Por Mês</button>
+    <button id="rel-tab-semanal" class="btn btn-secondary btn-sm" onclick="setRelTab('semanal')">📆 Por Semana</button>
+    <button id="rel-tab-comparar" class="btn btn-secondary btn-sm" onclick="setRelTab('comparar')">⚖️ Comparar</button>
+    <button id="rel-tab-geral" class="btn btn-secondary btn-sm" onclick="setRelTab('geral')">📊 Geral</button>
   </div>
-  <div id="rel-content"></div>
+
+  <!-- TAB MENSAL -->
+  <div id="rel-panel-mensal">
+    <div class="filter-bar no-print">
+      <span class="filter-label">Mês</span>
+      <input type="month" id="rel-mes" onchange="renderRelMensal()" style="width:160px">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rel-mes').value=today().slice(0,7);renderRelMensal()">Mês atual</button>
+    </div>
+    <div id="rel-mensal-content"></div>
+  </div>
+
+  <!-- TAB SEMANAL -->
+  <div id="rel-panel-semanal" style="display:none">
+    <div class="filter-bar no-print">
+      <span class="filter-label">Semana</span>
+      <input type="week" id="rel-semana" onchange="renderRelSemanal()" style="width:180px">
+      <button class="btn btn-secondary btn-sm" onclick="setRelSemanaAtual()">Semana atual</button>
+    </div>
+    <div id="rel-semanal-content"></div>
+  </div>
+
+  <!-- TAB COMPARAR -->
+  <div id="rel-panel-comparar" style="display:none">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">⚖️ Comparar Períodos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">● Período A</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <select id="rel-cmp-tipo-a" onchange="renderRelComparar()" style="width:100%">
+              <option value="mes">Por Mês</option>
+              <option value="semana">Por Semana</option>
+            </select>
+            <input type="month" id="rel-cmp-mes-a" onchange="renderRelComparar()" style="width:100%">
+            <input type="week" id="rel-cmp-sem-a" onchange="renderRelComparar()" style="width:100%;display:none">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--success)">● Período B</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <select id="rel-cmp-tipo-b" onchange="renderRelComparar()" style="width:100%">
+              <option value="mes">Por Mês</option>
+              <option value="semana">Por Semana</option>
+            </select>
+            <input type="month" id="rel-cmp-mes-b" onchange="renderRelComparar()" style="width:100%">
+            <input type="week" id="rel-cmp-sem-b" onchange="renderRelComparar()" style="width:100%;display:none">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="rel-comparar-content"></div>
+  </div>
+
+  <!-- TAB GERAL -->
+  <div id="rel-panel-geral" style="display:none">
+    <div class="filter-bar no-print">
+      <span class="filter-label">Período</span>
+      <input type="date" id="rel-from" onchange="renderRelatorio()" style="width:148px">
+      <span class="filter-sep">→</span>
+      <input type="date" id="rel-to" onchange="renderRelatorio()" style="width:148px">
+      <button class="btn btn-secondary btn-sm" onclick="cF('rel-from','rel-to');renderRelatorio()">Limpar</button>
+    </div>
+    <div id="rel-content"></div>
+  </div>
 </div>
 
 <!-- DIÁRIO -->
@@ -1851,7 +1907,7 @@ const renders={
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
   anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),
   mantras:()=>renderMantras(),sugestoes:()=>renderSugestoes(),planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
-  pdfs:()=>renderPDFs(),relatorio:()=>renderRelatorio(),diario:()=>renderDiario()
+  pdfs:()=>renderPDFs(),relatorio:()=>setRelTab(relTabAtual),diario:()=>renderDiario()
 };
 
 // Leis pré-cadastradas por matéria
@@ -2660,21 +2716,310 @@ async function salvarPDFs(){
 }
 
 // ══ RELATÓRIO ══
+// ══ RELATÓRIO ══
+let relTabAtual='mensal';
+
+function setRelTab(tab){
+  relTabAtual=tab;
+  ['mensal','semanal','comparar','geral'].forEach(t=>{
+    document.getElementById('rel-panel-'+t).style.display=t===tab?'block':'none';
+    const btn=document.getElementById('rel-tab-'+t);
+    if(btn){btn.className=t===tab?'btn btn-primary btn-sm':'btn btn-secondary btn-sm';}
+  });
+  if(tab==='mensal'){
+    if(!document.getElementById('rel-mes').value)
+      document.getElementById('rel-mes').value=today().slice(0,7);
+    renderRelMensal();
+  } else if(tab==='semanal'){
+    setRelSemanaAtual();
+  } else if(tab==='comparar'){
+    // init defaults
+    const m=today().slice(0,7);
+    const ma=getPrevMonth(m);
+    if(!document.getElementById('rel-cmp-mes-a').value)document.getElementById('rel-cmp-mes-a').value=ma;
+    if(!document.getElementById('rel-cmp-mes-b').value)document.getElementById('rel-cmp-mes-b').value=m;
+    renderRelComparar();
+  } else {
+    renderRelatorio();
+  }
+}
+
+function getPrevMonth(ym){
+  const [y,m]=ym.split('-').map(Number);
+  if(m===1)return`${y-1}-12`;
+  return`${y}-${String(m-1).padStart(2,'0')}`;
+}
+
+function setRelSemanaAtual(){
+  const d=new Date();
+  const jan4=new Date(d.getFullYear(),0,4);
+  const w=Math.ceil((((d-jan4)/86400000)+jan4.getDay()+1)/7);
+  document.getElementById('rel-semana').value=`${d.getFullYear()}-W${String(w).padStart(2,'0')}`;
+  renderRelSemanal();
+}
+
+// Dados de um período (from/to strings YYYY-MM-DD)
+function getRelDados(from,to){
+  const fE=fD(erros,from,to);
+  const fS=fD(simulados,from,to);
+  const fDi=diarios.filter(d=>{if(!d.data)return false;return(!from||d.data>=from)&&(!to||d.data<=to);});
+
+  // Questões por matéria
+  const porMateria={};
+  fE.forEach(e=>{
+    const m=e.materia||'Sem matéria';
+    if(!porMateria[m])porMateria[m]={feitas:0,erros:0,min:0};
+    porMateria[m].feitas+=(e.qtd_feitas||1);
+    porMateria[m].erros+=(e.qtd_erradas||0);
+    porMateria[m].min+=(e.min_questoes||0);
+  });
+
+  // Horas por matéria (diário)
+  const horasPorMateria={};
+  fDi.forEach(d=>{
+    const m=d.materia||'Sem matéria';
+    if(!horasPorMateria[m])horasPorMateria[m]=0;
+    horasPorMateria[m]+=(d.minutos||0);
+  });
+
+  const totalQ=fE.reduce((s,e)=>s+(e.qtd_feitas||1),0);
+  const totalErros=fE.reduce((s,e)=>s+(e.qtd_erradas||0),0);
+  const totalMin=fDi.reduce((s,d)=>s+(d.minutos||0),0);
+  const totalMinQ=fE.reduce((s,e)=>s+(e.min_questoes||0),0);
+  const totalMinTotal=totalMin+totalMinQ;
+
+  return{fE,fS,fDi,porMateria,horasPorMateria,totalQ,totalErros,totalMin,totalMinQ,totalMinTotal};
+}
+
+// Gera HTML de pizza SVG
+function gerarPizza(dados,titulo,corBase){
+  const entries=Object.entries(dados).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length)return'';
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const CORES=['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a78bfa','#f97316','#ec4899','#14b8a6','#84cc16'];
+  let svg='<svg viewBox="0 0 200 200" style="width:180px;height:180px">';
+  let ang=-Math.PI/2;
+  entries.forEach(([,v],i)=>{
+    const frac=v/total;
+    const end=ang+frac*2*Math.PI;
+    const x1=100+95*Math.cos(ang),y1=100+95*Math.sin(ang);
+    const x2=100+95*Math.cos(end),y2=100+95*Math.sin(end);
+    const large=frac>0.5?1:0;
+    svg+=`<path d="M100,100 L${x1},${y1} A95,95 0 ${large},1 ${x2},${y2} Z" fill="${CORES[i%CORES.length]}" stroke="var(--bg)" stroke-width="2"/>`;
+    ang=end;
+  });
+  svg+=`<circle cx="100" cy="100" r="40" fill="var(--surface)"/>`;
+  svg+=`<text x="100" y="97" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="700">${total}</text>`;
+  svg+=`<text x="100" y="111" text-anchor="middle" fill="var(--text2)" font-size="9">${titulo}</text>`;
+  svg+='</svg>';
+  const legenda=entries.slice(0,8).map(([k,v],i)=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${CORES[i%CORES.length]};flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${k}</span>
+      <span style="font-size:11px;font-weight:700;color:var(--text)">${v}</span>
+      <span style="font-size:10px;color:var(--text3)">${(v/total*100).toFixed(0)}%</span>
+    </div>`).join('');
+  return`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">${svg}<div style="flex:1;min-width:160px">${legenda}</div></div>`;
+}
+
+function renderBlocoRelatorio(dados,label){
+  const {porMateria,horasPorMateria,totalQ,totalErros,totalMin,totalMinQ,totalMinTotal,fS}=dados;
+  const totalAcertos=totalQ-totalErros;
+  const pct=totalQ>0?(totalAcertos/totalQ*100).toFixed(1):null;
+  const horasTotal=(totalMinTotal/60).toFixed(1);
+  const horasEstudo=(totalMin/60).toFixed(1);
+  const horasQuestoes=(totalMinQ/60).toFixed(1);
+
+  // Monta pizza de questões por matéria
+  const qPorMat={};
+  Object.entries(porMateria).forEach(([m,v])=>{qPorMat[m]=v.feitas;});
+  // Monta pizza de horas por matéria
+  const hPorMat={};
+  Object.entries(horasPorMateria).forEach(([m,v])=>{if(v>0)hPorMat[m]=Math.round(v);});
+
+  const matsList=Object.entries(porMateria).sort((a,b)=>b[1].feitas-a[1].feitas);
+
+  return`
+  <!-- KPIs -->
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:16px">
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div>
+      <div class="kpi-label">⏱ Horas totais</div>
+      <div class="kpi-value" style="color:var(--accent)">${horasTotal}h</div>
+      <div class="kpi-sub">${horasEstudo}h teoria + ${horasQuestoes}h questões</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div>
+      <div class="kpi-label">📝 Questões feitas</div>
+      <div class="kpi-value" style="color:var(--accent2)">${totalQ}</div>
+      <div class="kpi-sub">${totalAcertos} acertos · ${totalErros} erros</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:${pct>=70?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'}"></div>
+      <div class="kpi-label">🎯 % Acerto</div>
+      <div class="kpi-value" style="color:${pct>=70?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'}">${pct?pct+'%':'—'}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div>
+      <div class="kpi-label">📚 Matérias</div>
+      <div class="kpi-value" style="color:var(--success)">${Object.keys(porMateria).length}</div></div>
+  </div>
+
+  <!-- Gráficos de pizza -->
+  ${(Object.keys(qPorMat).length||Object.keys(hPorMat).length)?`
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🥧 Distribuição</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px">
+      ${Object.keys(qPorMat).length?`<div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Questões por Matéria</div>${gerarPizza(qPorMat,'questões')}</div>`:''}
+      ${Object.keys(hPorMat).length?`<div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Horas de Estudo por Matéria (min)</div>${gerarPizza(hPorMat,'minutos')}</div>`:''}
+    </div>
+  </div>`:''}
+
+  <!-- Tabela por matéria -->
+  ${matsList.length?`<div class="card" style="margin-bottom:16px">
+    <div class="card-title">📊 Detalhamento por Matéria</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Matéria</th><th>Questões</th><th>Acertos</th><th>Erros</th><th>% Acerto</th><th>Tempo estudo</th></tr></thead>
+      <tbody>${matsList.map(([m,v])=>{
+        const ac=v.feitas-v.erros;const p=v.feitas>0?ac/v.feitas:null;
+        const hM=horasPorMateria[m]||0;
+        return`<tr>
+          <td><span class="badge ${MB[m]||'badge-blue'}">${m}</span></td>
+          <td style="font-weight:700">${v.feitas}</td>
+          <td style="color:var(--success)">${ac}</td>
+          <td style="color:var(--danger)">${v.erros}</td>
+          <td>${pBadge(p)}</td>
+          <td style="color:var(--text2)">${hM?Math.round(hM)+'min':'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>`:''}
+
+  ${!totalQ&&!totalMinTotal?'<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Sem dados nesse período</div></div>':''}`;
+}
+
+function renderRelMensal(){
+  const mes=document.getElementById('rel-mes').value;
+  if(!mes)return;
+  const [y,m]=mes.split('-');
+  const from=`${y}-${m}-01`;
+  const lastDay=new Date(parseInt(y),parseInt(m),0).getDate();
+  const to=`${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  const label=new Date(parseInt(y),parseInt(m)-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const dados=getRelDados(from,to);
+  document.getElementById('rel-mensal-content').innerHTML=`
+    <div class="report-header"><div class="report-title-big">📅 ${label.charAt(0).toUpperCase()+label.slice(1)}</div>
+    <div class="report-sub">Emitido em ${fmtD(today())}</div></div>
+    ${renderBlocoRelatorio(dados,label)}`;
+}
+
+function renderRelSemanal(){
+  const semana=document.getElementById('rel-semana').value;
+  if(!semana)return;
+  const [y,w]=semana.split('-W');
+  // Calcular from/to da semana ISO
+  const jan4=new Date(parseInt(y),0,4);
+  const startOfWeek=new Date(jan4);
+  startOfWeek.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(parseInt(w)-1)*7);
+  const endOfWeek=new Date(startOfWeek);endOfWeek.setDate(startOfWeek.getDate()+6);
+  const from=startOfWeek.toISOString().slice(0,10);
+  const to=endOfWeek.toISOString().slice(0,10);
+  const label=`Semana ${w}/${y} (${fmtD(from)} → ${fmtD(to)})`;
+  const dados=getRelDados(from,to);
+  document.getElementById('rel-semanal-content').innerHTML=`
+    <div class="report-header"><div class="report-title-big">📆 ${label}</div>
+    <div class="report-sub">Emitido em ${fmtD(today())}</div></div>
+    ${renderBlocoRelatorio(dados,label)}`;
+}
+
+function renderRelComparar(){
+  const tipoA=document.getElementById('rel-cmp-tipo-a').value;
+  const tipoB=document.getElementById('rel-cmp-tipo-b').value;
+  // Mostrar input certo
+  document.getElementById('rel-cmp-mes-a').style.display=tipoA==='mes'?'':'none';
+  document.getElementById('rel-cmp-sem-a').style.display=tipoA==='semana'?'':'none';
+  document.getElementById('rel-cmp-mes-b').style.display=tipoB==='mes'?'':'none';
+  document.getElementById('rel-cmp-sem-b').style.display=tipoB==='semana'?'':'none';
+
+  function getPeriodo(tipo,mesEl,semEl){
+    if(tipo==='mes'){
+      const mes=document.getElementById(mesEl).value;if(!mes)return null;
+      const[y,m]=mes.split('-');const from=`${y}-${m}-01`;
+      const lastDay=new Date(parseInt(y),parseInt(m),0).getDate();
+      const to=`${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+      const label=new Date(parseInt(y),parseInt(m)-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      return{from,to,label};
+    } else {
+      const semana=document.getElementById(semEl).value;if(!semana)return null;
+      const[y,w]=semana.split('-W');
+      const jan4=new Date(parseInt(y),0,4);
+      const startOfWeek=new Date(jan4);
+      startOfWeek.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(parseInt(w)-1)*7);
+      const endOfWeek=new Date(startOfWeek);endOfWeek.setDate(startOfWeek.getDate()+6);
+      const from=startOfWeek.toISOString().slice(0,10);
+      const to=endOfWeek.toISOString().slice(0,10);
+      return{from,to,label:`Semana ${w}/${y}`};
+    }
+  }
+
+  const pA=getPeriodo(tipoA,'rel-cmp-mes-a','rel-cmp-sem-a');
+  const pB=getPeriodo(tipoB,'rel-cmp-mes-b','rel-cmp-sem-b');
+  if(!pA||!pB){document.getElementById('rel-comparar-content').innerHTML='';return;}
+
+  const dA=getRelDados(pA.from,pA.to);
+  const dB=getRelDados(pB.from,pB.to);
+
+  function kpiCmp(labelK,vA,vB,unid=''){
+    const diff=vB-vA;const melhor=diff>=0;
+    return`<div class="kpi" style="position:relative">
+      <div class="kpi-label">${labelK}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--accent);font-weight:700">● A</div>
+          <div style="font-size:20px;font-weight:800">${vA}${unid}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--success);font-weight:700">● B</div>
+          <div style="font-size:20px;font-weight:800">${vB}${unid}</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:4px;font-size:12px;font-weight:700;color:${melhor?'var(--success)':'var(--danger)'}">
+        ${diff>0?'+':''}${diff}${unid} ${melhor?'▲':'▼'}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('rel-comparar-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" style="border-left:4px solid var(--accent)">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px">● Período A — ${pA.label}</div>
+        ${renderBlocoRelatorio(dA,pA.label)}
+      </div>
+      <div class="card" style="border-left:4px solid var(--success)">
+        <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:12px">● Período B — ${pB.label}</div>
+        ${renderBlocoRelatorio(dB,pB.label)}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚖️ Comparativo</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+        ${kpiCmp('📝 Questões',dA.totalQ,dB.totalQ)}
+        ${kpiCmp('🎯 Acertos',dA.totalQ-dA.totalErros,dB.totalQ-dB.totalErros)}
+        ${kpiCmp('⏱ Horas estudo',parseFloat((dA.totalMinTotal/60).toFixed(1)),parseFloat((dB.totalMinTotal/60).toFixed(1)),'h')}
+        ${kpiCmp('📚 Matérias',Object.keys(dA.porMateria).length,Object.keys(dB.porMateria).length)}
+      </div>
+    </div>`;
+}
+
 function renderRelatorio(){
-  const from=document.getElementById('rel-from').value,to=document.getElementById('rel-to').value,tipo=document.getElementById('rel-tipo').value;
-  const fE=fD(erros,from,to),fS=fD(simulados,from,to);const periodo=from||to?`${from?fmtD(from):'início'} → ${to?fmtD(to):'hoje'}`:'Todo o período';
-  const tQ=fS.reduce((s,x)=>s+x.total,0),tAc=fS.reduce((s,x)=>s+x.acertos,0),pG=tQ>0?tAc/tQ:null;
-  const stD=calcStats(fE);
-  const cnt={};fE.forEach(e=>{const k=e.materia+'|||'+e.assunto;if(!cnt[k])cnt[k]={e:0,f:0};cnt[k].e+=(e.qtd_erradas||1);cnt[k].f+=(e.qtd_feitas||1);});const sA=Object.entries(cnt).sort((a,b)=>b[1].e-a[1].e);
+  const from=document.getElementById('rel-from')?.value||'';
+  const to=document.getElementById('rel-to')?.value||'';
+  const periodo=from||to?`${from?fmtD(from):'início'} → ${to?fmtD(to):'hoje'}`:'Todo o período';
+  const dados=getRelDados(from,to);
+  const {fE,fS}=dados;
+  const tQ=fS.reduce((s,x)=>s+x.total,0);
+  const tAc=fS.reduce((s,x)=>s+x.acertos,0);
+  const pG=tQ>0?tAc/tQ:null;
   let html=`<div class="report-header"><div class="report-title-big">⚖️ TJ-AM — Assistente Judiciário</div><div class="report-sub">Relatório · ${periodo} · Emitido em ${fmtD(today())}</div></div>`;
-  if(tipo==='geral'||tipo==='erros'){html+=`<div style="margin-bottom:16px"><div class="kpi-grid"><div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">Questões Feitas</div><div class="kpi-value" style="color:var(--accent2)">${tQ+stD.feitas}</div></div><div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">Acertos</div><div class="kpi-value" style="color:var(--success)">${tAc+stD.acertos}</div></div><div class="kpi"><div class="kpi-accent" style="background:${pG==null?'var(--text3)':pC(pG)}"></div><div class="kpi-label">Taxa Simulados</div><div class="kpi-value">${pK(pG,pC(pG))}</div></div><div class="kpi"><div class="kpi-accent" style="background:${stD.pct==null?'var(--text3)':pC(stD.pct)}"></div><div class="kpi-label">Taxa Diário</div><div class="kpi-value">${pK(stD.pct,pC(stD.pct))}</div></div></div></div>`;}
-  if((tipo==='geral'||tipo==='ranking')&&sA.length){html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🏆 Ranking</div><div class="tbl-wrap"><table><thead><tr><th>Pos.</th><th>Matéria</th><th>Assunto</th><th>Feitas</th><th>Erros</th><th>% Acerto</th><th>% Erro</th></tr></thead><tbody>${sA.map(([k,v],i)=>{const[m,a]=k.split('|||');const pAc=v.f>0?(v.f-v.e)/v.f:null;const pEr=v.f>0?v.e/v.f:null;return`<tr><td><span class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</span></td><td>${m}</td><td style="font-weight:600">${a}</td><td>${v.f}</td><td style="color:var(--accent3);font-weight:700">${v.e}</td><td>${pBadge(pAc)}</td><td>${pBadge(pEr)}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
-  if((tipo==='geral'||tipo==='simulados')&&fS.length){html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Simulado</th><th>Banca</th><th>Acertos</th><th>Total</th><th>% Acerto</th></tr></thead><tbody>${[...fS].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const p=s.acertos/s.total;return`<tr><td>${fmtD(s.data)}</td><td style="font-weight:600">${s.nome}</td><td>${s.banca||'—'}</td><td style="color:var(--success)">${s.acertos}</td><td>${s.total}</td><td>${pBadge(p)}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
-  if((tipo==='geral'||tipo==='erros')&&fE.length){html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">📝 Sessões de Questões</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Matéria</th><th>Assunto</th><th>Feitas</th><th>Erros</th><th>% Acerto</th><th>Material</th></tr></thead><tbody>${[...fE].sort((a,b)=>b.data.localeCompare(a.data)).map(e=>{const f=e.qtd_feitas||1,er=e.qtd_erradas||0,p=f>0?(f-er)/f:null;return`<tr><td>${fmtD(e.data)}</td><td>${e.materia}</td><td style="font-weight:600">${e.assunto}</td><td>${f}</td><td style="color:var(--accent3)">${er}</td><td>${pBadge(p)}</td><td>${e.material||'—'}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
-  if(tipo==='comparacao'){const cmp=document.getElementById('cmp-result')?.innerHTML;html+=`<div class="card"><div class="card-title">⚖️ Comparação</div>${cmp&&!cmp.includes('empty')?cmp:'<div style="padding:20px;text-align:center;color:#666">Faça uma comparação na aba Comparar primeiro.</div>'}</div>`;}
-  if(!fE.length&&!fS.length&&tipo!=='comparacao')html+='<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">Sem dados no período</div></div>';
+  html+=renderBlocoRelatorio(dados,periodo);
+  if(fS.length){html+=`<div class="card" style="margin-bottom:16px"><div class="card-title">🎯 Simulados</div><div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Simulado</th><th>Banca</th><th>Acertos</th><th>Total</th><th>% Acerto</th></tr></thead><tbody>${[...fS].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const p=s.acertos/s.total;return`<tr><td>${fmtD(s.data)}</td><td style="font-weight:600">${s.nome}</td><td>${s.banca||'—'}</td><td style="color:var(--success)">${s.acertos}</td><td>${s.total}</td><td>${pBadge(p)}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
   document.getElementById('rel-content').innerHTML=html;
 }
+
+
 
 // ══ REVISÃO ══
 function renderRevisao(){
@@ -4298,9 +4643,9 @@ const PLANO_AULAS=[
   {
     materia:'Administração Geral e Pública',
     modulos:[
-      {nome:'Administração Geral', total:45, minutos:1575},   // ~35min/aula × 45
-      {nome:'Administração Pública', total:11, minutos:385},  // ~35min/aula × 11
-      {nome:'Gestão de Pessoas', total:24, minutos:840}       // ~35min/aula × 24
+      {nome:'Administração Geral', total:61, minutos:2170},   // 36.2h (extraído do PDF)
+      {nome:'Administração Pública', total:11, minutos:402},  // 6.7h (extraído do PDF)
+      {nome:'Gestão de Pessoas', total:24, minutos:883}       // 14.7h (extraído do PDF)
     ]
   }
 ];
