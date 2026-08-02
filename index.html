@@ -1224,11 +1224,24 @@ body.light .lembrete-card{background:#fff;}
           <option value="2">2 dias</option>
         </select>
       </div>
+      <div class="form-group" style="margin:0">
+        <label>⚡ Velocidade de reprodução</label>
+        <select id="prev-velocidade" onchange="renderPrevisao()" style="width:140px">
+          <option value="1">1x (normal)</option>
+          <option value="1.25" selected>1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="1.75">1.75x</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
       <div style="margin-top:18px">
         <button class="btn btn-primary" onclick="renderPrevisao()">📊 Calcular</button>
       </div>
     </div>
   </div>
+
+  <!-- Comparativo de velocidades -->
+  <div id="prev-velocidades" style="margin-bottom:18px"></div>
 
   <!-- KPIs -->
   <div id="prev-kpis" style="margin-bottom:18px"></div>
@@ -4259,35 +4272,35 @@ const PLANO_AULAS=[
   {
     materia:'Direito Constitucional',
     modulos:[
-      {nome:'Módulo I',total:31}
+      {nome:'Módulo I', total:47, minutos:1356} // ~28.9h (média ~29min/aula × 47)
     ]
   },
   {
     materia:'Direito Administrativo',
     modulos:[
-      {nome:'Módulo I',total:43}
+      {nome:'Módulo I', total:43, minutos:1204} // ~20h (média ~28min × 43)
     ]
   },
   {
     materia:'Direito Processual Civil',
     modulos:[
-      {nome:'Módulo I',total:27},
-      {nome:'Módulo II',total:17}
+      {nome:'Módulo I', total:32, minutos:969},  // 16.1h (extraído do PDF)
+      {nome:'Módulo II', total:18, minutos:524}  // 8.7h (extraído do PDF)
     ]
   },
   {
     materia:'Direito Processual Penal',
     modulos:[
-      {nome:'Módulo I',total:44},
-      {nome:'Módulo II',total:9}
+      {nome:'Módulo I', total:44, minutos:1280}, // 21.3h (extraído do PDF)
+      {nome:'Módulo II', total:19, minutos:565}  // 9.4h (extraído do PDF)
     ]
   },
   {
     materia:'Administração Geral e Pública',
     modulos:[
-      {nome:'Administração Geral',total:40},
-      {nome:'Administração Pública',total:11},
-      {nome:'Gestão de Pessoas',total:24}
+      {nome:'Administração Geral', total:45, minutos:1575},   // ~35min/aula × 45
+      {nome:'Administração Pública', total:11, minutos:385},  // ~35min/aula × 11
+      {nome:'Gestão de Pessoas', total:24, minutos:840}       // ~35min/aula × 24
     ]
   }
 ];
@@ -4344,40 +4357,83 @@ function addDiasUteis(data,dias,diasSemana){
 function renderPrevisao(){
   const aulasdia=parseInt(document.getElementById('prev-aulas-dia')?.value)||5;
   const diasSem=parseInt(document.getElementById('prev-dias-semana')?.value)||5;
+  const velocidade=parseFloat(document.getElementById('prev-velocidade')?.value)||1.25;
   const inicioStr=document.getElementById('prev-inicio')?.value||today();
   if(!document.getElementById('prev-inicio')?.value){
     document.getElementById('prev-inicio').value=today();
   }
   const inicio=new Date(inicioStr+'T12:00');
 
-  // Calcula total geral
+  // Totais gerais
   const totalAulas=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>ss+mod.total,0),0);
+  const totalMinutos=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>ss+(mod.minutos||0),0),0);
   const totalConcluidas=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>ss+getPrevConcluidas(m.materia,mod.nome),0),0);
   const totalRestantes=totalAulas-totalConcluidas;
   const diasRestantes=Math.ceil(totalRestantes/aulasdia);
 
-  // Data de conclusão estimada
+  // Minutos concluídos (proporcional)
+  const minConcluidos=PLANO_AULAS.reduce((s,m)=>s+m.modulos.reduce((ss,mod)=>{
+    const conc=getPrevConcluidas(m.materia,mod.nome);
+    const minPorAula=(mod.minutos||0)/mod.total;
+    return ss+conc*minPorAula;
+  },0),0);
+  const minRestantes=totalMinutos-minConcluidos;
+
+  // Tempo real na velocidade selecionada
+  const minRestantesVel=minRestantes/velocidade;
+  const horasRestantes=(minRestantesVel/60).toFixed(1);
+  const horasTotal=(totalMinutos/velocidade/60).toFixed(1);
+  const horasConcluidas=(minConcluidos/velocidade/60).toFixed(1);
+
   const dataConclusao=addDiasUteis(inicio,diasRestantes,diasSem);
+
+  // Bloco comparativo de velocidades
+  const velComparativo=document.getElementById('prev-velocidades');
+  if(velComparativo){
+    const vels=[1,1.25,1.5,1.75,2];
+    velComparativo.innerHTML=`<div class="card" style="margin-bottom:0">
+      <div class="card-title">⚡ Comparativo de Velocidades</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        ${vels.map(v=>{
+          const minV=minRestantes/v;
+          const hV=(minV/60).toFixed(1);
+          const diasV=Math.ceil(totalRestantes/aulasdia);
+          const dataV=addDiasUteis(inicio,diasV,diasSem);
+          const ativo=v===velocidade;
+          return`<div style="background:${ativo?'var(--accent)22':'var(--surface2)'};border:${ativo?'2px solid var(--accent)':'1px solid var(--border)'};border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:${ativo?'var(--accent)':'var(--text)'}">${v}x</div>
+            <div style="font-size:22px;font-weight:800;margin:4px 0">${hV}h</div>
+            <div style="font-size:11px;color:var(--text2)">de vídeo restante</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Conclusão: ${dataV.toLocaleDateString('pt-BR')}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
 
   // KPIs
   document.getElementById('prev-kpis').innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
       <div class="kpi"><div class="kpi-accent" style="background:var(--accent2)"></div>
         <div class="kpi-label">Total de Aulas</div>
-        <div class="kpi-value" style="color:var(--accent2)">${totalAulas}</div></div>
+        <div class="kpi-value" style="color:var(--accent2)">${totalAulas}</div>
+        <div class="kpi-sub">${(totalMinutos/60).toFixed(0)}h de conteúdo</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div>
         <div class="kpi-label">✅ Concluídas</div>
-        <div class="kpi-value" style="color:var(--success)">${totalConcluidas}</div></div>
+        <div class="kpi-value" style="color:var(--success)">${totalConcluidas}</div>
+        <div class="kpi-sub">${horasConcluidas}h assistidas (${velocidade}x)</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div>
         <div class="kpi-label">Restantes</div>
-        <div class="kpi-value" style="color:var(--warning)">${totalRestantes}</div></div>
+        <div class="kpi-value" style="color:var(--warning)">${totalRestantes}</div>
+        <div class="kpi-sub">${horasRestantes}h restantes (${velocidade}x)</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div>
         <div class="kpi-label">Dias Restantes</div>
         <div class="kpi-value" style="color:var(--accent)">${diasRestantes}</div>
         <div class="kpi-sub">a ${aulasdia} aulas/dia</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--danger)"></div>
         <div class="kpi-label">📅 Conclusão Prevista</div>
-        <div class="kpi-value" style="font-size:20px;color:var(--danger)">${dataConclusao.toLocaleDateString('pt-BR')}</div></div>
+        <div class="kpi-value" style="font-size:20px;color:var(--danger)">${dataConclusao.toLocaleDateString('pt-BR')}</div>
+        <div class="kpi-sub">velocidade ${velocidade}x</div></div>
     </div>`;
 
   // Timeline por matéria
@@ -4385,6 +4441,7 @@ function renderPrevisao(){
   const timeline=document.getElementById('prev-timeline');
   timeline.innerHTML=PLANO_AULAS.map(mat=>{
     const totalMat=mat.modulos.reduce((s,m)=>s+m.total,0);
+    const totalMinMat=mat.modulos.reduce((s,m)=>s+(m.minutos||0),0);
     const concluidasMat=mat.modulos.reduce((s,m)=>s+Math.min(getPrevConcluidas(mat.materia,m.nome),m.total),0);
     const pct=totalMat>0?concluidasMat/totalMat:0;
     const restMat=totalMat-concluidasMat;
@@ -4392,7 +4449,14 @@ function renderPrevisao(){
     const inicioMat=new Date(dataAtual);
     const fimMat=addDiasUteis(dataAtual,diasMat,diasSem);
 
-    // Módulos em sequência
+    // Horas da matéria na velocidade
+    const horasMatTotal=(totalMinMat/velocidade/60).toFixed(1);
+    const minConcluidosMat=mat.modulos.reduce((s,m)=>{
+      const conc=getPrevConcluidas(mat.materia,m.nome);
+      return s+conc*((m.minutos||0)/m.total);
+    },0);
+    const horasMatFeitas=(minConcluidosMat/velocidade/60).toFixed(1);
+
     let dataModAtual=new Date(dataAtual);
     const modulosHTML=mat.modulos.map(mod=>{
       const conc=Math.min(getPrevConcluidas(mat.materia,mod.nome),mod.total);
@@ -4401,14 +4465,20 @@ function renderPrevisao(){
       const fimMod=addDiasUteis(dataModAtual,dias,diasSem);
       const pctMod=mod.total>0?conc/mod.total:0;
       const concluido=conc>=mod.total;
+      const minPorAula=(mod.minutos||0)/mod.total;
+      const horasModTotal=(mod.minutos||0)/velocidade/60;
+      const horasModFeitas=(conc*minPorAula)/velocidade/60;
+      const horasModRest=((rest*minPorAula)/velocidade/60).toFixed(1);
+
       const html=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
           <div>
             <div style="font-weight:700;font-size:13px">${mod.nome}</div>
             <div style="font-size:12px;color:var(--text2);margin-top:2px">
               ${concluido?'✅ Concluído':'📅 '+fimMod.toLocaleDateString('pt-BR')} · 
-              ${conc}/${mod.total} aulas · ${dias} dias restantes
+              ${conc}/${mod.total} aulas · ${horasModFeitas.toFixed(1)}h/${horasModTotal.toFixed(1)}h (${velocidade}x)
             </div>
+            ${!concluido?`<div style="font-size:11px;color:var(--text3);margin-top:2px">⏱ ${horasModRest}h restantes em ${velocidade}x</div>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="number" min="0" max="${mod.total}" value="${conc}"
@@ -4425,20 +4495,18 @@ function renderPrevisao(){
           <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${concluido?'var(--success)':'var(--accent)'};min-width:36px">${(pctMod*100).toFixed(0)}%</span>
         </div>
       </div>`;
-      // Avança data para próximo módulo
       dataModAtual=new Date(fimMod);
       return html;
     }).join('');
 
-    // Avança data para próxima matéria
     dataAtual=new Date(fimMat);
 
     return`<div class="card" style="margin-bottom:14px;border-left:4px solid ${pct>=1?'var(--success)':'var(--accent)'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div>
-          <div style="font-size:16px;font-weight:800">${pct>=1?'✅ ':''  }${mat.materia}</div>
+          <div style="font-size:16px;font-weight:800">${pct>=1?'✅ ':''}${mat.materia}</div>
           <div style="font-size:12px;color:var(--text2);margin-top:4px">
-            ${concluidasMat}/${totalMat} aulas · 
+            ${concluidasMat}/${totalMat} aulas · ${horasMatFeitas}h/${horasMatTotal}h (${velocidade}x) ·
             ${pct>=1?'Concluído!':'Previsão: '+inicioMat.toLocaleDateString('pt-BR')+' → '+fimMat.toLocaleDateString('pt-BR')}
           </div>
         </div>
