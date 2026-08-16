@@ -480,6 +480,7 @@ body.light .lembrete-card{background:#fff;}
     <button class="tab" onclick="showPage('mantras',this)"><span class="tab-icon">🔥</span>Regras & Mantras</button>
     <button class="tab" onclick="showPage('lembretes',this)"><span class="tab-icon">🔔</span>Lembretes</button>
     <button class="tab" onclick="showPage('ciclo',this)"><span class="tab-icon">🔄</span>Ciclo de Questões</button>
+    <button class="tab" onclick="showPage('editais',this)"><span class="tab-icon">🆚</span>Organização por Edital</button>
     <button class="tab" onclick="showPage('sugestoes',this)"><span class="tab-icon">💡</span>Sugestões</button>
     <button class="tab" onclick="showPage('planejamento',this)"><span class="tab-icon">🗓️</span>Planejamento</button>
     <button class="tab" onclick="showPage('materiais',this)"><span class="tab-icon">📁</span>Materiais</button>
@@ -927,6 +928,27 @@ body.light .lembrete-card{background:#fff;}
     </div>
     <div id="ciclo-historico"></div>
   </div>
+</div>
+
+<!-- ORGANIZAÇÃO POR EDITAL -->
+<div id="page-editais" class="page">
+  <div class="sec-head">
+    <div class="sec-title">🆚 Organização por Edital</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-sm" id="ed-btn-AM" onclick="setEditalSel('AM')">TJ-AM</button>
+      <button class="btn btn-sm" id="ed-btn-GO" onclick="setEditalSel('GO')">TJ-GO</button>
+      <button class="btn btn-sm" id="ed-btn-GERAL" onclick="setEditalSel('GERAL')">🏁 Geral</button>
+      <span id="editais-week-controls" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="color:var(--text3);font-size:12px;margin:0 2px">|</span>
+      <button class="btn btn-secondary btn-sm" onclick="navEditalSemana(-1)">← Anterior</button>
+      <span id="editais-semana-label" style="font-size:13px;font-weight:700;min-width:150px;text-align:center"></span>
+      <button class="btn btn-secondary btn-sm" onclick="navEditalSemana(1)">Próxima →</button>
+      <button class="btn btn-secondary btn-sm" onclick="editalSemanaOffset=0;renderEditais()">Hoje</button>
+      <input type="week" id="editais-week-picker" onchange="irParaEditalSemana(this.value)" style="font-size:12px;padding:5px 10px" title="Selecionar semana">
+      </span>
+    </div>
+  </div>
+  <div id="editais-content"></div>
 </div>
 
 
@@ -1871,7 +1893,9 @@ function setSS(e){
 }
 
 // ══ DATA ══
-const MATERIAS={"Direito Civil":["LINDB","Pessoa Natural","Pessoa Jurídica","Bens e Domicílio","Fato Jurídico","Invalidades do Negócio Jurídico","Prescrição e Decadência"],"Direito Penal":["Introdução e História do Direito Penal","Princípios do Direito Penal","Lei Penal no Tempo e no Espaço","Conflito Aparente de Normas","Conceito de Crime e suas Classificações","Teoria do Crime","Desistência Voluntária, Arrependimento Eficaz e Posterior","Arrependimento Posterior e Crime Impossível","Crime Doloso e Culposo","Conceito Analítico de Crime e Ilicitude","Conceito Analítico de Crime e Legítima Defesa","Estrito Cumprimento do Dever Legal","Culpabilidade","Punibilidade","Punibilidade e Prescrição","Prescrição","Teorias da Ação","Erro de Tipo e Erro de Proibição","Aberracio Ictus, Erro quanto à pessoa e Erro quanto ao nexo causal","Concurso de Pessoas","Participação no concurso de Crimes, Circunstâncias Pessoais, Elementares e outras","Concurso de Crimes","Das Penas","Exercícios"],"Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],"Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],"Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],"Direito do Trabalho":["Princípios e fontes do Direito do Trabalho","Relação de trabalho e emprego (CLT, art. 7º da CF/88)","Relações de trabalho e sujeitos da relação de emprego","Requisitos e distinção","Trabalho diferenciado","Jornada de trabalho (Decreto 10.410/20)","Do empregado e do empregador: conceito e caracterização","Das poderes do empregador: controle e fiscalização","Do grupo econômico da sucessão de empregadores: da responsabilidade solidária e subsidiária","Do contrato individual de trabalho","Contrato: obrigatoriedade e características","Da alteração do contrato de trabalho: alteração unilateral e bilateral e seus efeitos","Da suspensão e interrupção do contrato de trabalho: caracterização e distinção","Da rescisão do contrato de trabalho: dos justos causas, da assistência sindical, da quitação anual","Garantias de emprego","Da estabilidade e das garantias provisórias de emprego","Da duração do trabalho","Da duração do trabalho: jornada, horas extras, horas de descanso, do intervalo para o repouso e alimentação","Do salário mínimo","Salário: obrigatoriedade e garantia","Conceito, obrigatoriedade e garantia","Do FGTS","Do direito à férias e da duração, da concessão e da época das férias; dos efeitos sobre os efeitos do período aquisitivo","Do vale-transporte e da remuneração","Condutas e situações: composição do salário, modalidades de salário, formas e meios de pagamento","Da equiparação salarial","Do EPI","Da previdência e segurança","Do seguro e de ações e breveto do trabalho","Das disposições especiais sobre duração e condições de trabalho (capítulo I do título da CLT)","Da estabilidade do servidor: da licença-maternidade (art. 10 do ADCT)","Dos direitos coletivos e trabalho","Das organizações e acordos coletivos de trabalho","Do art. 7º da CF/88","Do teletrabalho (art. 75 a 75-E)","Dano moral nas relações de trabalho","Súmulas e orientações da jurisprudência (uniformização) do Tribunal Superior do Trabalho","Temas vinculantes do Tribunal Federal: relativos ao Direito do Trabalho","Instruções e atos normativos do TCU em matéria de Direito do Trabalho","Reforma trabalhista - Lei 13.467 de 2017","Acidente de trabalho","Princípio geral da responsabilidade civil trabalhista"],"Direito Processual do Trabalho":["Da justiça do trabalho: organização e competência","Das varas do trabalho, dos tribunais regionais do trabalho e do Tribunal Superior do Trabalho","Dos serviços auxiliares da Justiça do Trabalho que desempenham uso cargo do trabalho","Das férias judiciais","Do Ministério Público do Trabalho: organização e competência","Do processo judicial no trabalho","Princípio geral do processo trabalhista (aplicação subsidiária do CPC)","Prescrição e decadência","Prescrição intercorrente","3.3. Das ações, pedidos e prazos processuais","Do valor da causa no processo do trabalho, das custas e emolumentos","Todos e tramitação do processo para a fazenda pública","Das partes e procuradores: do jus postulandi","Da assistência judiciária: dos honorários de advogados, documentação e honorários (com a determinação estabelecida no art. 133 da CF)","Das nulidades: da configuração, de iniciativa e de julgamento: da notificação das partes","Das provas","Das petições postulatórias","Da forma de declaração e notificação: da reclamação escrita e verbal","Da legitimidade para agir","Das audiências e fases procedimentais","Do incidente de desconsideração da personalidade jurídica","Da ação e do ato judicial","Da mandado de segurança na Justiça do Trabalho: da ação de danos extrapatrimonial","Da liquidação da sentença: por cálculo, por artigos e por arbitramento","Da execução","Execução por certidão","Da execução por resoluções judiciais","Da execução perante a fazenda pública","Execução fiscal trabalhista","Da citação, do despacho de condenação e da nomeação de bens","Garantia na execução","Declaração e sequência judicial de bens e de penhoras","Das embargos do devedor: da impugnação ao crédito do exequente e da informação de terceiros","Da praça e leilão: da administração dos custos de paralisação","Dos recursos no processo do trabalho","Normas de processo e procedimento judicial (CLT arts. 13 ao 37 e do 107 (reforma trabalhista)","Previsão de procedimentos da lei 9957/00; lei 13 ao 37 da CLT em matéria de Direito Processual do Trabalho","Súmulas vinculantes do Supremo Tribunal Federal, relativas ao Direito Processual do Trabalho","TST-1000-ME"],"Gestão Pública":["Planejamento estratégico no judiciário brasileiro: resolução nº 70/2009 do conselho nacional do judiciário","Orçamento público","Do concurso","Orçamento: estrutura, classificação e objetivos","Planejamento de administração tributária","Competência interpessoal","Administração e gestão de recursos materiais","Acessibilidade na estrutura física","Transparência na administração pública","Da lei complementar nº 101/2000","Da lei nº 10.520/02"],"Raciocínio Lógico-matemático":["Números inteiros e racionais: operações (adição, subtração, multiplicação, divisão, potência, radiciação)","Problemas com sequências numéricas","Frações, mínimo múltiplo divisor e máximo divisor comum","Problemas de regra de três","Resolução de equações de primeiro e segundo graus","Noções de probabilidade","Estatística: média aritmética, moda e mediana","Divisão de partes proporcionais","Noção de parte fracionária","Estrutura lógica de relações arbitrárias entre pessoas, lugares, objetos ou eventos fictícios","Relação de informações a partir das quais sejam verdadeiras e das que podem ser inferidas","Negação e oposição de enunciados","Operações lógicas com preposições","Raciocínio matemático","Compreensão e elaboração da lógica dos argumentos","Equivalência de expressões","Funcionalidade formal e informal (tabelas de verdade)","Raciocínio crítico (geral e específico)","Generalização de argumentos","Sistematização de argumentos","Problema envolvendo lógica: que tipo de raciocínio lógico o problema pede para solução, definição e determinação"],"Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],"Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],"Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],"Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],"Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],"Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],"Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],"Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"],"Discursiva":["Análise do edital; mudança de hábito; a importância da escrita manuscrita","Teoria-Geral da produção textual em provas discursivas (Aspectos Estruturais)","Teoria-Geral da Produção textual em provas discursivas (Aspectos Formais de Apresentação)","Folha de resposta para transcrição do texto definitivo","Primeira Rodada de Temas","Segunda Rodada de Temas","Terceira Rodada de Temas"]};
+const MATERIAS={"Direito Civil":["LINDB","Pessoa Natural","Pessoa Jurídica","Bens e Domicílio","Fato Jurídico","Invalidades do Negócio Jurídico","Prescrição e Decadência"],"Direito Penal":["Introdução e História do Direito Penal","Princípios do Direito Penal","Lei Penal no Tempo e no Espaço","Conflito Aparente de Normas","Conceito de Crime e suas Classificações","Teoria do Crime","Desistência Voluntária, Arrependimento Eficaz e Posterior","Arrependimento Posterior e Crime Impossível","Crime Doloso e Culposo","Conceito Analítico de Crime e Ilicitude","Conceito Analítico de Crime e Legítima Defesa","Estrito Cumprimento do Dever Legal","Culpabilidade","Punibilidade","Punibilidade e Prescrição","Prescrição","Teorias da Ação","Erro de Tipo e Erro de Proibição","Aberracio Ictus, Erro quanto à pessoa e Erro quanto ao nexo causal","Concurso de Pessoas","Participação no concurso de Crimes, Circunstâncias Pessoais, Elementares e outras","Concurso de Crimes","Das Penas","Exercícios"],"Língua Portuguesa":["Ortografia e acentuação","Classes de palavras","Pronomes e colocação pronominal","Verbos e correlação verbal","Formação de palavras","Sintaxe da oração","Concordância verbal e nominal","Regência verbal e nominal. Crase","Pontuação","Coesão e coerência textuais","Semântica","Interpretação de textos","Variação linguística"],"Direito Constitucional":["Princípios fundamentais","Direitos individuais e coletivos","Direitos sociais","Nacionalidade","Direitos políticos","Partidos políticos","Administração pública","Poder Legislativo","Poder Executivo","Poder Judiciário","Funções essenciais à justiça"],"Direito Administrativo":["Organização administrativa","Poderes administrativos","Atos administrativos","Controle da administração","Responsabilidade civil do Estado","Agentes públicos","Processo administrativo"],"Direito do Trabalho":["Princípios e fontes do Direito do Trabalho","Relação de trabalho e emprego (CLT, art. 7º da CF/88)","Relações de trabalho e sujeitos da relação de emprego","Requisitos e distinção","Trabalho diferenciado","Jornada de trabalho (Decreto 10.410/20)","Do empregado e do empregador: conceito e caracterização","Das poderes do empregador: controle e fiscalização","Do grupo econômico da sucessão de empregadores: da responsabilidade solidária e subsidiária","Do contrato individual de trabalho","Contrato: obrigatoriedade e características","Da alteração do contrato de trabalho: alteração unilateral e bilateral e seus efeitos","Da suspensão e interrupção do contrato de trabalho: caracterização e distinção","Da rescisão do contrato de trabalho: dos justos causas, da assistência sindical, da quitação anual","Garantias de emprego","Da estabilidade e das garantias provisórias de emprego","Da duração do trabalho","Da duração do trabalho: jornada, horas extras, horas de descanso, do intervalo para o repouso e alimentação","Do salário mínimo","Salário: obrigatoriedade e garantia","Conceito, obrigatoriedade e garantia","Do FGTS","Do direito à férias e da duração, da concessão e da época das férias; dos efeitos sobre os efeitos do período aquisitivo","Do vale-transporte e da remuneração","Condutas e situações: composição do salário, modalidades de salário, formas e meios de pagamento","Da equiparação salarial","Do EPI","Da previdência e segurança","Do seguro e de ações e breveto do trabalho","Das disposições especiais sobre duração e condições de trabalho (capítulo I do título da CLT)","Da estabilidade do servidor: da licença-maternidade (art. 10 do ADCT)","Dos direitos coletivos e trabalho","Das organizações e acordos coletivos de trabalho","Do art. 7º da CF/88","Do teletrabalho (art. 75 a 75-E)","Dano moral nas relações de trabalho","Súmulas e orientações da jurisprudência (uniformização) do Tribunal Superior do Trabalho","Temas vinculantes do Tribunal Federal: relativos ao Direito do Trabalho","Instruções e atos normativos do TCU em matéria de Direito do Trabalho","Reforma trabalhista - Lei 13.467 de 2017","Acidente de trabalho","Princípio geral da responsabilidade civil trabalhista"],"Direito Processual do Trabalho":["Da justiça do trabalho: organização e competência","Das varas do trabalho, dos tribunais regionais do trabalho e do Tribunal Superior do Trabalho","Dos serviços auxiliares da Justiça do Trabalho que desempenham uso cargo do trabalho","Das férias judiciais","Do Ministério Público do Trabalho: organização e competência","Do processo judicial no trabalho","Princípio geral do processo trabalhista (aplicação subsidiária do CPC)","Prescrição e decadência","Prescrição intercorrente","3.3. Das ações, pedidos e prazos processuais","Do valor da causa no processo do trabalho, das custas e emolumentos","Todos e tramitação do processo para a fazenda pública","Das partes e procuradores: do jus postulandi","Da assistência judiciária: dos honorários de advogados, documentação e honorários (com a determinação estabelecida no art. 133 da CF)","Das nulidades: da configuração, de iniciativa e de julgamento: da notificação das partes","Das provas","Das petições postulatórias","Da forma de declaração e notificação: da reclamação escrita e verbal","Da legitimidade para agir","Das audiências e fases procedimentais","Do incidente de desconsideração da personalidade jurídica","Da ação e do ato judicial","Da mandado de segurança na Justiça do Trabalho: da ação de danos extrapatrimonial","Da liquidação da sentença: por cálculo, por artigos e por arbitramento","Da execução","Execução por certidão","Da execução por resoluções judiciais","Da execução perante a fazenda pública","Execução fiscal trabalhista","Da citação, do despacho de condenação e da nomeação de bens","Garantia na execução","Declaração e sequência judicial de bens e de penhoras","Das embargos do devedor: da impugnação ao crédito do exequente e da informação de terceiros","Da praça e leilão: da administração dos custos de paralisação","Dos recursos no processo do trabalho","Normas de processo e procedimento judicial (CLT arts. 13 ao 37 e do 107 (reforma trabalhista)","Previsão de procedimentos da lei 9957/00; lei 13 ao 37 da CLT em matéria de Direito Processual do Trabalho","Súmulas vinculantes do Supremo Tribunal Federal, relativas ao Direito Processual do Trabalho","TST-1000-ME"],"Gestão Pública":["Planejamento estratégico no judiciário brasileiro: resolução nº 70/2009 do conselho nacional do judiciário","Orçamento público","Do concurso","Orçamento: estrutura, classificação e objetivos","Planejamento de administração tributária","Competência interpessoal","Administração e gestão de recursos materiais","Acessibilidade na estrutura física","Transparência na administração pública","Da lei complementar nº 101/2000","Da lei nº 10.520/02"],"Raciocínio Lógico-matemático":["Números inteiros e racionais: operações (adição, subtração, multiplicação, divisão, potência, radiciação)","Problemas com sequências numéricas","Frações, mínimo múltiplo divisor e máximo divisor comum","Problemas de regra de três","Resolução de equações de primeiro e segundo graus","Noções de probabilidade","Estatística: média aritmética, moda e mediana","Divisão de partes proporcionais","Noção de parte fracionária","Estrutura lógica de relações arbitrárias entre pessoas, lugares, objetos ou eventos fictícios","Relação de informações a partir das quais sejam verdadeiras e das que podem ser inferidas","Negação e oposição de enunciados","Operações lógicas com preposições","Raciocínio matemático","Compreensão e elaboração da lógica dos argumentos","Equivalência de expressões","Funcionalidade formal e informal (tabelas de verdade)","Raciocínio crítico (geral e específico)","Generalização de argumentos","Sistematização de argumentos","Problema envolvendo lógica: que tipo de raciocínio lógico o problema pede para solução, definição e determinação"],"Administração Geral":["Noções de administração","Abordagens clássica e burocrática","Planejamento estratégico","Liderança","Motivação e satisfação","Indicadores de desempenho","Cultura organizacional","Excelência nos serviços públicos","Gestão de pessoas","Gestão de desempenho","Gestão por competências","Educação corporativa","Gestão do conhecimento","Qualidade de vida no trabalho"],"Direito Processual Civil":["Princípios constitucionais do processo","Função jurisdicional","Sujeitos do processo","Atos processuais","Tutela provisória","Formação e extinção do processo","Juizados especiais cíveis","Competência"],"Direito Processual Penal":["Inquérito policial","Ação penal","Competência","Citações e intimações","Provas - teoria geral","Provas - provas em espécie","Prisão e liberdade provisória I","Prisão e liberdade provisória II","Rito sumaríssimo - Juizados criminais"],"Estatuto dos Servidores":["Estatuto dos Funcionários Públicos I","Estatuto dos Funcionários Públicos II","Estatuto dos Funcionários Públicos III","Estatuto dos Funcionários Públicos IV","Plano de Cargos e Carreiras I","Plano de Cargos e Carreiras II"],"Organização Judiciária":["Noções Essenciais sobre o Poder Judiciário","Código de Organização I","Código de Organização II","Código de Organização III","Código de Organização IV","Código de Organização V","Código de Organização VI"],"Informática e Processo Digital":["Redes de computadores I","Redes de computadores II","Internet e Intranet","Internet - navegação e sites","Internet - e-mail e sites","Segurança da informação I","Segurança da informação II","Windows","Processo Digital - Lei 11.419/2006"],"Acessibilidade":["Introdução aos direitos da pessoa com deficiência","Lei 13.146/2015 - parte 01","Lei 13.146/2015 - parte 02","Lei 13.146/2015 - parte 03"],"Geografia do Amazonas":["Municípios do Amazonas: área, limites e hidrografia","Aspectos humanos e econômicos do Amazonas"],"Metas Nacionais do Poder Judiciário e Resoluções do CNJ":["Metas Nacionais do Poder Judiciário e Resoluções do CNJ"],"História e Geografia de Goiás":["História e Geografia de Goiás"],"Constituição do Estado de Goiás":["Constituição do Estado de Goiás"],"Noções de Administração Pública":["Noções de Administração Pública"],"Orçamento Público":["Orçamento Público"],"Código de Organização Judiciária e Regimento Interno do TJ-GO":["Código de Organização Judiciária e Regimento Interno do TJ-GO"],"Discursiva":["Análise do edital; mudança de hábito; a importância da escrita manuscrita","Teoria-Geral da produção textual em provas discursivas (Aspectos Estruturais)","Teoria-Geral da Produção textual em provas discursivas (Aspectos Formais de Apresentação)","Folha de resposta para transcrição do texto definitivo","Primeira Rodada de Temas","Segunda Rodada de Temas","Terceira Rodada de Temas"]};
+const EDITAL_MATERIAS={"Língua Portuguesa":["AM","GO"],"Direito Constitucional":["AM","GO"],"Direito Administrativo":["AM","GO"],"Discursiva":["AM","GO"],"Informática e Processo Digital":["AM","GO"],"Raciocínio Lógico-matemático":["AM","GO"],"Geografia do Amazonas":["AM"],"Organização Judiciária":["AM"],"Acessibilidade":["AM"],"Direito Processual Civil":["AM"],"Direito Processual Penal":["AM"],"Administração Geral":["AM"],"Estatuto dos Servidores":["AM"],"Metas Nacionais do Poder Judiciário e Resoluções do CNJ":["AM"],"História e Geografia de Goiás":["GO"],"Constituição do Estado de Goiás":["GO"],"Noções de Administração Pública":["GO"],"Orçamento Público":["GO"],"Código de Organização Judiciária e Regimento Interno do TJ-GO":["GO"]};
+const EDITAL_NOMES={AM:"TJ-AM",GO:"TJ-GO"};
 const PDF_DEF={"Língua Portuguesa":{total:16,feitas:0,feitas_q:0,status:'pendente'},"Direito Constitucional":{total:12,feitas:0,feitas_q:0,status:'pendente'},"Direito Administrativo":{total:7,feitas:0,feitas_q:0,status:'pendente'},"Administração Geral":{total:15,feitas:0,feitas_q:0,status:'pendente'},"Direito Processual Civil":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Direito Processual Penal":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Estatuto dos Servidores":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Organização Judiciária":{total:6,feitas:0,feitas_q:0,status:'pendente'},"Informática e Processo Digital":{total:8,feitas:0,feitas_q:0,status:'pendente'},"Acessibilidade":{total:4,feitas:0,feitas_q:0,status:'pendente'},"Geografia do Amazonas":{total:2,feitas:0,feitas_q:0,status:'pendente'}};
 const ML=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const SL={pendente:'⏳ Pendente',concluido:'✅ Concluído',revisao:'🔄 Em Revisão',caderno:'📓 Caderno TEC'};
@@ -1905,7 +1929,7 @@ const renders={
   ranking:()=>renderRanking(),materias:()=>renderMaterias(),comparar:()=>{},
   graficos:()=>renderGraficos(),conteudo:()=>renderConteudo(),revisao:()=>renderRevisao(),
   leiseca:()=>renderLeiSeca(),desempenho:()=>renderDesempenho(),materiais:()=>renderMateriais(),
-  anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),
+  anotacoes:()=>renderAnotacoes(),lembretes:()=>renderLembretes(),ciclo:()=>renderCiclo(),editais:()=>renderEditais(),
   mantras:()=>renderMantras(),sugestoes:()=>renderSugestoes(),planejamento:()=>renderPlanejamento(),previsao:()=>renderPrevisao(),
   pdfs:()=>renderPDFs(),relatorio:()=>setRelTab(relTabAtual),diario:()=>renderDiario()
 };
@@ -4099,6 +4123,184 @@ function irParaSemana(weekVal){
   const diffMs=segunda-segAtual;
   planSemanaOffset=Math.round(diffMs/(1000*60*60*24*7));
   renderPlanejamento();
+}
+
+// ══ ORGANIZAÇÃO POR EDITAL ══
+let editalSel='AM';
+let editalSemanaOffset=0;
+function setEditalSel(ed){editalSel=ed;renderEditais();}
+function navEditalSemana(delta){editalSemanaOffset+=delta;renderEditais();}
+function irParaEditalSemana(weekVal){
+  if(!weekVal)return;
+  const [y,w]=weekVal.split('-W');
+  const jan4=new Date(parseInt(y),0,4);
+  const segunda=new Date(jan4);
+  segunda.setDate(jan4.getDate()-((jan4.getDay()+6)%7)+(parseInt(w)-1)*7);
+  const hoje=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
+  hoje.setHours(0,0,0,0);
+  const segAtual=new Date(hoje);
+  segAtual.setDate(hoje.getDate()-((hoje.getDay()+6)%7));
+  const diffMs=segunda-segAtual;
+  editalSemanaOffset=Math.round(diffMs/(1000*60*60*24*7));
+  renderEditais();
+}
+function getMateriasEdital(ed){return Object.keys(EDITAL_MATERIAS).filter(m=>EDITAL_MATERIAS[m].includes(ed)&&MATERIAS[m]);}
+function isComumEdital(m){return(EDITAL_MATERIAS[m]||[]).length>1;}
+function renderEditais(){
+  ['AM','GO','GERAL'].forEach(ed=>{
+    const btn=document.getElementById('ed-btn-'+ed);
+    if(btn)btn.className=ed===editalSel?'btn btn-primary btn-sm':'btn btn-secondary btn-sm';
+  });
+  const wc=document.getElementById('editais-week-controls');
+  if(wc)wc.style.display=editalSel==='GERAL'?'none':'flex';
+  if(editalSel==='GERAL'){renderEditaisGeral();return;}
+  const dias=getSemanaAtual(editalSemanaOffset);
+  const lbl=document.getElementById('editais-semana-label');
+  if(lbl)lbl.textContent=fmtD(dateToStr(dias[0]))+' – '+fmtD(dateToStr(dias[6]));
+  const picker=document.getElementById('editais-week-picker');
+  if(picker&&!picker.matches(':focus')){
+    const d=dias[0];const onejan=new Date(d.getFullYear(),0,1);
+    const wk=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+    picker.value=d.getFullYear()+'-W'+String(wk).padStart(2,'0');
+  }
+  const de=dateToStr(dias[0]),ate=dateToStr(dias[6]);
+  const materiasEd=getMateriasEdital(editalSel);
+
+  // KPIs
+  let totalAss=0,domAss=0,revAss=0,naoAss=0;
+  materiasEd.forEach(m=>{
+    (MATERIAS[m]||[]).forEach(a=>{
+      totalAss++;
+      const st=getAssuntoStatus(m,a);
+      if(st==='concluido')domAss++;
+      else if(st==='revisando')revAss++;
+      else if(st==='nao_iniciado')naoAss++;
+    });
+  });
+  const pct=totalAss>0?Math.round(domAss/totalAss*100):0;
+
+  // Atividade da semana selecionada (diarios + erros) filtrada às matérias deste edital
+  const diariosSemana=fD(diarios,de,ate).filter(d=>materiasEd.includes(d.materia));
+  const errosSemana=fD(erros,de,ate).filter(e=>materiasEd.includes(e.materia));
+  const minTotalSemana=diariosSemana.reduce((s,d)=>s+(d.minutos||0),0)+errosSemana.reduce((s,e)=>s+(e.min_questoes||0),0);
+  const porDia={};dias.forEach(d=>porDia[dateToStr(d)]=[]);
+  diariosSemana.forEach(d=>{if(porDia[d.data])porDia[d.data].push({tipo:'📖',txt:d.materia+(d.assunto?' — '+d.assunto:''),min:d.minutos||0});});
+  errosSemana.forEach(e=>{if(porDia[e.data])porDia[e.data].push({tipo:'❓',txt:e.materia+(e.assunto?' — '+e.assunto:''),min:e.min_questoes||0});});
+
+  const DIAS_L=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const calHtml=`<div class="card" style="margin-bottom:18px">
+    <div class="card-title">📅 Atividade da Semana — ${EDITAL_NOMES[editalSel]}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+      ${dias.map((d,i)=>{const ds=dateToStr(d);const items=porDia[ds]||[];const isHoje=ds===today();
+        return`<div style="background:var(--surface2);border-radius:8px;padding:8px;min-height:70px;${isHoje?'border:1px solid var(--accent)':''}">
+          <div style="font-size:10px;font-weight:800;color:${isHoje?'var(--accent)':'var(--text3)'};text-transform:uppercase;margin-bottom:4px">${DIAS_L[i]} ${d.getDate()}</div>
+          ${items.length?items.map(it=>`<div style="font-size:10px;color:var(--text2);margin-bottom:2px" title="${escHtml(it.txt)}">${it.tipo} ${minToHM(it.min)}</div>`).join(''):'<div style="font-size:10px;color:var(--text3)">—</div>'}
+        </div>`;}).join('')}
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text3)">Total estudado na semana (matérias ${EDITAL_NOMES[editalSel]}): <b style="color:var(--text)">${minToHM(minTotalSemana)}</b></div>
+  </div>`;
+
+  const kpiHtml=`<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-accent" style="background:var(--accent)"></div><div class="kpi-label">Matérias ${EDITAL_NOMES[editalSel]}</div><div class="kpi-value" style="color:var(--accent)">${materiasEd.length}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--success)"></div><div class="kpi-label">% Concluído</div><div class="kpi-value" style="color:var(--success)">${pct}<span style="font-size:20px">%</span></div><div class="kpi-sub">${domAss}/${totalAss} assuntos</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--warning)"></div><div class="kpi-label">Em Revisão</div><div class="kpi-value" style="color:var(--warning)">${revAss}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:var(--text3)"></div><div class="kpi-label">Não Iniciados</div><div class="kpi-value" style="color:var(--text3)">${naoAss}</div></div>
+  </div>`;
+
+  const matHtml=`<div class="card">
+    <div class="card-title">📚 Matérias — ${EDITAL_NOMES[editalSel]}</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${materiasEd.map(m=>{
+        const assuntos=MATERIAS[m]||[];
+        const domM=assuntos.filter(a=>getAssuntoStatus(m,a)==='concluido').length;
+        const pctM=assuntos.length>0?Math.round(domM/assuntos.length*100):0;
+        const comum=isComumEdital(m);
+        const mid='ed-mat-'+m.replace(/[^a-zA-Z0-9]/g,'');
+        return`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <div style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px" onclick="const b=document.getElementById('${mid}');b.style.display=b.style.display==='block'?'none':'block';">
+            <span class="badge ${edTagInfo(m).cls}" style="font-size:10px">${edTagInfo(m).label}</span>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${escHtml(m)}</div>
+              <div class="prog" style="margin-top:6px"><div class="prog-fill" style="width:${pctM}%;background:var(--success)"></div></div>
+            </div>
+            <span style="font-size:12px;color:var(--text3);white-space:nowrap">${domM}/${assuntos.length}</span>
+          </div>
+          <div id="${mid}" style="display:none;padding:0 16px 14px 16px;border-top:1px solid var(--border)">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+              ${assuntos.map(a=>{const st=getAssuntoStatus(m,a);
+                return`<span onclick="event.stopPropagation();openPopup('${m.replace(/'/g,"\\'")}','${a.replace(/'/g,"\\'")}')" class="pct-badge ${ST_CSS[st]}" style="cursor:pointer;font-size:11px">${ST_LABELS[st]?.split(' ')[0]||'⬜'} ${escHtml(a)}</span>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('editais-content').innerHTML=kpiHtml+calHtml+matHtml;
+}
+
+// Cor/label da tag de edital para uma matéria, independente da aba selecionada
+function edTagInfo(m){
+  const eds=EDITAL_MATERIAS[m]||[];
+  if(eds.length>1)return{cls:'badge-blue',label:'COMUM',color:'var(--accent2)'};
+  if(eds[0]==='AM')return{cls:'badge-yellow',label:'TJ-AM',color:'var(--accent)'};
+  return{cls:'badge-green',label:'TJ-GO',color:'var(--success)'};
+}
+
+// Velocímetro (gauge semicircular) em SVG puro
+function gaugeSVG(pct,color,mini){
+  pct=Math.max(0,Math.min(100,Math.round(pct||0)));
+  const thetaEnd=180-1.8*pct;
+  const rad=t=>t*Math.PI/180;
+  const x2=(100+90*Math.cos(rad(thetaEnd))).toFixed(2);
+  const y2=(110-90*Math.sin(rad(thetaEnd))).toFixed(2);
+  const w=mini?'110px':'170px';
+  return`<svg viewBox="0 0 200 130" style="width:${w};max-width:100%">
+    <path d="M10,110 A90,90 0 0 1 190,110" fill="none" stroke="var(--surface2)" stroke-width="18" stroke-linecap="round"/>
+    ${pct>0?`<path d="M10,110 A90,90 0 0 1 ${x2},${y2}" fill="none" stroke="${color}" stroke-width="18" stroke-linecap="round"/>`:''}
+    <text x="100" y="102" text-anchor="middle" font-size="${mini?24:32}" font-weight="800" fill="var(--text)">${pct}%</text>
+  </svg>`;
+}
+
+// ══ ABA GERAL — matérias dos dois editais juntas + velocímetros ══
+function renderEditaisGeral(){
+  const materiasAM=getMateriasEdital('AM');
+  const materiasGO=getMateriasEdital('GO');
+  const materiasTodas=[...new Set([...materiasAM,...materiasGO])];
+
+  function pctEdital(list){
+    let tot=0,dom=0;
+    list.forEach(m=>{(MATERIAS[m]||[]).forEach(a=>{tot++;if(getAssuntoStatus(m,a)==='concluido')dom++;});});
+    return tot>0?Math.round(dom/tot*100):0;
+  }
+  const pctAM=pctEdital(materiasAM),pctGO=pctEdital(materiasGO);
+
+  const topHtml=`<div class="card" style="margin-bottom:18px">
+    <div class="card-title">🏁 Progresso Geral por Edital</div>
+    <div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap;padding:6px 0">
+      <div style="text-align:center">${gaugeSVG(pctAM,'var(--accent)')}<div style="font-weight:800;font-size:13px;margin-top:-6px">TJ-AM</div></div>
+      <div style="text-align:center">${gaugeSVG(pctGO,'var(--success)')}<div style="font-weight:800;font-size:13px;margin-top:-6px">TJ-GO</div></div>
+    </div>
+  </div>`;
+
+  const cardsHtml=materiasTodas.map(m=>{
+    const assuntos=MATERIAS[m]||[];
+    const dom=assuntos.filter(a=>getAssuntoStatus(m,a)==='concluido').length;
+    const pctM=assuntos.length>0?Math.round(dom/assuntos.length*100):0;
+    const info=edTagInfo(m);
+    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center">
+      <span class="badge ${info.cls}" style="font-size:9px">${info.label}</span>
+      <div>${gaugeSVG(pctM,info.color,true)}</div>
+      <div style="font-size:12px;font-weight:700;margin-top:-8px;line-height:1.3">${escHtml(m)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${dom}/${assuntos.length} assuntos</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('editais-content').innerHTML=topHtml+`<div class="card">
+    <div class="card-title">📚 Todas as Matérias — TJ-AM + TJ-GO</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">${cardsHtml}</div>
+  </div>`;
 }
 
 function updateTarAssunto(){
